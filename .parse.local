@@ -1,0 +1,11 @@
+{
+  "applications": {
+    "_default": {
+      "link": "compta"
+    },
+    "compta": {
+      "parseAppId": "xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT",
+      "herokuAppId": "611cd57a-71cd-4d54-ad51-0f52dd9dc3ce"
+    }
+  }
+}

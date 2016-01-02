@@ -1,0 +1,22 @@
+{
+  "name": "compta",
+  "version": "1.0.0",
+  "description": "Gestionnaire comptable",
+  "main": "index.js",
+  "scripts": {
+    "start": "babel-node index.js"
+  },
+  "dependencies": {
+    "express": "4.13.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amsayk/compta"
+  },
+  "keywords": [
+    "node",
+    "heroku",
+    "express"
+  ],
+  "license": "MIT"
+}
