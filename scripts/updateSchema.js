@@ -1,5 +1,8 @@
 #!/usr/bin/env babel-node --optional es7.asyncFunctions
 
+require("babel-core/register");
+require("babel-polyfill");
+
 import fs from 'fs';
 import path from 'path';
 import { Schema } from '../data/schema/index';
