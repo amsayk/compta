@@ -8,10 +8,11 @@
     "url": "https://github.com/amsayk/compta"
   },
   "engines": {
-    "node": "5.1.1"
+    "node": "5.4.0"
   },
   "scripts": {
-    "start": "babel-node server.js",
+    "dist": "rm -fr out && mkdir -p out/express-jwt && mkdir -p out/data/database && babel express-jwt/ --out-dir out/express-jwt && cp data/database/*.json out/data/database/ && babel data/ --out-dir out/data/ && babel server.js --out-dir out/",
+    "start": "babel-node ./server.js",
     "build-schema": "babel-node scripts/updateSchema.js"
   },
   "dependencies": {
@@ -42,6 +43,7 @@
     "redux-form": "^4.1.1"
   },
   "devDependencies": {
+    "babel-cli": "^6.4.0",
     "babel-core": "6.4.0",
     "babel-eslint": "^5.0.0-beta6",
     "babel-loader": "6.2.1",
