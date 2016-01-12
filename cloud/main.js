@@ -1,59 +1,66 @@
-//
-//
-//Parse.Cloud.beforeSave("SomeClass", function (request, response) {
-//
-//  if (request.object.isNew()) {
-//    getSequence(function(sequence) {
-//      if (sequence) {
-//        request.object.set("myAIColumn", sequence);
-//        response.success();
-//      } else {
-//        response.error('Could not get a sequence.')
-//      }
-//    });
-//  } else {
-//    response.success();
-//  }
-//
-//});
-//
+
+Parse.Cloud.define("hello", function(request, response) {
+  console.log('Ran cloud function.');
+  response.success("Hello world! " + (request.params.a + request.params.b));
+});
+
+Parse.Cloud.beforeSave('Transaction', function (request, response) {
+
+  if (request.object.isNew()) {
+    getSequence(function (err, sequence) {
+      if (err) {
+        response.error('Could not get a sequence.');
+        return;
+      }
+
+      request.object.set('_nr', sequence);
+      response.success();
+    });
+  } else {
+    response.success();
+  }
+
+});
+
+var Seq = Parse.Object.extend('Seq');
+var SEQ_ID = 'lQyJu5P86j';
+
 //function getCurrentSequence(callback) {
-//  var Test = Parse.Object.extend("Sequence");
-//  var query = new Parse.Query(Test);
-//  //console.log('Getting the sequence object');
-//  query.get("lQyJu5P86j", {
-//    success: function(object) {
-//      //console.log(object);
-//      //console.log(object.get('sequence'));
-//      callback(object.get('sequence'));
+//  var query = new Parse.Query(Seq);
+//  // console.log('Getting the sequence object');
+//  query.get(SEQ_ID, {
+//    success: function (object) {
+//      // console.log(object);
+//      // console.log(object.get('sequence'));
+//      callback(null, object.get('sequence'));
 //    }, error: function (error) {
-//      callback(undefined);
+//      callback(error);
 //    }
 //  });
 //}
-//
-//function getSequence(callback) {
-//  var Test = Parse.Object.extend("Sequence");
-//  var query = new Parse.Query(Test);
-//  //console.log('Getting the Sequence object');
-//  query.get("lQyJu5P86j", {
-//    success: function(object) {
-//      object.increment('sequence');
-//      object.save(null,{
-//        success:function(object) {
-//          //console.log('In success from getSequence save');
-//          callback(object.get('sequence'));
-//        },
-//        error:function(object,error) {
-//          //console.log('In error from getSequence save');
-//          //console.log(error);
-//          callback(undefined);
-//        }
-//      });
-//    }, error: function (error) {
-//      //console.log('In error from getSeq get');
-//      console.log(error);
-//      callback(undefined);
-//    }
-//  });
-//}
+
+function getSequence(callback) {
+  var query = new Parse.Query(Seq);
+  // console.log('Getting the Sequence object');
+  query.get(SEQ_ID, {
+    success: function (object) {
+      object.increment('sequence');
+      object.save(null, {
+        success: function (object) {
+          // console.log('In success from getSequence save');
+          callback(null, object.get('sequence'));
+        },
+        error: function (object, error) {
+          // console.log('In error from getSequence save');
+          // console.log(error);
+          callback(error);
+        }
+      });
+    }, error: function (error) {
+      // console.log('In error from getSeq get:', error);
+      callback(error);
+    }
+  });
+}
+
+console.log('Deployed');

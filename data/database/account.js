@@ -47,6 +47,10 @@ export class Transaction extends Parse.Object{
   get operations(){
     return this.get('operations');
   }
+
+  get nr(){
+    return this.get('_nr');
+  }
 }
 
 export class Operation extends Parse.Object{
