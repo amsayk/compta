@@ -11,8 +11,8 @@
     "node": "5.4.0"
   },
   "scripts": {
-    "dist": "rm -fr out && mkdir -p out/express-jwt && mkdir -p out/data/database && babel express-jwt/ --out-dir out/express-jwt && cp data/database/*.json out/data/database/ && babel data/ --out-dir out/data/ && babel server.js --out-dir out/",
-    "start": "babel-node server.js",
+    "dist": "rm -fr out && mkdir -p out/express-jwt && mkdir -p out/data/database && babel express-jwt/ --out-dir out/express-jwt && cp data/database/*.json out/data/database/ && babel data/ --out-dir out/data/ && cp data/schema.json out/data/ && babel server.js --out-dir out/",
+    "start": "npm run dist && node out/server.js",
     "build-schema": "babel-node scripts/updateSchema.js"
   },
   "dependencies": {

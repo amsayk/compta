@@ -76,7 +76,7 @@ const compiler = webpack({
     // The script refreshing the browser on none hot updates
     `webpack-dev-server/client?http://localhost:${APP_PORT}`,
 
-    path.resolve(__dirname, 'js', 'app.js')
+    path.resolve(process.cwd(), 'js', 'app.js')
   ],
   module: {
     loaders: [
@@ -195,7 +195,7 @@ const app = new WebpackDevServer(compiler, {
 });
 
 // Serve static resources
-app.use('/', express.static(path.resolve(__dirname, 'public')));
+app.use('/', express.static(path.resolve(process.cwd(), 'public')));
 app.listen(APP_PORT, () => {
   console.log(`App is now running on http://localhost:${APP_PORT}`);
 });
