@@ -1,7 +1,6 @@
-https://fathomless-scrubland-2804.herokuapp.com/ | https://git.heroku.com/fathomless-scrubland-2804.git
-
-
 # compta
+
+https://fathomless-scrubland-2804.herokuapp.com/ | https://git.heroku.com/fathomless-scrubland-2804.git
 
 A barebones Node.js app using [Express 4](http://expressjs.com/).
 
