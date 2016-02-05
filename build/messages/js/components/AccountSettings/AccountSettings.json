@@ -1,0 +1,30 @@
+[
+  {
+    "id": "account-page.title",
+    "defaultMessage": "Account"
+  },
+  {
+    "id": "account-page.subtitle",
+    "defaultMessage": "Settings"
+  },
+  {
+    "id": "account-page.login-info-legend",
+    "defaultMessage": "Account Info"
+  },
+  {
+    "id": "account-page.login-info-message",
+    "defaultMessage": "Update the personal information linked to this account."
+  },
+  {
+    "id": "account-page.login-info-label",
+    "defaultMessage": "Change your login information"
+  },
+  {
+    "id": "account-page.login-info-description",
+    "defaultMessage": "This is where you can change your email address or password."
+  },
+  {
+    "id": "account-page.action-change-login-info",
+    "defaultMessage": "Change my login information"
+  }
+]

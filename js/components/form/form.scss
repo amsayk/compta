@@ -1,0 +1,137 @@
+
+.field {
+  position: relative;
+  border-style: solid;
+  border-color: #e3e3e3;
+  border-width: 1px 1px 0;
+  min-height: 80px;
+  background: #fff;
+}
+
+.left {
+  position: absolute;
+  left: 0;
+  height: 100%;
+}
+
+.right {
+  position: relative;
+  min-height: 80px;
+  text-align: right;
+  padding: 0;
+}
+
+.label {
+  font-size: 13px;
+}
+
+.centered {
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+  position: absolute;
+  width: 100%;
+  top: 50%;
+}
+
+.text {
+  font-weight: 700;
+}
+
+.description {
+  margin-top: 2px;
+  color: #a5a5b4;
+  line-height: 13px;
+}
+
+body.fonts_loaded .text_input {
+  font-family: AlrightSans, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+input.text_input {
+  text-align: center;
+}
+
+.text_input {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  border: 0;
+  outline: 0;
+  background: #f6fafb;
+  font-size: 16px;
+  width: 100%;
+  padding: 6px;
+  vertical-align: top;
+  resize: none;
+}
+
+.dropdown .menu {
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dropdown, .menu {
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menu {
+  max-height: 200px;
+  border: 1px solid #169cee;
+  background: #fff;
+  overflow: auto;
+}
+
+.dropdown {
+  position: relative;
+  background: #f6fafb;
+  font-size: 16px;
+  height: 80px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.current {
+  text-align: center;
+  height: 80px;
+}
+
+.current .option, .current .placeHolder {
+  height: 80px;
+  line-height: 80px;
+}
+
+.menu .option {
+  color: #169cee;
+  border-bottom: 1px solid #e3e3e3;
+  height: 100%;
+}
+
+.menu>a:hover .option {
+  background: rgba(0,0,0,.1)!important;
+  color: #169cee!important;
+}
+
+.menu>a {
+  height: 60px;
+}
+
+.option {
+  line-height: 50px;
+  padding: 0 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.current:not(.hideArrow):after {
+  border-style: solid;
+  border-width: 8px 6px 0;
+  border-top-color: rgba(0, 0, 0, .3);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  position: absolute;
+  content: '';
+  top: 36px;
+  right: 20px;
+}

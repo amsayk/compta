@@ -1,0 +1,81 @@
+.fixedDataTableLayout_main {
+    border-style: none;
+}
+
+.fixedDataTableLayout_header .public_fixedDataTableCell_cellContent {
+    text-transform: uppercase;
+
+    color: #6e8ba8;
+    font-weight: 400;
+}
+
+.fixedDataTableLayout_header .fixedDataTableCellLayout_main {
+    border-right-style: none;
+    border-width: 0 1px 0 0;
+
+    border-color: transparent;
+
+    background-color: #e3eaf3;
+
+}
+
+.public_fixedDataTable_header, .public_fixedDataTable_header .public_fixedDataTableCell_main {
+    background-image: none;
+}
+
+.public_fixedDataTableCell_main, .public_fixedDataTableRow_highlighted,
+.public_fixedDataTableRow_highlighted .public_fixedDataTableCell_main {
+    background-color: #ffffff;
+}
+
+.fixedDataTableRowLayout_rowWrapper{
+    /*z-index: -1!important;*/
+}
+
+/*.public_fixedDataTable_bodyRow:hover .fixedDataTableCellLayout_main {*/
+    /*background-color: #f3f8fe;*/
+    /*color: #000;*/
+/*}*/
+
+.fixedDataTableCellLayout_main {
+    background-image: none;
+}
+
+.public_fixedDataTableCell_main {
+}
+
+.fixedDataTableLayout_header .public_fixedDataTableCell_cellContent {
+    padding: 4px 8px;
+}
+
+.fixedDataTableLayout_footer .public_fixedDataTableCell_main {
+
+}
+
+.fixedDataTableLayout_footer .fixedDataTableCellLayout_main{
+    background-color: #eeeeee;
+}
+
+.public_fixedDataTable_footer .fixedDataTableCellLayout_main.public_fixedDataTableCell_main {
+    border-style: none;
+    border-width: 0;
+}
+
+/*.public_fixedDataTable_bodyRow .fixedDataTableCellLayout_main.public_fixedDataTableCell_main {*/
+    /*border-color: #c7c7c7;*/
+    /*border-style: dotted;*/
+/*}*/
+
+.public_fixedDataTable_header{
+    border-bottom: 2px solid #cedcea;
+}
+
+.public_fixedDataTable_header .fixedDataTableCellLayout_main.public_fixedDataTableCell_main {
+    border-color: #c0d0e4;
+    border-style: solid;
+}
+
+.fixedDataTableRowLayout_main .fixedDataTableCellLayout_main:last-of-type {
+    border-right-style: none;
+    border-right-width: 0;
+}

@@ -1,0 +1,109 @@
+.table .empty {
+  top: 126px;
+}
+
+.empty {
+  position: fixed;
+  left: 300px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.center {
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+.icon {
+  width: 170px;
+  height: 170px;
+  margin: 0 auto 24px;
+  border-radius: 100%;
+  background: #f3f0f2;
+  text-align: center;
+  padding-top: 45px;
+}
+
+.title {
+  font-size: 46px;
+  font-weight: 300;
+  line-height: 55px;
+  white-space: nowrap;
+  margin-bottom: 45px;
+}
+
+body.fonts_loaded .description {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.description {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  letter-spacing: .72px;
+  line-height: 17px;
+  margin-bottom: 12px;
+}
+
+.glance {
+  float: right;
+  width: 340px;
+  padding: 10px 12px;
+  border-left: 1px solid #1e3b4d;
+  border-right: 1px solid #1e3b4d;
+}
+
+.section {
+  font-size: 12px;
+  color: #fff;
+  margin: 0 0 6px;
+}
+
+.count {
+  float: left;
+  margin-right: 12px;
+}
+
+body.fonts_loaded .number {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.number {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #fff;
+  font-size: 18px;
+}
+
+.label {
+  color: #788c97;
+  font-size: 11px;
+}
+
+body.fonts_loaded .edit {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.edit {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  position: absolute;
+  top: 7px;
+  left: 86px;
+  background: #29475d;
+  border-radius: 3px;
+  height: 17px;
+  line-height: 18px;
+  color: #fff;
+  font-size: 10px;
+  padding: 0 8px;
+}
+
+.plan {
+  float: right;
+  width: 300px;
+  padding: 10px 12px;
+  position: relative;
+}

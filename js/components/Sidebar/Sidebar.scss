@@ -1,0 +1,290 @@
+.sidebar {
+  position: fixed;
+  width: 300px;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: #0c5582;
+  color: #fff;
+  transition: left .5s ease-in;
+}
+
+.header {
+  background: #05283c;
+  height: 48px;
+  padding: 10px 14px;
+}
+
+.logo {
+  float: left;
+}
+
+.logo span {
+  position: absolute;
+  letter-spacing: 2px;
+  line-height: 10px;
+  text-transform: uppercase;
+  font-size: 10px;
+  top: 17px;
+  margin-left: 3px;
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #fff;
+  opacity: .4;
+}
+
+.logo span:hover {
+}
+
+.account {
+  font-size: 14px;
+  text-align: right;
+  line-height: 30px;
+  width: 160px;
+  float: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.content {
+  position: absolute;
+  overflow-y: auto;
+  top: 48px;
+  right: 0;
+  //bottom: 36px;
+  left: 0;
+}
+
+.createApp:hover, .section {
+  background: #0c5582;
+}
+
+.section_header {
+  display: block;
+  // height: 48px;
+  font-size: 18px;
+  line-height: 28px;
+  padding: 12px 14px;
+  color: #fff;
+}
+
+.section_header > i {
+  margin-right: 14px;
+  vertical-align: middle;
+}
+
+.section_header > span {
+  vertical-align: middle;
+}
+
+.section:not(.active) .section_header:hover {
+  background-color: #0d5e91;
+}
+
+.apps {
+  margin: 0;
+  padding: 0;
+}
+
+.currentApp, .menuRow {
+  display: block;
+  background: #094162;
+  height: 48px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 30px;
+  cursor: pointer;
+}
+
+.menuRow {
+  border-bottom: 1px solid #0c5582;
+}
+
+.menuRow > :first-child {
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.fonts_loaded .badge {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.menuRow > :not(:first-child) {
+  float: right;
+}
+
+.badge {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  display: inline-block;
+  height: 26px;
+  line-height: 26px;
+  vertical-align: middle;
+  text-align: center;
+  border: 1px solid #768c97;
+  color: #768c97;
+  border-radius: 5px;
+  font-size: 10px;
+  letter-spacing: 4px;
+  width: 60px;
+  padding-left: 3px;
+}
+
+.appsMenu .menuRow:hover {
+  background: #0c5582;
+}
+
+.menuRow {
+  border-bottom: 1px solid #0c5582;
+}
+
+.currentApp {
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 40px;
+}
+
+.appsMenu {
+  //overflow: auto;
+  background: #094162;
+  width: 300px;
+
+  height: 100%;
+}
+
+.unselectable {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+body.fonts_loaded .createApp {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.createApp {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  display: block;
+  background: #169cee;
+  color: #fff;
+  width: 91%;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 5px;
+  text-align: center;
+  margin: 12px auto;
+  font-size: 12px;
+}
+
+body.fonts_loaded .menuSection {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.menuSection {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  height: 24px;
+  line-height: 24px;
+  background: #0c5582;
+  color: #84a5bc;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 8px;
+  padding: 0 14px;
+  border-bottom: 1px solid #094162;
+}
+
+.currentApp:after {
+  border-width: 7px 5px 0;
+  border-top-color: #132b39;
+  border-bottom-color: transparent;
+}
+
+.appsMenu .currentApp:after, .currentApp:after {
+  border-style: solid;
+  border-right-color: transparent;
+  border-left-color: transparent;
+  position: absolute;
+  content: '';
+  top: 20px;
+  right: 15px;
+}
+
+.appsMenu .currentApp:after {
+  border-width: 0 5px 7px;
+  border-top-color: transparent;
+  border-bottom-color: #fff;
+}
+
+.currentApp:hover:after {
+  border-top-color: #fff;
+}
+
+.sections {
+  position: absolute;
+  overflow-y: auto;
+  top: 48px;
+  right: 0;
+  // bottom: 36px;
+  left: 0;
+  height: 100%;
+  background: #0c5582;
+}
+
+.apps {
+  background: #094162;
+  height: 100%;
+}
+
+.apps + .sections {
+  top: 96px;
+}
+
+.active {
+  background: #159cee;
+}
+
+.createApp:hover {
+  background: #0c5582;
+}
+
+.active .section_header {
+  font-weight: 700;
+}
+
+body.fonts_loaded .action {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.action {
+  //font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  //position: absolute;
+  //font-size: 12px;
+  //font-weight: 400;
+  padding: 0 8px 0 30px;
+  line-height: 20px;
+  //top: 4px;
+  //right: 0;
+  float: right;
+  //background: #0c5987;
+  color: #fff;
+  //border-radius: 3px;
+  cursor: pointer;
+}
+
+.action:hover {
+  //background: #094162;
+  opacity: 0.4;
+}
+
+.action i{
+  vertical-align: middle;
+}

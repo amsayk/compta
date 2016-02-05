@@ -1,0 +1,42 @@
+[
+  {
+    "id": "title.login",
+    "description": "",
+    "defaultMessage": "Login"
+  },
+  {
+    "id": "login.default-login",
+    "description": "",
+    "defaultMessage": "amadou.cisse"
+  },
+  {
+    "id": "login-form.title",
+    "description": "",
+    "defaultMessage": "Member Login"
+  },
+  {
+    "id": "label.email",
+    "description": "",
+    "defaultMessage": "Email"
+  },
+  {
+    "id": "label.password",
+    "description": "",
+    "defaultMessage": "Password"
+  },
+  {
+    "id": "error.login",
+    "description": "",
+    "defaultMessage": "You must enter a valid e-mail address."
+  },
+  {
+    "id": "login.forgot-something",
+    "description": "",
+    "defaultMessage": "Forgot something?"
+  },
+  {
+    "id": "action.login",
+    "description": "",
+    "defaultMessage": "Log In"
+  }
+]

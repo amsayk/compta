@@ -1,0 +1,54 @@
+.button:focus, .button:hover, .btn-primary {
+  background-color: #169cee;
+  border-color: #169cee;
+  color: #fff;
+}
+
+.button {
+  outline: 0;
+}
+
+.error {
+  background: #f9f9fa;
+  height: 50px;
+  line-height: 50px;
+  overflow: hidden;
+  font-size: 13px;
+  color: #ff395e;
+
+  border-top: 1px solid #e3e3e3;
+  text-align: center;
+}
+
+.modal :global(.modal-dialog) {
+  margin-top: 10%;
+}
+
+.icon {
+  position: absolute;
+  top: 19px;
+  right: 28px;
+  width: 52px;
+  height: 52px;
+  text-align: center;
+  border-radius: 100%;
+  background: rgba(0, 0, 0, .3);
+}
+
+.icon i {
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.subtitle, .title {
+  position: absolute;
+  color: #fff;
+  left: 28px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 500;
+}

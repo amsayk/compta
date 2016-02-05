@@ -1,0 +1,22 @@
+[
+  {
+    "id": "action.create-new-app",
+    "description": "Label to create new company",
+    "defaultMessage": "Create a new app"
+  },
+  {
+    "id": "message.created",
+    "description": "The word for created at.",
+    "defaultMessage": "Created"
+  },
+  {
+    "id": "message.filter-companies",
+    "description": "The message to filter the list of companies.",
+    "defaultMessage": "Start typing to filter…"
+  },
+  {
+    "id": "message.no-data",
+    "description": "",
+    "defaultMessage": "No data to display."
+  }
+]

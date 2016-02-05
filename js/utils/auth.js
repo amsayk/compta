@@ -1,82 +1,61 @@
 import Parse from 'parse';
-// import jwt from 'jsonwebtoken';
+
+import Relay from 'react-relay';
+
+import {Schema as schema} from '../../data/schema/index';
+
+import RelayLocalSchema from 'relay-local-schema';
+
+import LogInMutation from '../mutations/LogInMutation';
+import LogOutMutation from '../mutations/LogOutMutation';
 
 Parse.initialize(
   process.env.APPLICATION_ID,
   process.env.JAVASCRIPT_KEY
 );
 
-const storage = /*process.env.NODE_ENV !== 'production' ? {} : */localStorage;
+Relay.injectNetworkLayer(
+  new RelayLocalSchema.NetworkLayer({
+    schema,
+    onError: (errors, request) => console.error(errors, request),
+  })
+);
 
-export default{
-  login(email, cb) {
-    doLogin(email, (err, res) => {
+const auth = {
+  sendEmail(email, cb){
+    cb(null);
+  },
+  login(email, password, cb) {
 
-      if (err) {
-        this.onChange(false);
-        cb(false);
-        return;
-      }
-
-      const {ok, token} = res;
-
-      if (ok) {
-        storage.token = token;
-
-        //const {payload: {sessionToken}} = jwt.decode(token, { complete: true }) || {};
-
-        // This will make Parse.User.current() work
-        //Parse.User.become(sessionToken).then((user) => {
-        //  cb(true);
-        //  this.onChange(true);
-        //}, (error) => {
-        //  cb(false);
-        //  this.onChange(false);
-        //});
-
-        this.onChange(true);
-        cb(true);
-
-      } else {
-        this.onChange(false);
-        cb(false);
-      }
+    Relay.Store.commitUpdate(new LogInMutation({
+      email,
+      password,
+    }), {
+      onSuccess: function ({logIn: { user}}) {
+        cb(null, {user});
+      },
+      onFailure: function (transaction) {
+        cb(transaction.getError());
+      },
     });
   },
 
-  getToken() {
-    return storage.token;
-  },
-
-  logOut(cb) {
-    delete storage.token;
-    // Parse.User.logOut();
-
-    this.onChange(false);
-    if (cb) cb();
+  logOut(user, cb) {
+    Relay.Store.commitUpdate(new LogOutMutation({
+      viewerId: user.id,
+    }), {
+      onSuccess: function ({logIn: { user}}) {
+        cb(null, {user});
+      },
+      onFailure: function (transaction) {
+        cb(transaction.getError());
+      },
+    });
   },
 
   isLoggedIn() {
-    return !!storage.token; // && Parse.User.current();
-  },
-
-  onChange() {
+    return !!Parse.User.current();
   }
 };
 
-function doLogin(email, cb) {
-  fetch('/auth/login', {
-    method: 'POST',
-    body: `email=${encodeURIComponent(email)}`,
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-    },
-  }).then(function (response) {
-    return response.json();
-  }).then((res) => {
-    cb(null, res);
-  }, () => {
-    cb(new Error())
-  });
-}
+export default auth;

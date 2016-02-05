@@ -1,47 +1,61 @@
 import express from 'express';
-import graphQLHTTP from 'express-graphql';
 import path from 'path';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import {Schema} from './data/schema/index';
+import AssetsPlugin from 'assets-webpack-plugin';
 
-import assign from 'object-assign';
+import locale from 'locale';
 
-import {logIn, getUserFromPayload} from './data/auth';
-
-import bodyParser from 'body-parser';
 import morgan from 'morgan';
-
-import jwt from './express-jwt';
-import { sign as jwtSign } from 'jsonwebtoken';
 
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
 
+const SUPPORTED_LOCALES = [ "en", "fr", ];
+
+const __DEVELOPMENT__ = process.env.NODE_ENV !== "production";
+
 const APP_PORT = process.env.PORT || 5000;
-const GRAPHQL_PORT = 9090;
 
-// Expose a GraphQL endpoint
-const graphQLServer = express();
-graphQLServer.use('/', jwt({ secret: process.env.APP_SECRET, getUser: getUserFromPayload }), graphQLHTTP(req => ({
-  graphiql: true,
-  pretty: true,
-  schema: Schema,
-  rootValue: {user: req.user},
-})));
-graphQLServer.listen(GRAPHQL_PORT, () => console.log(
-  `GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}`
-));
-
-const __DEV__ = process.env.NODE_ENV !== "production";
+const vendors = [
+  'babel-polyfill',
+  'classnames',
+  'dataloader',
+  'dom-helpers',
+  'debug',
+  'fixed-data-table',
+  'graphql',
+  'graphql-relay',
+  'lodash.findindex',
+  'lodash.throttle',
+  'moment',
+  'moment-range',
+  'parse',
+  'react',
+  'react-addons-update',
+  'react-bootstrap',
+  'react-css-modules',
+  'react-datepicker',
+  'react-dnd',
+  'react-dnd-html5-backend',
+  'react-document-meta',
+  'react-dom',
+  'react-intl',
+  'react-relay',
+  'react-router',
+  'redux',
+  'redux-form',
+  'relay-local-schema',
+  'uid',
+];
 
 const plugins = [
-  new ExtractTextPlugin('app.css', {
+  new ExtractTextPlugin('[hash].app.css', {
     allChunks: true
   }),
   new webpack.HotModuleReplacementPlugin(),
   new webpack.DefinePlugin({
     'process.env': {
-      NODE_ENV: JSON.stringify(__DEV__ ? 'development' : 'production'),
+      NODE_ENV: JSON.stringify(__DEVELOPMENT__ ? 'development' : 'production'),
       APPLICATION_ID: JSON.stringify(process.env.APPLICATION_ID),
       JAVASCRIPT_KEY: JSON.stringify(process.env.JAVASCRIPT_KEY),
     }
@@ -50,9 +64,17 @@ const plugins = [
   new webpack.optimize.DedupePlugin(),
   // Avoid publishing files when compilation fails
   new webpack.NoErrorsPlugin(),
+  new AssetsPlugin({
+
+  }),
+  new webpack.optimize.CommonsChunkPlugin({
+    name: 'vendors',
+    filename: '[hash].vendors.js',
+    minChunks: Infinity,
+  }),
 ];
 
-if(__DEV__){
+if(!__DEVELOPMENT__){
   plugins.push(
     new webpack.optimize.UglifyJsPlugin({
       compress: {
@@ -64,20 +86,49 @@ if(__DEV__){
   );
 }
 
+let entry = {
+  main: [
+    path.resolve(process.cwd(), 'js', 'app.js'),
+  ],
+
+  vendors
+};
+
+let output = {
+  filename: '[hash].app.js',
+  path: path.resolve(process.cwd(), 'public', 'js', '__build__'),
+  publicPath: '/js/__build__/',
+  chunkFilename: '[id].[chunkhash].app.js',
+};
+
+if(__DEVELOPMENT__){
+  entry = {
+    main: [
+      // For hot style updates
+      'webpack/hot/dev-server',
+
+      // The script refreshing the browser on none hot updates
+      `webpack-dev-server/client?http://localhost:${APP_PORT}`,
+
+      path.resolve(process.cwd(), 'js', 'app.js'),
+    ],
+
+    vendors
+  };
+
+  output = {
+    filename: '[hash].app.js',
+    path: '/',
+    publicPath: '/js/',
+    chunkFilename: '[id].[chunkhash].app.js',
+  };
+}
+
 // Serve the Relay app
 const compiler = webpack({
-  debug: __DEV__,
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'cheap-module-source-map',
-  entry: [
-
-    // For hot style updates
-    'webpack/hot/dev-server',
-
-    // The script refreshing the browser on none hot updates
-    `webpack-dev-server/client?http://localhost:${APP_PORT}`,
-
-    path.resolve(process.cwd(), 'js', 'app.js')
-  ],
+  debug: __DEVELOPMENT__,
+  devtool: __DEVELOPMENT__ ? 'cheap-module-eval-source-map' : 'cheap-module-source-map',
+  entry,
   module: {
     loaders: [
       {
@@ -86,26 +137,40 @@ const compiler = webpack({
         query: {
           presets: ["es2015", "stage-0", "react"],
           plugins: [
-            './build/babelRelayPlugin',
+            path.resolve(__dirname, 'build', 'babelRelayPlugin'),
             'transform-decorators-legacy',
-            ['babel-plugin-module-map', assign({}, require('fbjs/module-map'), {
+            ['babel-plugin-module-map', { ...require('fbjs/module-map'),
               React: 'react',
               ReactDOM: 'react-dom',
-            })],
+            }],
             ['react-intl', {
-              messagesDir: "./build/messages/",
-              enforceDescriptions: true
+              messagesDir: path.resolve(process.cwd(), 'build', 'messages'),
+              enforceDescriptions: false
             }],
           ],
           cacheDirectory: true,
           env: {
             production: {
-              plugins: ["transform-react-constant-elements"],
+              plugins: [
+                "transform-react-constant-elements",
+                // "transform-react-inline-elements",
+              ],
             }
           },
         },
         test: /\.js$/,
       },
+
+      { test: /\.css$/, loader: "style-loader!css-loader" },
+      { test: /\.less$/, loader: "style-loader!css-loader!less-loader" },
+
+      { test: /\.gif$/, loader: "url-loader?mimetype=image/png" },
+      { test: /\.woff(2)?(\?v=[0-9].[0-9].[0-9])?$/, loader: "url-loader?mimetype=application/font-woff" },
+      { test: /\.(ttf|eot|svg)(\?v=[0-9].[0-9].[0-9])?$/, loader: "file-loader?name=[name].[ext]" },
+
+      { test: /\.(png)$/, loader: 'url-loader?limit=100000' },
+
+      { test: /\.jpg$/, loader: "file-loader" },
 
       {
         exclude: /node_modules/,
@@ -117,85 +182,107 @@ const compiler = webpack({
         test: /\.scss$/,
         loader: ExtractTextPlugin.extract('style', 'css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!sass')
       },
+
     ]
   },
-  output: {
-    filename: 'app.js',
-    path: '/',
-    publicPath: '/js/',
-    chunkFilename: '[id].app.js',
-  },
+  output,
   plugins,
 });
-const app = new WebpackDevServer(compiler, {
-  contentBase: '/public/',
-  proxy: {'/graphql': `http://localhost:${GRAPHQL_PORT}`},
-  publicPath: '/js/',
 
-  // Configure hot replacement
-  hot: __DEV__,
+function setup(server){
+  server || (server = express());
 
-  // The rest is terminal configurations
-  quiet: false,
-  noInfo: false,
-  stats: {colors: true},
+  server.use(locale(SUPPORTED_LOCALES));
 
-  setup(server){
-    __DEV__ || server.use(require('compression')({}));
+  __DEVELOPMENT__ || server.use(require('compression')({}));
 
-    // use morgan to log requests to the console
-    __DEV__ && server.use(morgan('combined', {}));
+  // use morgan to log requests to the console
+  __DEVELOPMENT__ && server.use(morgan('combined', {}));
 
-    // ---------------------------------------------------------
-    // get an instance of the router for auth routes
-    // ---------------------------------------------------------
-    const authRoutes = express.Router();
+  function getAssets(){
+    const fileData = require("fs").readFileSync(
+      path.resolve(process.cwd(), "webpack-assets.json"), 'utf8');
+    return JSON.parse(fileData);
+  }
 
-    authRoutes.use(bodyParser.urlencoded({ extended: false }));
+  // Rendering
 
-    // ---------------------------------------------------------
-    // authentication (no middleware necessary since this isn't authenticated)
-    // ---------------------------------------------------------
-    authRoutes.post('/login', function(req, res) {
+  server.set('views', path.resolve(process.cwd(), 'public'));
+  server.set('view engine', 'html');
 
-      if(!req.body.email){
-        res.status(400).send({
-          ok: false,
-          message: 'Username required!',
-        });
-        return;
-      }
+  server.engine('html', require('ejs').renderFile);
 
-      // find the user
-      logIn(req.body.email, function(err, user) {
+  // Serve static resources
 
-        if (err) {
-          res.json({ ok: false, message: 'Authentication failed. User not found.' });
-          return;
-        }
+  [ '/', '/index.html', '/apps*', '/login', '/account', '/reset', ].forEach(function(path){
+    server.get(path, function(req, res) {
 
-        // create a token
-        jwtSign(user, process.env.APP_SECRET, {
-          // expiresIn: 24 * 60 * 60 // expires in 24 hours
-        }, token => {
-
-          res.json({
-            ok: true,
-            message: 'Enjoy your token!',
-            token,
-          });
-        });
-
+      res.render('index', {
+        dev: __DEVELOPMENT__,
+        assets: getAssets(),
+        port: APP_PORT,
+        locale: req.locale,
       });
+
+    });
+  });
+
+  [ 'css', 'js', ].forEach(function(p){
+    server.use('/' + p, express.static(path.resolve(process.cwd(), 'public', p)));
+  });
+
+  return server;
+}
+
+function createApp(cb){
+
+  if(__DEVELOPMENT__){
+    const app = new WebpackDevServer(compiler, {
+      contentBase: '/public/',
+      publicPath: '/js/',
+
+      // Configure hot replacement
+      hot: true,
+
+      // Set this as true if you want to access dev server from arbitrary url.
+      // This is handy if you are using a html5 router.
+      historyApiFallback: false,
+
+      // The rest is terminal configurations
+      quiet: false,
+      noInfo: false,
+      stats: {colors: true},
+
+      setup
     });
 
-    server.use('/auth', authRoutes);
-
+    return cb(app);
   }
-});
 
-// Serve static resources
-app.use('/', express.static(path.resolve(process.cwd(), 'public')));
-app.listen(APP_PORT, () => {
-  console.log(`App is now running on http://localhost:${APP_PORT}`);
+  compiler.run(function(err, stats) {
+    if(err) throw err;
+
+    if(stats.hasErrors()) {
+      console.log(stats.toString({colors: true}));
+      return;
+    }
+
+    console.log('webpack: bundle is now VALID.');
+
+    const app = setup();
+
+    cb(app);
+  });
+}
+
+createApp(function (app){
+
+  app.listen(APP_PORT, (err) => {
+
+    if(err) {
+      throw err;
+    }
+
+    console.log(`App is now running on http://localhost:${APP_PORT}`);
+  });
 });

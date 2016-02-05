@@ -1,15 +1,349 @@
-body{
-    padding-top: 20px;
-    padding-bottom: 20px;
+@import "spinner.css";
+@import "progress.css";
+@import "react-datepicker.css";
+@import "fixed-data-table.css";
+@import "table-overrides.css";
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+html {
+    height: 100%;
+}
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
 #root{
-    position: absolute;
+    /*min-height: 100%;*/
+    min-height: 100vh;
+    background: #fdfafb;
+}
 
-    left: 0;
-    right: 0;
-    top: 0;
+a {
+    color: #169cee;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+footer{
+    position: absolute;
     bottom: 0;
 }
 
+.dashboard-wrapper {
+    height: 100%;
+    margin: auto;
+    max-width: 1440px;
+}
+
+.app-wrapper {
+    /*position: relative;*/
+    top: 0;
+    height: 100%;
+}
+
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.md-48 { font-size: 48px; }
+
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+.material-icons.md-light { color: rgba(255, 255, 255, 1); }
+.material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+.unselectable {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.modal-footer>* {
+    margin: 0 12px 0 0;
+    margin-top: 0px;
+    margin-right: 12px;
+    margin-bottom: 0px;
+    margin-left: 0px;
+}
+
+.modal .subtitle, .modal .title  {
+    position: absolute;
+    color: #fff;
+    left: 28px;
+
+}
+.modal .title {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.modal .subtitle, .modal .title {
+    position: absolute;
+    color: #fff;
+    left: 28px;
+}
+
+.modal .subtitle {
+    font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    top: 49px;
+}
+
+.modal-header {
+    background: #169cee;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+
+    padding: 15px;
+    border-bottom: none;
+
+    transition: background .3s ease;
+    height: 90px;
+}
+
+.valid .modal-header {
+    background: #00db7c;
+}
+
+.green {
+    color: #00db7c;
+    border-color: #00db7c;
+}
+
+.green.btn-primary {
+    border-color: #00db7c;
+    background-color: #00db7c;
+    color: #fff;
+}
+
+.modal-footer {
+    background: #fff;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+
+    text-align: right;
+    border-top: 1px solid #e5e5e5;
+    padding: 17px 28px;
+}
+
+.journal-form .modal-footer{
+    padding: 12px 28px;
+}
+
+.journal-form *{
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+.journal-form .modal-header{
+    height: 60px;
+}
+
+.modal-content{
+    background: #1e3b4d;
+    border: none;
+}
+
+.modal-body {
+    background: #ffffff;
+    padding: 0;
+}
+
+.modal-dialog{
+    display:table;
+    pointer-events:none;
+}
+.modal-content {
+    /* To center vertically */
+    display: table-cell;
+    vertical-align: middle;
+    pointer-events:none;
+}
+.modal-content {
+    /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+    width:inherit;
+    height:inherit;
+    /* To center horizontally */
+    margin: 0 auto;
+    pointer-events:all;
+}
+
+.btn{
+    min-width: 110px;
+    padding: 0 16px;
+    border-radius: 5px;
+    line-height: 28px;
+    height: 30px;
+}
+
+.content {
+    margin-left: 300px;
+    transition: margin-left .5s ease-in;
+}
+
+.home.loading .content{
+    margin-left: 0;
+}
+
+.index {
+    background: #1e3b4d;
+    min-height: 100vh;
+}
+
+.index {
+    padding: 38px 30px;
+}
+
+.header {
+    position: relative;
+    padding-bottom: 10px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.header input.search::-webkit-input-placeholder { color:#788c97; }
+.header input.search:-moz-placeholder { color:#788c97; } /* FF 4-18 */
+.header input.search::-moz-placeholder { color:#788c97; } /* FF 19+ */
+.header input.search:-ms-input-placeholder { color:#788c97; } /* IE 10+ */
+
+body.fonts_loaded .create {
+    font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.create {
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    position: absolute;
+    top: -2px;
+    right: 0;
+    height: 24px;
+    line-height: 24px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: 5px;
+    color: #fff;
+    background: #169cee;
+}
+
+body.fonts_loaded .search {
+    font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.search {
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    background: transparent;
+    border: none;
+    color: #fff;
+    outline: none;
+    font-size: 14px;
+    vertical-align: top;
+    margin-left: 10px;
+    width: 25%;
+}
+
+.apps {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.apps li:hover {
+    background: #172c3b;
+}
+
+ul {
+    list-style: none;
+}
+
+.apps li {
+    display: block;
+    cursor: pointer;
+    background: #193040;
+    border-radius: 5px;
+    margin: 14px 0;
+    padding: 0 9px;
+    height: 80px;
+}
+
+.icon {
+    display: block;
+    float: left;
+    width: 56px;
+    height: 56px;
+    margin-top: 9px;
+    margin-right: 15px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.details {
+    padding: 9px 0;
+    color: #788c97;
+    font-size: 12px;
+}
+
+.inline-block{
+    display: inline-block;
+}
+
+.appname {
+    display: inline-block;
+    font-size: 22px;
+    color: #fff;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ago {
+    color: #fff;
+}
+
+.form input:focus::-webkit-input-placeholder { color:transparent; }
+.form input:focus:-moz-placeholder { color:transparent; } /* FF 4-18 */
+.form input:focus::-moz-placeholder { color:transparent; } /* FF 19+ */
+.form input:focus:-ms-input-placeholder { color:transparent; } /* IE 10+ */
+
+::selection {
+    color: #fff;
+    background: #169cee;
+}
+
+.btn{
+    outline: 0!important;
+}
+
+.text-center{
+    text-align: center;
+}
+
+.select-dropdown .dropdown-menu{
+    top: -1px;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    max-height: 200px;
+    border: 1px solid #169cee;
+    background: #fff;
+    overflow: auto;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    width: 300px;
+    border-top: none;
+}
 

@@ -1,0 +1,243 @@
+.button:focus, .button:hover, .btn-primary {
+  background-color: #169cee;
+  border-color: #169cee;
+  color: #fff;
+}
+
+.button {
+  outline: 0;
+}
+
+.button.sm {
+  padding: .25rem .75rem;
+  font-size: .875rem;
+  line-height: 1.5;
+
+  background: #eeeeee;
+  border-color: #eeeeee;
+  border-radius: 0;
+  color: #159cee;
+}
+
+.button.sm:hover, .button.sm:focus {
+  background: #dddddd;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.error {
+  background: #f9f9fa;
+  height: 50px;
+  line-height: 50px;
+  overflow: hidden;
+  font-size: 13px;
+  color: #ff395e;
+
+  border-top: 1px solid #e3e3e3;
+  text-align: center;
+}
+
+.modal :global(.modal-header), .modal :global(.modal-footer) {
+  border-radius: 0;
+}
+
+.modal :global(.modal-footer) {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin-bottom: 0;
+
+  transition: height .5s ease-in;
+}
+
+.modal :global(.modal-body) {
+}
+
+.modal :global(.modal-dialog) {
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+
+  margin: 0;
+  padding: 0;
+}
+
+.modal :global(.modal-content) {
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+
+  margin: 0;
+  padding: 0;
+}
+
+.icon {
+  position: absolute;
+  right: 28px;
+  width: 36px;
+  height: 36px;
+  text-align: center;
+  border-radius: 100%;
+  background: rgba(0, 0, 0, .3);
+}
+
+.icon i {
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.subtitle, .title {
+  position: absolute;
+  color: #fff;
+  left: 28px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.datepicker {
+  border-radius: 0;
+  display: inline-block;
+  margin-left: 10px;
+}
+
+.datepicker :global(.rw-input):focus{
+   // border-color: #00d6b2;
+}
+
+.row {
+  border-bottom: 1px solid #c7c7c7;
+  cursor: pointer;
+
+  color: #000;
+}
+
+.row.isDragging {
+  //border-bottom-width: 2px;
+  //border-bottom-color: #b0d629;
+  border-bottom: 2px solid #b0d629;
+}
+
+.row.row-is-editing{
+  background-color: #fff;
+  padding: 2px 0;
+  // border-bottom: 2px solid #c7c7c7;
+  // border-left: 2px solid #c7c7c7;
+  // border-right: 2px solid #c7c7c7;
+  box-shadow: 0 0 5px #969696;
+  // height: 50px!important;
+
+  border: 1px solid #c7c7c7;
+
+  // width: 97%!important;
+  width: 100.1% !important;
+  // height: 50px!important;
+}
+
+.invalid {
+  font-weight: 800;
+  color: #d9534f;
+}
+
+.row.row-is-editing.first-row{
+  border-top-width: 0;
+}
+
+.row:not(.row-is-editing) :global(.fixedDataTableCellLayout_main.public_fixedDataTableCell_main) {
+  border-color: #c7c7c7;
+  border-style: dotted;
+  border-bottom: 1px solid #c7c7c7;
+}
+
+.row.row-is-editing :global(.fixedDataTableCellLayout_main.public_fixedDataTableCell_main) {
+  border: none;
+  background-color: #fff!important;
+}
+
+.journal-form.dragging .row.isDragging :global(.fixedDataTableCellLayout_main),
+.journal-form.dragging .row.not-isDragging :global(.fixedDataTableCellLayout_main){
+  background-color: #ffffff;
+}
+
+.journal-form:not(.dragging) .row:hover :global(.fixedDataTableCellLayout_main){
+  background-color: #f3f8fe;
+}
+
+:global .datepicker__input-container {
+  display: inline-block;
+  margin-left: 10px;
+}
+
+.date {
+  font-weight: 700;
+}
+
+.align-Left {
+  text-align: left;
+}
+
+.align-Right {
+  text-align: right;
+}
+
+.align-Center {
+  text-align: center;
+}
+
+.dragHandle {
+  width: 16px;
+  cursor: move;
+  background-position: -9px -2407px;
+  margin: auto;
+  height: 16px;
+  background-size: 120px;
+}
+
+.editHandle{
+  height: 25px;
+  background-color: white;
+  vertical-align: middle;
+  background-size: 40px;
+  background-position: 6px -318px;
+}
+
+.tertiary-sprite {
+  background-repeat: no-repeat;
+  background-image: url(../images/sprite.svg) !important;
+}
+
+.secondary-color-sprite {
+  background-repeat: no-repeat;
+  background-image: url(../images/secondary-color-sprite.svg) !important;
+}
+
+.deleteColumn {
+  width: 16px;
+  cursor: pointer;
+  background-position: 0 -330px;
+  margin: auto;
+  height: 16px;
+  background-size: 66px;
+}

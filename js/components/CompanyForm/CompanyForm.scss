@@ -1,0 +1,25 @@
+.button:focus, .button:hover, .btn-primary {
+  background-color: #169cee;
+  border-color: #169cee;
+  color: #fff;
+}
+
+.button{
+  outline: 0;
+}
+
+.error {
+  background: #f9f9fa;
+  height: 50px;
+  line-height: 50px;
+  overflow: hidden;
+  font-size: 13px;
+  color: #ff395e;
+
+  border-top: 1px solid #e3e3e3;
+  text-align: center;
+}
+
+.modal :global(.modal-dialog){
+  margin-top: 10%;
+}

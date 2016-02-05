@@ -1,0 +1,30 @@
+[
+  {
+    "id": "sidebar.all-apps",
+    "defaultMessage": "All Companies"
+  },
+  {
+    "id": "sidebar.new-app",
+    "defaultMessage": "Create a new app"
+  },
+  {
+    "id": "app-dashboard-menu-item-title",
+    "defaultMessage": "Dashboard"
+  },
+  {
+    "id": "transactions-menu-item-title",
+    "defaultMessage": "Transactions"
+  },
+  {
+    "id": "accounts-menu-item-title",
+    "defaultMessage": "Chart of Accounts"
+  },
+  {
+    "id": "reports-menu-item-title",
+    "defaultMessage": "Reports"
+  },
+  {
+    "id": "app-settings-menu-item-title",
+    "defaultMessage": "Settings"
+  }
+]

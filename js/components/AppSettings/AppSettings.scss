@@ -1,0 +1,66 @@
+.page {
+  padding: 120px 0 80px;
+}
+
+.toolbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 300px;
+  background: #353446;
+  height: 96px;
+  color: #fff;
+  transition: left .5s ease-in;
+}
+
+.title {
+  position: absolute;
+  left: 14px;
+  bottom: 10px;
+}
+
+.toolbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 300px;
+  background: #353446;
+  height: 96px;
+  color: #fff;
+  transition: left .5s ease-in;
+}
+
+.title {
+  position: absolute;
+  left: 14px;
+  bottom: 10px;
+}
+
+body.fonts_loaded .section {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.section {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #757985;
+  text-transform: uppercase;
+  font-size: 8px;
+  letter-spacing: 1.6px;
+}
+
+.subsection {
+  font-size: 18px;
+  vertical-align: bottom;
+  margin-right: 10px;
+}
+
+.details {
+  color: #80848f;
+  font-size: 12px;
+}
+
+.actions {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+}

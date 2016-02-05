@@ -1,0 +1,40 @@
+[
+  {
+    "id": "forgot-page.abort-message",
+    "defaultMessage": "Never mind, go back"
+  },
+  {
+    "id": "forgot.help-message",
+    "defaultMessage": "<span>That's okay. Enter your email and we'll send</span>\n            <br/><span>you a way to reset your password.\n            </span>"
+  },
+  {
+    "id": "title.forgot",
+    "description": "",
+    "defaultMessage": "Reset your password"
+  },
+  {
+    "id": "forgot.default-forgot",
+    "description": "",
+    "defaultMessage": "amadou.cisse@epsilon.ma"
+  },
+  {
+    "id": "forgot-form.title",
+    "description": "",
+    "defaultMessage": "Reset your password"
+  },
+  {
+    "id": "forgot-page.label.email",
+    "description": "",
+    "defaultMessage": "Email"
+  },
+  {
+    "id": "error.login",
+    "description": "",
+    "defaultMessage": "You must enter a valid e-mail address."
+  },
+  {
+    "id": "forgot-page.action-reset",
+    "description": "",
+    "defaultMessage": "Reset password"
+  }
+]

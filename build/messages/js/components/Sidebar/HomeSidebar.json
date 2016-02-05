@@ -1,0 +1,12 @@
+[
+  {
+    "id": "apps-menu-item-title",
+    "description": "The title of Your Companies menu.",
+    "defaultMessage": "Your Companies"
+  },
+  {
+    "id": "account-settings-menu-item-title",
+    "description": "The title of your Account Settings menu.",
+    "defaultMessage": "Account AccountSettings"
+  }
+]
