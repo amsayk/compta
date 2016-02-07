@@ -11,10 +11,11 @@
     "node": "5.5.0"
   },
   "scripts": {
-    "clean": "rm -fr public/js/__build__ && rm -fr out",
+    "clean": "npm run clean:app && rm -fr public/js/__build__",
+    "clean:app": "rm -fr out",
     "build:schema": "node out/scripts/updateSchema.js",
     "build:langs": "node out/scripts/translate.js && mkdir -p out/build/lang && cp -r build/lang out/build/ && cp -r build/babelRelayPlugin.js out/build/",
-    "build:app": "npm run clean && mkdir -p out/data/database && mkdir -p out/scripts && babel scripts/updateSchema.js --out-dir out/ && babel scripts/translate.js --out-dir out/ && cp data/database/*.json out/data/database/ && babel data/ --out-dir out/data/ && babel server.js --out-dir out/",
+    "build:app": "npm run clean:app && mkdir -p out/data/database && mkdir -p out/scripts && babel scripts/updateSchema.js --out-dir out/ && babel scripts/translate.js --out-dir out/ && cp data/database/*.json out/data/database/ && babel data/ --out-dir out/data/ && babel server.js --out-dir out/",
     "build": "npm run build:app && npm run build:schema && npm run build:langs",
     "start": "node out/server.js"
   },
