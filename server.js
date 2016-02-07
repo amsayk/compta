@@ -52,7 +52,6 @@ const plugins = [
   new ExtractTextPlugin('[hash].app.css', {
     allChunks: true
   }),
-  new webpack.HotModuleReplacementPlugin(),
   new webpack.DefinePlugin({
     'process.env': {
       NODE_ENV: JSON.stringify(__DEVELOPMENT__ ? 'development' : 'production'),
@@ -83,6 +82,10 @@ if(!__DEVELOPMENT__){
         warnings: false,
       },
     })
+  );
+}else {
+  plugins.push(
+    new webpack.HotModuleReplacementPlugin()
   );
 }
 
@@ -259,20 +262,20 @@ function createApp(cb){
     return cb(app);
   }
 
-  compiler.run(function(err, stats) {
-    if(err) throw err;
-
-    if(stats.hasErrors()) {
-      console.log(stats.toString({colors: true}));
-      return;
-    }
-
-    console.log('webpack: bundle is now VALID.');
+  //compiler.run(function(err, stats) {
+  //  if(err) throw err;
+  //
+  //  if(stats.hasErrors()) {
+  //    console.log(stats.toString({colors: true}));
+  //    return;
+  //  }
+  //
+  //  console.log('webpack: bundle is now VALID.');
 
     const app = setup();
 
     cb(app);
-  });
+  //});
 }
 
 createApp(function (app){

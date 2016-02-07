@@ -54,6 +54,7 @@
   "action.login": "Log In",
   "reports-page.title": "Reports",
   "sidebar.all-apps": "All Companies",
+  "sidebar.new-app": "Create a new app",
   "app-dashboard-menu-item-title": "Dashboard",
   "transactions-menu-item-title": "Transactions",
   "accounts-menu-item-title": "Chart of Accounts",
@@ -84,6 +85,5 @@
   "journal-page.subtitle": "Journal",
   "app.title": "Compta • Accounting Manager",
   "error.required": "Required",
-  "error.invalid-email": "Invalid email address",
-  "sidebar.new-app": "Create a new company"
+  "error.invalid-email": "Invalid email address"
 }
