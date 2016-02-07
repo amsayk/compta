@@ -6,6 +6,4 @@ data/schema.graphql
 
 /*.env
 
-out
-
 BACKUP

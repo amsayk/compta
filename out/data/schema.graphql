@@ -1,0 +1,213 @@
+type Account implements Node {
+  id: ID!
+  code: String!
+  name: String!
+  operations(after: String, first: Int, before: String, last: Int): AccountOperationsConnection
+  period: String!
+  periodType: PeriodType!
+}
+
+type AccountOperationsConnection {
+  pageInfo: PageInfo!
+  edges: [AccountOperationsEdge]
+  totalCount: Int
+}
+
+type AccountOperationsEdge {
+  node: Operation
+  cursor: String!
+}
+
+input AddCompanyInput {
+  sessionToken: String!
+  id: ID
+  displayName: String!
+  periodType: PeriodType!
+  clientMutationId: String!
+}
+
+type AddCompanyPayload {
+  companyEdge: UserCompaniesEdge
+  root: Query
+  clientMutationId: String!
+}
+
+type ChartAccount implements Node {
+  id: ID!
+  code: String!
+  name: String!
+  _classCode: String!
+  _categoryCode: String!
+  _groupCode: String!
+  _parentCode: String
+}
+
+type Company implements Node {
+  id: ID!
+  periodType: PeriodType!
+  displayName: String!
+  lastSeqNr: Int!
+  transactions(period: String!, after: String, first: Int, before: String, last: Int): CompanyTransactionsConnection
+  accounts(period: String!, after: String, first: Int, before: String, last: Int): CompanyAccountsConnection
+  createdAt: String
+  updatedAt: String
+  user: User
+}
+
+type CompanyAccountsConnection {
+  pageInfo: PageInfo!
+  edges: [CompanyAccountsEdge]
+  totalCount: Int
+}
+
+type CompanyAccountsEdge {
+  node: Account
+  cursor: String!
+}
+
+type CompanyTransactionsConnection {
+  pageInfo: PageInfo!
+  edges: [CompanyTransactionsEdge]
+  totalCount: Int
+}
+
+type CompanyTransactionsEdge {
+  node: Transaction
+  cursor: String!
+}
+
+input LogInInput {
+  email: String!
+  password: String
+  clientMutationId: String!
+}
+
+type LogInPayload {
+  viewer: User
+  clientMutationId: String!
+}
+
+input LogOutInput {
+  viewerId: ID!
+  clientMutationId: String!
+}
+
+type LogOutPayload {
+  viewer: User
+  clientMutationId: String!
+}
+
+type Mutation {
+  addCompany(input: AddCompanyInput!): AddCompanyPayload
+  removeCompany(input: RemoveCompanyInput!): RemoveCompanyPayload
+  logIn(input: LogInInput!): LogInPayload
+  logOut(input: LogOutInput!): LogOutPayload
+}
+
+interface Node {
+  id: ID!
+}
+
+type Operation implements Node {
+  id: ID!
+  index: String!
+  accountCode: String!
+  type: OperationKind!
+  amount: Float!
+  transaction: Transaction
+  date: String!
+  description: String
+  period: String!
+  periodType: PeriodType!
+  createdAt: String
+  updatedAt: String
+  user: User
+}
+
+enum OperationKind {
+  DEBIT
+  CREDIT
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+enum PeriodType {
+  MONTHLY
+  TRIMESTERLY
+}
+
+type Query {
+  node(id: ID!): Node
+  id: String!
+  root: Query!
+  viewer: User
+  companies: [Company]
+  company(id: ID!): Company!
+  accounts: [ChartAccount]
+}
+
+input RemoveCompanyInput {
+  sessionToken: String!
+  id: ID!
+  clientMutationId: String!
+}
+
+type RemoveCompanyPayload {
+  deletedCompanyId: ID
+  viewer: User
+  clientMutationId: String!
+}
+
+type Transaction implements Node {
+  id: ID!
+  operations(after: String, first: Int, before: String, last: Int): TransactionOperationsConnection
+  transactionNr: Int!
+  date: String!
+  memo: String
+  period: String!
+  periodType: PeriodType!
+  files: [URL!]!
+  createdAt: String
+  updatedAt: String
+  user: User
+}
+
+type TransactionOperationsConnection {
+  pageInfo: PageInfo!
+  edges: [TransactionOperationsEdge]
+  totalCount: Int
+}
+
+type TransactionOperationsEdge {
+  node: Operation
+  cursor: String!
+}
+
+scalar URL
+
+type User implements Node {
+  id: ID!
+  displayName: String
+  email: String
+  username: String
+  sessionToken: String
+  companies(after: String, first: Int, before: String, last: Int): UserCompaniesConnection
+  createdAt: String
+  updatedAt: String
+}
+
+type UserCompaniesConnection {
+  pageInfo: PageInfo!
+  edges: [UserCompaniesEdge]
+  totalCount: Int
+}
+
+type UserCompaniesEdge {
+  node: Company
+  cursor: String!
+}
