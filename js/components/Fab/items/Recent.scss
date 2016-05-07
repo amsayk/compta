@@ -1,0 +1,139 @@
+.modal{
+  font-family: HelveticaNeueRoman, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.my--Modal{
+  z-index: 2222;
+}
+
+.my--Modal :global .modal-dialog{
+  transform: translate(0,75px)!important;
+}
+
+.modal :global .modal-content{
+  border-radius: 0;
+}
+
+.flyout-view {
+  // font-family: "HelveticaNeueLight", Helvetica, Arial, sans-serif;
+  // background-color: #fff;
+  // height: auto;
+  // position: absolute;
+  // z-index: -2;
+  // color: #404040;
+  // width: 1024px;
+  // transition: all 0.3s;
+  // -webkit-transition: all 0.3s;
+  // border: 1px solid #c7c7c7;
+  // border-top: 0;
+  // top: -438px;
+  // padding-top: 20px;
+  // box-shadow: 0 0 0 9999px rgba(0,0,0,0.1);
+  // cursor: default;
+
+  font-family: "HelveticaNeueLight", Helvetica, Arial, sans-serif;
+  background-color: #fff;
+  transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+  border: 0;
+  padding-top: 20px;
+  // box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.1);
+  cursor: default;
+}
+
+.scroller {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  // transform: translate3d(0, 0, 0);
+  // -webkit-transform: translate3d(0, 0, 0);
+}
+
+.flyout-view.scroller {
+  overflow: visible;
+}
+
+.flyout-view * {
+  box-sizing: border-box;
+}
+.tableCell {
+  display: table-cell;
+  vertical-align: top;
+}
+.subsection20TitleText {
+  font-family: "HelveticaNeueLight", Helvetica, Arial, sans-serif;
+  line-height: 50px;
+  font-size: 1.5rem;
+}
+.flyout-view .title {
+  font-weight: normal;
+  padding: 10px 34px 15px 34px;
+  white-space: normal;
+  line-height: 28px;
+}
+
+.flyout-view .flyout-header {
+  position: absolute;
+  top: -10px;
+  left: -1px;
+  height: 10px;
+  background-color: #264a6d;
+  border-left: 1px solid #264a6d;
+  border-right: 1px solid #264a6d;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  box-sizing: content-box;
+  width: 100%;
+}
+
+.width100Percent {
+  width: 100%;
+}
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+.tableRow {
+  display: table-row;
+  vertical-align: top;
+}
+
+.flyout-view .flyout-section .tableCell:not(.mainSettingsSection):not(.subsection20TitleText):not(.mini) {
+  // padding-left: 19px;
+  padding-left: 34px;
+}
+
+.flyout-view .subTitle {
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  padding-left: 15px;
+  font-size: 1rem;
+  font-weight: normal;
+}
+.flyout-view .flyout-section ul {
+  list-style: none;
+  margin-top: 10px;
+  padding: 0;
+}
+.flyout-view .flyout-section ul li {
+  cursor: pointer;
+  line-height: 1.5em;
+}
+
+.flyout-view .flyout-section ul li a {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  padding: 6px 15px;
+  font-size: 0.9rem;
+  color: #404040;
+  letter-spacing: .5px;
+  display: block;
+  overflow: hidden;
+  white-space: normal;
+  text-decoration: none;
+  line-height: 1.7rem;
+}

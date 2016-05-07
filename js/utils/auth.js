@@ -2,22 +2,24 @@ import Parse from 'parse';
 
 import Relay from 'react-relay';
 
-import {Schema as schema} from '../../data/schema/index';
+import {Schema as schema,} from '../../data/schema/index';
 
-import RelayLocalSchema from 'relay-local-schema';
+import RelayNetworkLayer from './RelayNetworkLayer';
 
 import LogInMutation from '../mutations/LogInMutation';
 import LogOutMutation from '../mutations/LogOutMutation';
 
-Parse.initialize(
-  process.env.APPLICATION_ID,
-  process.env.JAVASCRIPT_KEY
-);
-
 Relay.injectNetworkLayer(
-  new RelayLocalSchema.NetworkLayer({
+  new RelayNetworkLayer({
     schema,
-    onError: (errors, request) => console.error(errors, request),
+    onError(errors, request) {
+      errors.forEach(error => {
+        console.log(error.toString());
+        console.log('Source', error.source);
+        console.log('Positions', error.positions);
+        console.log('Locations', error.locations);
+      });
+    },
   })
 );
 
@@ -31,7 +33,7 @@ const auth = {
       email,
       password,
     }), {
-      onSuccess: function ({logIn: { user}}) {
+      onSuccess: function ({logIn: { user, }}) {
         cb(null, {user});
       },
       onFailure: function (transaction) {
@@ -41,11 +43,21 @@ const auth = {
   },
 
   logOut(user, cb) {
+
     Relay.Store.commitUpdate(new LogOutMutation({
-      viewerId: user.id,
+      viewer: user,
     }), {
-      onSuccess: function ({logIn: { user}}) {
-        cb(null, {user});
+      onSuccess: function () {
+
+        const login = localStorage.getItem('app.login');
+
+        localStorage.clear();
+
+        if(login){
+          localStorage.setItem('app.login', login);
+        }
+
+        cb(null);
       },
       onFailure: function (transaction) {
         cb(transaction.getError());
@@ -53,9 +65,10 @@ const auth = {
     });
   },
 
-  isLoggedIn() {
+  get isLoggedIn() {
     return !!Parse.User.current();
-  }
+  },
+
 };
 
 export default auth;

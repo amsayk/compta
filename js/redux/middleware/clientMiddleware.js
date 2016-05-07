@@ -16,7 +16,11 @@ export default function clientMiddleware() {
         (result) => next({...rest, result, type: SUCCESS}),
         (error) => next({...rest, error, type: FAILURE})
       ).catch((error)=> {
-        console.error('MIDDLEWARE ERROR:', error);
+
+        if(process.env.NODE_ENV !== 'production'){
+          console.error('MIDDLEWARE ERROR:', error);
+        }
+
         next({...rest, error, type: FAILURE});
       });
     };

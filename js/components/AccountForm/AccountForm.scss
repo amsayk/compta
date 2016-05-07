@@ -20,6 +20,10 @@
   text-align: center;
 }
 
+.modal{
+  z-index: 2223;
+}
+
 .modal :global(.modal-dialog) {
   margin-top: 10%;
 }

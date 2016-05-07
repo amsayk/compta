@@ -1,7 +1,3 @@
-/**
- *
- */
-
 import Relay from 'react-relay';
 
 export default class RemoveCompanyMutation extends Relay.Mutation {
@@ -14,6 +10,7 @@ export default class RemoveCompanyMutation extends Relay.Mutation {
     viewer: () => Relay.QL`
       fragment on User {
         id,
+        sessionToken,
       }
     `,
   };
@@ -24,10 +21,13 @@ export default class RemoveCompanyMutation extends Relay.Mutation {
     return Relay.QL`
       fragment on RemoveCompanyPayload {
         deletedCompanyId,
-        viewer {
-        },
+        viewer,
       }
     `;
+  }
+  getCollisionKey() {
+    // Give the same key to like mutations that affect the same story
+    return `update_company_${this.props.company.id}`;
   }
   getConfigs() {
     return [{

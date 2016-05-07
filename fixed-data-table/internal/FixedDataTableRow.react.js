@@ -222,12 +222,7 @@ var FixedDataTableRow = React.createClass({
     /**
      * Width of the row.
      */
-    width: PropTypes.number.isRequired,
-
-    /**
-     * The row index.
-     */
-    index: PropTypes.number.isRequired
+    width: PropTypes.number.isRequired
   },
 
   render: function render() /*object*/{
@@ -240,7 +235,7 @@ var FixedDataTableRow = React.createClass({
     };
     translateDOMPositionXY(style, 0, this.props.offsetTop);
 
-    var wrapRow = this.props.wrapRow ? this.props.wrapRow : function (Component, index, props) {
+    var renderRow = this.props.renderRow ? this.props.renderRow : function (Component, index, props) {
       return React.createElement(Component, props);
     };
 
@@ -255,7 +250,7 @@ var FixedDataTableRow = React.createClass({
       );
     };
 
-    return wrapRow(Component, this.props.index, {
+    return renderRow(Component, this.props.index, {
       style: style,
       className: cx('fixedDataTableRowLayout/rowWrapper')
     });

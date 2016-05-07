@@ -1,0 +1,129 @@
+.dropdown :global .dropdown-menu{
+  left: auto;
+  width: 275px;
+}
+
+.searchBox {
+  // margin-left: 12px;
+  width: 275px;
+}
+
+.dgrid * {
+  box-sizing: border-box !important;
+}
+.dijitInline {
+  display: inline-block;
+  border: 0;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.dijitReset {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  line-height: normal;
+  color: inherit;
+}
+
+.dijitSelect .dijitButtonText, .button{
+  outline: none;
+  height: 34px;
+  border: 1px solid #c7c7c7;
+  padding: 0 8px;
+  background-clip: border-box;
+  border-radius: 2px;
+  transition-property: border;
+  transition-duration: 0.35s;
+  font-size: 0.9rem;
+  background-color: white;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  width: 100%;
+  vertical-align: middle;
+}
+
+.dijitButtonNode {
+  border: 0 none;
+  margin: 0;
+  line-height: normal;
+  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dijitSelect, .dijitSelect *, .dijitButtonNode, .dijitButtonNode * {
+  cursor: pointer;
+}
+
+
+.dijitButtonNode {
+  transition-property: background-color;
+  transition-duration: 0.3s;
+}
+
+.dijitTextBox .dijitButtonNode {
+  border-width: 0;
+}
+
+
+.dijitSelect .dijitButtonNode, .dijitComboBox .dijitButtonNode {
+  height: 34px;
+  width: 30px;
+  display: inline-block;
+  margin-left: -30px;
+}
+
+
+.dijitComboBox.searchBox .dijitArrowButton {
+  background-repeat: no-repeat;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgb3ZlcmZsb3c9InZpc2libGUiPjxwYXRoIGZpbGw9IiM5ODk4OTgiIGQ9Ik02MS45NjEgNTIuMDk0bC0xMC45NDUtMTAuOTM4Yy0xLjgyMi0xLjgyLTQuMzkxLTIuMzk4LTYuNzEzLTEuNzg1bC0yLjk5Ni0yLjk5NmMyLjg2OS0zLjg5OCA0LjQ4Mi04LjU0NyA0LjQ4Ni0xMy40OCAwLTYuMTEzLTIuMzg1LTExLjg2My02LjcwOS0xNi4xOTEtNC4zMjYtNC4zMjEtMTAuMDc3LTYuNzA0LTE2LjE5NS02LjcwNC02LjExOSAwLTExLjg3MSAyLjM4My0xNi4xOTIgNi43MDMtOC45MjggOC45MjYtOC45MzIgMjMuNDUzIDAgMzIuMzc5IDQuMzIgNC4zMjggMTAuMDcyIDYuNzA3IDE2LjE5MSA2LjcwNyA0LjkzMyAwIDkuNTg4LTEuNjEzIDEzLjQ4OC00LjQ4NGwyLjk5NCAzYy0uNjExIDIuMzI0LS4wMzkgNC44OTUgMS43NzkgNi43MTFsMTAuOTQ1IDEwLjk0MWMxLjM2NSAxLjM2MyAzLjE1IDIuMDQzIDQuOTMxIDIuMDQzIDEuNzg1IDAgMy41NzItLjY4IDQuOTM2LTIuMDQzIDIuNzE5LTIuNzIzIDIuNzE5LTcuMTQxIDAtOS44NjN6bS01MC4zMzQtMTcuOTQyYy02LjIxOS02LjIxOS02LjIxOS0xNi4zMDEgMC0yMi41MiAzLjExMS0zLjEwOSA3LjE4Ni00LjY2IDExLjI2Mi00LjY2IDQuMDc0IDAgOC4xNSAxLjU1MSAxMS4yNjQgNC42NiA2LjIxNyA2LjIxOSA2LjIxNyAxNi4zMDUtLjAwNCAyMi41Mi0zLjExIDMuMTA5LTcuMTg2IDQuNjY4LTExLjI2IDQuNjY4LTQuMDc3IDAtOC4xNTEtMS41NTgtMTEuMjYyLTQuNjY4eiIvPjwvc3ZnPg==");
+  background-size: 18px;
+  background-position: 4px 8px;
+}
+
+.dijitSelect, .dijitSelect *, .dijitButtonNode, .dijitButtonNode * {
+  cursor: pointer;
+}
+
+.dijitButtonNode * {
+  vertical-align: middle;
+}
+
+.dijitComboBox.searchBox .dijitArrowButton .dropDownImage {
+  display: none;
+}
+.dijitSelect .dijitDownArrowButton .dropDownImage, .dijitComboBox .dijitDownArrowButton .dropDownImage {
+  margin: 10px 0 0 10px;
+}
+
+.dijitSelect .dijitDownArrowButton .dropDownImage:before, .dijitComboBox .dijitDownArrowButton .dropDownImage:before {
+  display: inline-block;
+  width: 0 !important;
+  height: 0 !important;
+  vertical-align: middle;
+  border-bottom: 5px solid #404040;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+  background-color: transparent;
+  display: block;
+  margin-bottom: 2px;
+  border-bottom-color: #193048;
+}
+
+.dijitSelect .dijitDownArrowButton .dropDownImage:after, .dijitComboBox .dijitDownArrowButton .dropDownImage:after {
+  display: inline-block;
+  width: 0 !important;
+  height: 0 !important;
+  vertical-align: middle;
+  border-top: 5px solid #404040;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+  background-color: transparent;
+  display: block;
+  margin-top: 2px;
+  border-top-color: #193048;
+}

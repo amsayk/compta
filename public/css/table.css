@@ -1,0 +1,213 @@
+@media print {
+  .myTable {
+    border-collapse: collapse !important;
+  }
+  .myTable td,
+  .myTable th {
+    background-color: #fff !important;
+  }
+  .myTable-bordered th,
+  .myTable-bordered td {
+    border: 1px solid #ddd !important;
+  }
+}
+
+.myTable {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 1rem;
+}
+
+.myTable th,
+.myTable td {
+  padding: .75rem;
+  line-height: 1.5;
+  vertical-align: top;
+  border-top: 1px solid #eceeef;
+}
+
+.myTable thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid #eceeef;
+}
+
+.myTable tbody + tbody {
+  border-top: 2px solid #eceeef;
+}
+
+.myTable .myTable {
+  background-color: #fff;
+}
+
+.myTable-sm th,
+.myTable-sm td {
+  padding: .3rem;
+}
+
+.myTable-bordered {
+  border: 1px solid #eceeef;
+}
+
+.myTable-bordered th,
+.myTable-bordered td {
+  border: 1px solid #eceeef;
+}
+
+.myTable-bordered thead th,
+.myTable-bordered thead td {
+  border-bottom-width: 2px;
+}
+
+.myTable-striped tbody tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+
+.myTable-hover tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+.myTable-active,
+.myTable-active > th,
+.myTable-active > td {
+  background-color: #f5f5f5;
+}
+
+.myTable-hover .myTable-active:hover {
+  background-color: #e8e8e8;
+}
+
+.myTable-hover .myTable-active:hover > td,
+.myTable-hover .myTable-active:hover > th {
+  background-color: #e8e8e8;
+}
+
+.myTable-success,
+.myTable-success > th,
+.myTable-success > td {
+  background-color: #dff0d8;
+}
+
+.myTable-hover .myTable-success:hover {
+  background-color: #d0e9c6;
+}
+
+.myTable-hover .myTable-success:hover > td,
+.myTable-hover .myTable-success:hover > th {
+  background-color: #d0e9c6;
+}
+
+.myTable-info,
+.myTable-info > th,
+.myTable-info > td {
+  background-color: #d9edf7;
+}
+
+.myTable-hover .myTable-info:hover {
+  background-color: #c4e3f3;
+}
+
+.myTable-hover .myTable-info:hover > td,
+.myTable-hover .myTable-info:hover > th {
+  background-color: #c4e3f3;
+}
+
+.myTable-warning,
+.myTable-warning > th,
+.myTable-warning > td {
+  background-color: #fcf8e3;
+}
+
+.myTable-hover .myTable-warning:hover {
+  background-color: #faf2cc;
+}
+
+.myTable-hover .myTable-warning:hover > td,
+.myTable-hover .myTable-warning:hover > th {
+  background-color: #faf2cc;
+}
+
+.myTable-danger,
+.myTable-danger > th,
+.myTable-danger > td {
+  background-color: #f2dede;
+}
+
+.myTable-hover .myTable-danger:hover {
+  background-color: #ebcccc;
+}
+
+.myTable-hover .myTable-danger:hover > td,
+.myTable-hover .myTable-danger:hover > th {
+  background-color: #ebcccc;
+}
+
+.myTable-responsive {
+  display: block;
+  width: 100%;
+  min-height: .01%;
+  overflow-x: auto;
+}
+
+.thead-inverse th {
+  color: #fff;
+  background-color: #373a3c;
+}
+
+.thead-default th {
+  color: #55595c;
+  background-color: #eceeef;
+}
+
+.myTable-inverse {
+  color: #eceeef;
+  background-color: #373a3c;
+}
+
+.myTable-inverse.myTable-bordered {
+  border: 0;
+}
+
+.myTable-inverse th,
+.myTable-inverse td,
+.myTable-inverse thead th {
+  border-color: #55595c;
+}
+
+.myTable-reflow thead {
+  float: left;
+}
+
+.myTable-reflow tbody {
+  display: block;
+  white-space: nowrap;
+}
+
+.myTable-reflow th,
+.myTable-reflow td {
+  border-top: 1px solid #eceeef;
+  border-left: 1px solid #eceeef;
+}
+
+.myTable-reflow th:last-child,
+.myTable-reflow td:last-child {
+  border-right: 1px solid #eceeef;
+}
+
+.myTable-reflow thead:last-child tr:last-child th,
+.myTable-reflow thead:last-child tr:last-child td,
+.myTable-reflow tbody:last-child tr:last-child th,
+.myTable-reflow tbody:last-child tr:last-child td,
+.myTable-reflow tfoot:last-child tr:last-child th,
+.myTable-reflow tfoot:last-child tr:last-child td {
+  border-bottom: 1px solid #eceeef;
+}
+
+.myTable-reflow tr {
+  float: left;
+}
+
+.myTable-reflow tr th,
+.myTable-reflow tr td {
+  display: block !important;
+  border: 1px solid #eceeef;
+}

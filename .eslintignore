@@ -1,4 +1,4 @@
 **/node_modules/
-lib/
-scripts/
 *.md
+out
+fixed-data-table

@@ -1,0 +1,78 @@
+.link-combo-button {
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.action:not(.has-menu), .action.has-menu{
+  display: inherit;
+  padding-right: 12px;
+}
+
+.link-combo-button [type=button] {
+  font-size: 0.9rem;
+}
+.link-combo-button .combo-button-main {
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  // text-align: left;
+}
+.link-combo-button button {
+  background-image: none;
+  background-color: transparent;
+  height: 18px;
+  padding: 0;
+  line-height: 18px;
+  margin: 0;
+  box-shadow: none;
+  vertical-align: middle;
+  border: none;
+  min-width: 20px;
+
+  white-space: nowrap;
+  background-clip: padding-box;
+  border-radius: 2px;
+  font-family: 'HelveticaNeueRoman', Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  color: #365ebf;
+}
+
+.link-combo-button .combo-button-main:hover {
+  text-decoration: underline;
+}
+
+.link-combo-button .combo-button-toggle {
+  border-left: 1px solid #c7c7c7;
+  margin-left: 5px;
+  left: 0;
+}
+
+.link-combo-button .combo-button-toggle:hover,
+.link-combo-button .combo-button-toggle:active, .link-combo-button .combo-button-toggle.active,
+.link-combo-button .combo-button-toggle.dijitHasDropDownOpen {
+  background-color: #3668d3;
+}
+
+.link-combo-button .combo-button-toggle:hover:after,
+.link-combo-button .combo-button-toggle.hover:after,
+.link-combo-button .combo-button-toggle:active:after,
+.link-combo-button .combo-button-toggle.active:after,
+.link-combo-button .combo-button-toggle.dijitHasDropDownOpen:after {
+  border-top-color: #fff;
+}
+.link-combo-button .combo-button-toggle:after {
+  display: inline-block;
+  width: 0 !important;
+  height: 0 !important;
+  vertical-align: middle;
+  border-top: 6px solid #404040;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  content: "";
+  background-color: transparent;
+  margin-left: 5px;
+  margin-right: 5px;
+}

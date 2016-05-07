@@ -1,13 +1,20 @@
+.apps a:hover,
+.apps a:focus {
+  color: #fff!important;
+}
+
 .table .empty {
   top: 126px;
 }
 
 .empty {
   position: fixed;
-  left: 300px;
+  left: 225px;
   top: 0;
   bottom: 0;
   right: 0;
+
+  background: #1e3b4d;
 }
 
 .center {
@@ -52,7 +59,7 @@ body.fonts_loaded .description {
 .glance {
   float: right;
   width: 340px;
-  padding: 10px 12px;
+  padding: 4px 12px;
   border-left: 1px solid #1e3b4d;
   border-right: 1px solid #1e3b4d;
 }
@@ -104,6 +111,6 @@ body.fonts_loaded .edit {
 .plan {
   float: right;
   width: 300px;
-  padding: 10px 12px;
+  padding: 4px 12px;
   position: relative;
 }

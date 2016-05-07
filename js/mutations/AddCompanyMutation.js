@@ -1,14 +1,11 @@
-/**
- *
- */
-
 import Relay from 'react-relay';
 
 export default class AddCompanyMutation extends Relay.Mutation {
   static fragments = {
-    root: () => Relay.QL`
-      fragment on Query {
+    viewer: () => Relay.QL`
+      fragment on User {
         id,
+        sessionToken,
       }
     `,
   };
@@ -19,7 +16,7 @@ export default class AddCompanyMutation extends Relay.Mutation {
     return Relay.QL`
       fragment on AddCompanyPayload {
         companyEdge,
-        root {
+        viewer {
           id,
           companies,
         },
@@ -29,19 +26,19 @@ export default class AddCompanyMutation extends Relay.Mutation {
   getConfigs() {
     return [{
       type: 'RANGE_ADD',
-      parentName: 'root',
-      parentID: this.props.root.id,
+      parentName: 'viewer',
+      parentID: this.props.viewer.id,
       connectionName: 'companies',
       edgeName: 'companyEdge',
       rangeBehaviors: {
-        '': 'append',
+        '': 'prepend',
       },
     }, {
       type: 'REQUIRED_CHILDREN',
       // Forces these fragments to be included in the query
       children: [Relay.QL`
         fragment on AddCompanyPayload {
-          companyEdge
+          companyEdge,
         }
       `],
     },];
@@ -54,18 +51,19 @@ export default class AddCompanyMutation extends Relay.Mutation {
     };
   }
   getOptimisticResponse() {
-    return {
-      // FIXME: totalCount gets updated optimistically, but this edge does not
-      // get added until the server responds
-      companyEdge: {
-        node: {
-          displayName: this.props.displayName,
-          periodType: this.props.periodType,
-        },
-      },
-      root: {
-        id: this.props.root.id,
-      },
-    };
+    return null;
+    // return {
+    //   // FIXME: totalCount gets updated optimistically, but this edge does not
+    //   // get added until the server responds
+    //   companyEdge: {
+    //     node: {
+    //       displayName: this.props.displayName,
+    //       periodType: this.props.periodType,
+    //     },
+    //   },
+    //   viewer: {
+    //     id: this.props.viewer.id,
+    //   },
+    // };
   }
 }

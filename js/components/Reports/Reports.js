@@ -15,10 +15,7 @@ import {
   intlShape,
 } from 'react-intl';
 
-const Title = (company) => ({
-  id: 'reports-page.displayName',
-  defaultMessage: company.displayName,
-});
+const Title = (company) => company.displayName;
 
 const messages = defineMessages({
 
@@ -30,41 +27,43 @@ const messages = defineMessages({
 });
 
 @CSSModules(styles, {allowMultiple: true})
-class Dashboard extends Component {
+class Reports extends Component {
   static contextTypes = {
     intl: intlShape.isRequired,
   };
 
   render() {
+    const { route, viewer, company, companies, } = this.props;
     const {formatMessage,} = this.context.intl;
     return (
-      <div className="">
+      <div className=''>
 
         <Sidebar
-          viewer={this.props.viewer}
-          company={this.props.company}
-          companies={this.props.companies}
-          root={this.props.root}
-          page="/reports"
+          route={route}
+          viewer={viewer}
+          company={company}
+          companies={companies.edges.map(({ node: company, }) => company)}
+          viewer={viewer}
+          page='/reports'
         />
 
-          <div className="content">
+          <div className='content'>
 
-            <div styleName="page">
+            <div styleName='page'>
 
-              <div styleName="toolbar">
+              <div styleName='toolbar'>
 
-                <div styleName="title">
-                  <div styleName="section">{formatMessage(Title(this.props.company))}</div>
+                <div styleName='title'>
+                  <div styleName='section'>{Title(company)}</div>
 
                   <div>
-                    <span styleName="subsection">{formatMessage(messages.Subtitle)}</span>
-                    <span styleName="details"></span>
+                    <span styleName='subsection'>{formatMessage(messages.Subtitle)}</span>
+                    <span styleName='details'></span>
                   </div>
 
                 </div>
 
-                <div styleName="actions"></div>
+                <div styleName='actions'></div>
 
               </div>
 
@@ -89,9 +88,9 @@ function wrapWithC(Component, props) {
       return React.createElement(
         Component, {
           ...props,
-          companies: this.props.root.companies,
-          company: this.props.root.company,
-          root: this.props.root,
+          companies: this.props.viewer.companies,
+          company: this.props.viewer.company,
+          viewer: this.props.viewer,
         },
         this.props.children
       );
@@ -102,26 +101,68 @@ function wrapWithC(Component, props) {
     initialVariables: {companyId: props.params.app, period: 'M1/2016', first: 1000},
 
     fragments: {
-      root: () => Relay.QL`
-        fragment on Query {
+      viewer: () => Relay.QL`
+        fragment on User {
           id,
+          objectId,
+          displayName,
+          username,
+          email,
+          createdAt,
+          updatedAt,
+          sessionToken,
 
           company(id: $companyId){
+            objectId,
 
             id,
             displayName,
             periodType,
-            lastSeqNr,
+            lastTransactionIndex, lastPaymentsTransactionIndex,
+
+            createdAt,
+            updatedAt,
+
+            settings {
+              periodType,
+              closureEnabled,
+              closureDate,
+            },
+            salesSettings {
+              defaultDepositToAccountCode,
+              preferredInvoiceTerms,
+              enableCustomTransactionNumbers,
+              enableServiceDate,
+              discountEnabled,
+
+              showProducts,
+              showRates,
+              trackInventory,
+              defaultIncomeAccountCode,
+            },
+            expensesSettings {
+              defaultExpenseAccountCode,
+              preferredPaymentMethod,
+            },
+            paymentsSettings {
+              defaultDepositToAccountCode,
+              preferredPaymentMethod,
+            },
 
           },
 
-          companies{
-            id,
-            displayName,
-            periodType,
-            lastSeqNr,
-            createdAt,
-            updatedAt,
+          companies(first: 100000){
+            edges{
+              node{
+                objectId,
+                id,
+                displayName,
+                periodType,
+                lastTransactionIndex, lastPaymentsTransactionIndex,
+                createdAt,
+                updatedAt,
+              }
+            }
           },
 
         }
@@ -130,29 +171,34 @@ function wrapWithC(Component, props) {
   });
 }
 
-module.exports = (props) => (
-  <Relay.RootContainer
-    Component={wrapWithC(Dashboard, props)}
-    route={new ReportsRoute({companyId: props.params.app, period: 'M1/2016'})}
-    renderLoading={function() {
-      return (
-        <div className="loading">
+module.exports = (props) => {
+  const route = new ReportsRoute({companyId: props.params.app, period: 'M1/2016'});
+  return (
+    <Relay.RootContainer
+      forceFetch={true}
+      Component={wrapWithC(Reports, { ...props, route, })}
+      route={route}
+      renderLoading={function() {
+        return (
+          <div className='loading'>
 
-          <Sidebar
-            viewer={props.viewer}
-            company={props.company}
-            companies={props.companies || []}
-            page="/reports"
-          />
+            <Sidebar
+              route={route}
+              viewer={props.viewer}
+              company={props.company}
+              companies={props.companies || { edges: [], }}
+              page='/reports'
+            />
 
-          <div className="content">
+            <div className='content'>
 
-              <Loading/>
+                <Loading/>
+
+            </div>
 
           </div>
-
-        </div>
-      );
-    }}
-  />
-);
+        );
+      }}
+    />
+  );
+};

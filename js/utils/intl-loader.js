@@ -6,16 +6,36 @@ const loaders = {
   en(callback, force = false) {
     if (!window.Intl || force) {
       require.ensure([], (require) => {
+
+        // Globalize
+        const Globalize = require('./globalize');
+
+        Globalize.load(
+        	require( "cldr-data/main/en/numbers.json" ),
+        	require( "cldr-data/supplemental/numberingSystems.json" ),
+        	require( "cldr-data/supplemental/likelySubtags.json" ),
+        );
+
         require('intl');
         require('intl/locale-data/jsonp/en.js');
-        const lang = require('../../build/lang/en');
-        return callback({messages: lang});
+        const messages = require('../../build/lang/en');
+        return callback({messages});
       });
     } else {
       require.ensure([], (require) => {
-        require('react-intl/dist/locale-data/en.js');
-        const lang = require('../../build/lang/en');
-        return callback({messages: lang});
+
+        // Globalize
+        const Globalize = require('./globalize');
+
+        Globalize.load(
+        	require( "cldr-data/main/en/numbers.json" ),
+        	require( "cldr-data/supplemental/numberingSystems.json" ),
+        	require( "cldr-data/supplemental/likelySubtags.json" ),
+        );
+
+        require('react-intl/locale-data/en.js');
+        const messages = require('../../build/lang/en');
+        return callback({messages});
       });
     }
 
@@ -24,16 +44,36 @@ const loaders = {
   fr(callback, force = false) {
     if (!window.Intl || force) {
       require.ensure([], (require) => {
+
+        // Globalize
+        const Globalize = require('./globalize');
+
+        Globalize.load(
+        	require( "cldr-data/main/fr/numbers.json" ),
+        	require( "cldr-data/supplemental/numberingSystems.json" ),
+        	require( "cldr-data/supplemental/likelySubtags.json" ),
+        );
+
         require('intl');
         require('intl/locale-data/jsonp/fr.js');
-        const lang = require('../../build/lang/fr');
-        return callback({messages: lang});
+        const messages = require('../../build/lang/fr');
+        return callback({messages});
       });
     } else {
       require.ensure([], (require) => {
-        addLocaleData(require('react-intl/dist/locale-data/fr.js'));
-        const lang = require('../../build/lang/fr');
-        return callback({messages: lang});
+
+        // Globalize
+        const Globalize = require('./globalize');
+
+        Globalize.load(
+        	require( "cldr-data/main/fr/numbers.json" ),
+        	require( "cldr-data/supplemental/numberingSystems.json" ),
+        	require( "cldr-data/supplemental/likelySubtags.json" ),
+        );
+
+        addLocaleData(require('react-intl/locale-data/fr.js'));
+        const messages = require('../../build/lang/fr');
+        return callback({messages});
       });
     }
   }

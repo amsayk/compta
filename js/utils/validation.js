@@ -2,18 +2,48 @@ import {
   defineMessages,
 } from 'react-intl';
 
+import isURL from 'validator/lib/isURL';
+
 const messages = defineMessages({
+
+  minimum: {
+    id: 'error.minimum',
+    defaultMessage: 'Doit être supérieur à {value}',
+  },
+
+  maximum: {
+    id: 'error.maximum',
+    defaultMessage: 'Doit être inférieur à {value}',
+  },
+
+  oneOf: {
+    id: 'error.oneOf',
+    defaultMessage: 'Doit être l\'un des: '
+  },
 
   required: {
     id: 'error.required',
-    description: '',
-    defaultMessage: 'Required'
+    defaultMessage: 'Ce champ est nécessaire.'
   },
 
   email: {
     id: 'error.invalid-email',
-    description: '',
-    defaultMessage: 'Invalid email address'
+    defaultMessage: 'Cette adresse e-mail est invalide.'
+  },
+
+  url: {
+    id: 'error.invalid-url',
+    defaultMessage: 'Cette URL est invalide.'
+  },
+
+  phone: {
+    id: 'error.invalid-phone',
+    defaultMessage: 'Invalid telephone number'
+  },
+
+  fax: {
+    id: 'error.invalid-fax',
+    defaultMessage: 'Invalid fax'
   },
 
 });
@@ -28,10 +58,33 @@ export function email(value) {
   }
 }
 
+export function url(value) {
+  // Let's not start a debate on email regex. This is just for an example app!
+  if (!isEmpty(value) && isURL(value)) {
+    return messages.url;
+  }
+}
+
 export function required(value) {
   if (isEmpty(value)) {
     return messages.required;
   }
+}
+
+export function minExclusive(minimum){
+  return (value) => {
+    if (!isEmpty(value) && value <= minimum) {
+      return messages.minimum;
+    }
+  };
+}
+
+export function maxInclusive(maximum){
+  return (value) => {
+    if (!isEmpty(value) && value > maximum) {
+      return messages.maximum;
+    }
+  };
 }
 
 export function minLength(min) {
@@ -59,7 +112,8 @@ export function integer(value) {
 export function oneOf(enumeration) {
   return value => {
     if (!~enumeration.indexOf(value)) {
-      return `Must be one of: ${enumeration.join(', ')}`;
+      // return `Must be one of: ${enumeration.join(', ')}`;
+      return messages.oneOf
     }
   };
 }

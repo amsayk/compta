@@ -10,60 +10,26 @@ import styles from './AccountSettings.scss';
 
 import SettingsHomeRoute from '../../routes/AccountSettingsRoute';
 
+import auth from '../../utils/auth';
+
+import {getBodyHeight, getBodyWidth, } from '../../utils/dimensions';
+
 import AccountForm from '../AccountForm/AccountForm';
 
 import {editStart,} from '../../redux/modules/account';
 
 import {
-  defineMessages,
   intlShape,
 } from 'react-intl';
 
-const messages = defineMessages({
-
-  Title: {
-    id: 'account-page.title',
-    defaultMessage: 'Account',
-  },
-
-  Subtitle: {
-    id: 'account-page.subtitle',
-    defaultMessage: 'Settings',
-  },
-
-  Legend: {
-    id: 'account-page.login-info-legend',
-    defaultMessage: 'Account Info',
-  },
-
-  Desc1: {
-    id: 'account-page.login-info-message',
-    defaultMessage: 'Update the personal information linked to this account.',
-  },
-
-  LeftLabel: {
-    id: 'account-page.login-info-label',
-    defaultMessage: 'Change your login information',
-  },
-
-  LeftDesc: {
-    id: 'account-page.login-info-description',
-    defaultMessage: 'This is where you can change your email address or password.',
-  },
-
-
-  Action: {
-    id: 'account-page.action-change-login-info',
-    defaultMessage: 'Change my login information',
-  },
-
-});
+import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
 class AccountSettings extends Component {
   static contextTypes = {
     intl: intlShape.isRequired,
     store: PropTypes.object.isRequired,
+    router: PropTypes.object.isRequired,
   };
 
   state = {
@@ -75,7 +41,19 @@ class AccountSettings extends Component {
     this.context.store.dispatch(editStart(this.props.viewer.id));
     this.setState({
       modalOpen: true
+    });
+  };
+
+  _onLogOut = (e) => {
+    e.preventDefault();
+
+    auth.logOut(this.props.viewer, () => {
+      this.context.router.replace('/');
     })
+  };
+
+  _onDelClicked = (e) => {
+    e.preventDefault();
   };
 
   _close = () => {
@@ -97,58 +75,124 @@ class AccountSettings extends Component {
   render() {
     const {formatMessage,} = this.context.intl;
     return (
-      <div className="">
-        <Sidebar viewer={this.props.viewer} page="/account"/>
+      <div className=''>
+        <Sidebar viewer={this.props.viewer} page='/account'/>
 
-        <div className="content">
+        <div className='content'>
 
-          <div styleName="settings-page">
+          <div styleName='settings-page'>
 
-            <div styleName="toolbar">
+            <div styleName='toolbar'>
 
-              <div styleName="title">
-                <div styleName="section">{formatMessage(messages.Title)}</div>
+              <div styleName='title'>
+                <div styleName='section'>{formatMessage(messages.Title)}</div>
 
                 <div>
-                  <span styleName="subsection">{formatMessage(messages.Subtitle)}</span>
-                  <span styleName="details"></span>
+                  <span styleName='subsection'>{formatMessage(messages.Subtitle)}</span>
+                  <span styleName='details'></span>
                 </div>
 
               </div>
 
-              <div styleName="actions"></div>
+              <div styleName='actions'></div>
 
             </div>
 
-            <div styleName="fieldset">
+            <div styleName='settings-page-body' className='scrollable-shadow scrollable' style={{zIndex: 0, top: 96, position: 'absolute', height: getBodyHeight() - 96, width: getBodyWidth() - 225, }}>
 
-              <div styleName="legend">{formatMessage(messages.Legend)}</div>
+              <div styleName='fieldset'>
 
-              <div styleName="description-1">{formatMessage(messages.Desc1)}</div>
+                <div styleName='legend'>{formatMessage(messages.Legend)}</div>
 
-              <div styleName="fields">
+                <div styleName='description-1'>{formatMessage(messages.Desc1)}</div>
 
-                <div styleName="field">
+                <div styleName='fields'>
 
-                  <div styleName="left" style={{width:'56%'}}>
-                    <div styleName="label centered" style={{padding:'0 20px'}}>
-                      <div styleName="text">{formatMessage(messages.LeftLabel)}</div>
-                      <div styleName="description-2">{formatMessage(messages.LeftDesc)}</div>
-                    </div>
-                  </div>
+                  <div styleName='field'>
 
-                  <div styleName="right" style={{marginLeft:'56%'}}>
-
-                    <div styleName="input">
-
-                      <a href="javascript:;" onClick={this._onAddClicked} role="button" style={{width:'80%',minWidth:'80%'}}
-                         styleName="button unselectable primary">
-                        <span>{formatMessage(messages.Action)}</span>
-                      </a>
-
+                    <div styleName='left' style={{width:'56%'}}>
+                      <div styleName='label centered' style={{padding:'0 20px'}}>
+                        <div styleName='text'>{formatMessage(messages.LeftLabel)}</div>
+                        <div styleName='description-2'>{formatMessage(messages.LeftDesc)}</div>
+                      </div>
                     </div>
 
+                    <div styleName='right' style={{marginLeft:'56%'}}>
+
+                      <div styleName='input'>
+
+                        <a href='javascript:;' onClick={this._onAddClicked} role='button' style={{width:'80%',minWidth:'80%'}}
+                           styleName='button unselectable primary'>
+                          <span>{formatMessage(messages.Action)}</span>
+                        </a>
+
+                      </div>
+
+                    </div>
+
                   </div>
+
+                </div>
+
+              </div>
+
+              <br/>
+
+              <div styleName='fieldset'>
+
+                <div styleName='legend'>{formatMessage(messages.AppManagementLegend)}</div>
+
+                <div styleName='description-1'>{formatMessage(messages.AppManagementLegendDesc)}</div>
+
+                <div styleName='fields'>
+
+                  <div styleName='field'>
+
+                    <div styleName='left' style={{width:'56%'}}>
+                      <div styleName='label centered' style={{padding:'0 20px'}}>
+                        <div styleName='text'>{formatMessage(messages.LogoutLabel)}</div>
+                        <div styleName='description-2'>{formatMessage(messages.LogoutDesc)}</div>
+                      </div>
+                    </div>
+
+                    <div styleName='right' style={{marginLeft:'56%'}}>
+
+                      <div styleName='input'>
+
+                        <a href='javascript:;' onClick={this._onLogOut} role='button' style={{width:'80%',minWidth:'80%'}}
+                           styleName='button unselectable primary btn-danger'>
+                          <span>{formatMessage(messages.LogoutAction)}</span>
+                        </a>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {/*<div styleName='field'>
+
+                    <div styleName='left' style={{width:'56%'}}>
+                      <div styleName='label centered' style={{padding:'0 20px'}}>
+                        <div styleName='text'>{formatMessage(messages.AppManagementLegendLeftLabel)}</div>
+                        <div styleName='description-2'>{formatMessage(messages.AppManagementLegendLeftDesc)}</div>
+                      </div>
+                    </div>
+
+                    <div styleName='right' style={{marginLeft:'56%'}}>
+
+                      <div styleName='input'>
+
+                        <a href='javascript:;' onClick={this._onDelClicked} role='button' style={{width:'80%',minWidth:'80%'}}
+                           styleName='button unselectable primary btn-danger'>
+                          <span>{formatMessage(messages.AppManagementLegendDelAction)}</span>
+                        </a>
+
+                      </div>
+
+                    </div>
+
+                  </div>*/}
 
                 </div>
 
@@ -173,7 +217,7 @@ function wrapWithC(Component, props) {
       return React.createElement(
         Component, {
           ...props,
-          root: this.props.root,
+          viewer: this.props.viewer,
         },
         this.props.children
       );
@@ -184,10 +228,17 @@ function wrapWithC(Component, props) {
     initialVariables: {},
 
     fragments: {
-      root: () => Relay.QL`
-        fragment on Query {
+      viewer: () => Relay.QL`
+        fragment on User {
 
           id,
+          objectId,
+          displayName,
+          username,
+          email,
+          createdAt,
+          updatedAt,
+          sessionToken,
 
         }
       `,
@@ -197,18 +248,19 @@ function wrapWithC(Component, props) {
 
 module.exports = (props) => (
   <Relay.RootContainer
+    forceFetch={true}
     Component={wrapWithC(AccountSettings, props)}
     route={new SettingsHomeRoute()}
     renderLoading={function() {
       return (
-        <div className="loading">
+        <div className='loading'>
 
           <Sidebar
             viewer={props.viewer}
-            page="/account"
+            page='/account'
           />
 
-          <div className="content">
+          <div className='content'>
 
               <Loading/>
 

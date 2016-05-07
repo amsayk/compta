@@ -1,0 +1,233 @@
+.col-field:not(:last-child) {
+  display: inherit;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+.modal :global .col-sm-3 {
+  width: 155px;
+}
+
+.modal :global .col-sm-6 {
+  width: 220px;
+}
+
+.modal :global .form-group {
+  margin-bottom: 0.2rem;
+}
+
+.modal > div{
+  position: initial!important;
+
+  animation: none;
+  transform: translate3d(0, 0, 0);
+}
+
+.modal.mini{
+  height: 355px;
+  width: 570px;
+
+  // top: 303.875px;
+  // left: 257.875px;
+
+  background-color: #fff;
+  border: 1px solid #c7c7c7;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  box-shadow: none;
+  padding: 0;
+
+  overflow-x: visible!important;
+  overflow-y: visible!important;
+}
+
+.modal.sales-recent{
+  height: 220px;
+  width: 400px;
+}
+
+.modal label{
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  color: #404040;
+  display: block;
+  margin-bottom: 4px;
+
+  font-size: 0.759rem;
+}
+
+.modal.mini label{
+  font-size: 0.759rem;
+}
+
+.btn.dark:focus {
+  outline: none;
+  -webkit-box-shadow: inset 0 0 0 1px #365ebf, 0 0 0 2px #284784;
+  box-shadow: inset 0 0 0 1px #365ebf, 0 0 0 2px #284784;
+}
+
+.subsection12TitleText {
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  line-height: 25px;
+  font-size: 0.8rem;
+}
+
+.btn.dark:hover {
+  background-color: #2e4d6f;
+  background-image: none;
+}
+
+.btn.dark {
+  color: #fff;
+  box-shadow: none;
+  background-image: -webkit-linear-gradient(top, #537ca0 0%, #3e5c7f 100%);
+  background-image: linear-gradient(to bottom, #537ca0 0%, #3e5c7f 100%);
+}
+
+.btn.primary:hover, .button.primary:focus {
+  background-color: #24479b;
+  background-image: none;
+}
+
+.btn.primary {
+  color: #fff;
+  box-shadow: none;
+  background-image: -webkit-linear-gradient(top, #3e6cc9 0%, #2e50b6 100%);
+  background-image: linear-gradient(to bottom, #3e6cc9 0%, #2e50b6 100%);
+}
+
+.btn {
+  background-clip: padding-box;
+  border-radius: 2px;
+  font-family: "HelveticaNeueRoman", Helvetica, Arial, sans-serif;
+  min-width: 80px;
+  cursor: pointer;
+  // font-size: 1.4rem;
+  height: 34px;
+  line-height: 34px;
+  padding: 0 20px;
+  border: 0;
+  margin: 0px;
+  box-sizing: border-box;
+  color: #365ebf;
+  box-shadow: inset 0 0 0 1px #dcdcdc;
+  background-image: -webkit-linear-gradient(top, #fff 0%, #f2f2f2 100%);
+  background-image: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);
+  -webkit-font-smoothing: subpixel-antialiased;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.modal-body{
+  padding: 0!important;
+}
+
+.modal fieldset{
+  padding: 0!important;
+}
+
+.tableRow {
+  display: table-row;
+  vertical-align: top;
+}
+
+.tableCell {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+.save-btn:hover{
+  background-color: #fff;
+  background-image: none;
+  text-decoration: none;
+}
+
+.save-btn{
+  font-size: 1rem;
+
+  cursor: pointer;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  white-space: nowrap;
+
+  background-clip: padding-box;
+  border-radius: 2px;
+  font-family: "HelveticaNeueRoman", Helvetica, Arial, sans-serif;
+  min-width: 80px;
+  height: 34px;
+  line-height: 34px;
+  padding: 0 20px;
+  border: 0;
+  margin: 0;
+  box-sizing: border-box;
+  color: #365ebf;
+  box-shadow: inset 0 0 0 1px #dcdcdc;
+  background-image: -webkit-linear-gradient(top, #fff 0%, #f2f2f2 100%);
+  background-image: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);
+  -webkit-font-smoothing: subpixel-antialiased;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+
+.modal-footer{
+  border: none!important;
+}
+.stretch {
+  display: block;
+
+  // width: 100%;
+  // height: 100%;
+}
+
+.f-subtitle, .f-title {
+  color: #fff;
+}
+
+.f-title {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.unselectable {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.floatLeft{
+  float: left;
+}
+
+.floatRight{
+  float: right;
+}
+
+
+.subsection12TitleText {
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  line-height: 25px;
+  font-size: 0.8rem;
+}
+
+.datepicker {
+  border-radius: 0;
+  display: inline-block;
+}
+
+.datepicker :global(.rw-input):focus{
+}

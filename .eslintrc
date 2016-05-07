@@ -1,21 +1,7 @@
----
-parser: babel-eslint
-
-extends:
-  - ./node_modules/fbjs-scripts/eslint/.eslintrc
-
-plugins:
-  - react
-
-rules:
-  react/jsx-uses-react: 2
-
-globals:
-  $Enum: true
-  $FixMe: true
-  $FlowFixMe: true
-  $FlowIssue: true
-  Iterator: true
-  IteratorResult: true
-  ReactClass: true
-  ReactElement: true
+{
+  "extends": "airbnb",
+  "rules": {
+    "no-unused-expressions": [2, { "allowShortCircuit": true }],
+    "no-console": [2, { "allow": ["log", "warn", "error"] }]
+  }
+}

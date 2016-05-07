@@ -165,6 +165,10 @@
   border-top-width: 0;
 }
 
+.table-row-container.isDragging :global(.fixedDataTableCellLayout_main.public_fixedDataTableCell_main){
+  border-bottom: 2px solid #c0d0e4!important;
+}
+
 .row:not(.row-is-editing) :global(.fixedDataTableCellLayout_main.public_fixedDataTableCell_main) {
   border-color: #c7c7c7;
   border-style: dotted;

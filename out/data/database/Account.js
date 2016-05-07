@@ -8,8 +8,6 @@ var _parse = require('parse');
 
 var _parse2 = _interopRequireDefault(_parse);
 
-var _utils = require('./utils');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -18,9 +16,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-exports.default = function (company, period) {
+exports.default = function (company) {
 
-  var name = 'Account_' + company.id + '_' + (0, _utils.encode_period)(period);
+  var name = 'Account_' + company.id;
 
   var Account = function (_Parse$Object) {
     _inherits(Account, _Parse$Object);

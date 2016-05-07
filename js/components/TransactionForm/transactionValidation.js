@@ -1,7 +1,7 @@
 import { createValidator, required, } from '../../utils/validation';
 
-const accountValidation = createValidator({
+const transactionValidation = createValidator({
   date: [required],
   operations: [],
 });
-export default accountValidation;
+export default transactionValidation;

@@ -1,0 +1,88 @@
+.app-modal .modal-footer {
+    background: #fff;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+
+    text-align: right;
+    border: 1px solid #e5e5e5;
+    padding: 17px 28px;
+}
+
+.app-modal .modal-content {
+    background: #1e3b4d;
+    border: none;
+}
+
+.app-modal .modal-body {
+    background: #ffffff;
+    padding: 0;
+}
+
+.app-modal .modal-dialog {
+    display: table;
+    pointer-events: none;
+}
+
+.app-modal .modal-content {
+    /* To center vertically */
+    display: table-cell;
+    vertical-align: middle;
+    pointer-events: none;
+}
+
+.app-modal .modal-content {
+    /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+    width: inherit;
+    height: inherit;
+    /* To center horizontally */
+    margin: 0 auto;
+    pointer-events: all;
+}
+
+.app-modal .modal-footer > * {
+    margin: 0 12px 0 0;
+    margin-top: 0px;
+    margin-right: 12px;
+    margin-bottom: 0px;
+    margin-left: 0px;
+}
+
+.app-modal.modal .subtitle, .app-modal.modal .title {
+    position: absolute;
+    color: #fff;
+    left: 28px;
+
+}
+
+.app-modal.modal .title {
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.app-modal.modal .subtitle, .app-modal.modal .title {
+    position: absolute;
+    color: #fff;
+    left: 28px;
+}
+
+.app-modal.modal .subtitle {
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    top: 49px;
+}
+
+.app-modal .modal-header {
+    background: #169cee;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+
+    padding: 15px;
+    border-bottom: none;
+
+    transition: background .3s ease;
+    height: 90px;
+}
+
+.app-modal.valid .modal-header {
+    background: #00db7c;
+}

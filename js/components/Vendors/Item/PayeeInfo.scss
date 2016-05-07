@@ -1,0 +1,99 @@
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+.width100Percent {
+  width: 100%;
+}
+
+.tableRow {
+  display: table-row;
+  vertical-align: top;
+}
+.leftColumn {
+  width: 45%;
+}
+.tableCell {
+  display: table-cell;
+  vertical-align: top;
+}
+
+.info {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #CCCCCC;
+  max-width: 90%;
+}
+
+.tableRow {
+  display: table-row;
+  vertical-align: top;
+}
+
+.info .labelCell {
+  width: 120px;
+}
+
+.info .labelCell .label {
+  color: #404040;
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  width: 120px;
+}
+
+.info .value {
+  font-size: 0.9rem;
+  word-break: break-all;
+  display: inline-block;
+}
+
+.rightColumn {
+  max-width: 45%;
+}
+
+.noborderbottom {
+  border-bottom: 0;
+}
+.status {
+  font-style: italic;
+  padding-top: 5px;
+  font-size: smaller;
+  color: gray;
+}
+
+.notesWidth {
+  width: 400px;
+}
+.dijitExpandingTextArea {
+  resize: none;
+}
+.dijitTextArea {
+  padding: 8px;
+}
+
+.dijitTextBox.dijitTextArea {
+  height: auto;
+}
+
+.stageNote {
+  resize: none;
+  cursor: text;
+}
+
+.notes{
+  outline: none;
+  height: 34px;
+  border: 1px solid #c7c7c7;
+  padding: 0 8px;
+  background-clip: border-box;
+  border-radius: 2px;
+  transition-property: border;
+  transition-duration: 0.35s;
+  font-size: 1rem;
+  background-color: white;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  width: 100%;
+  vertical-align: middle;
+}

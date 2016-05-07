@@ -1,80 +1,197 @@
 import React, {Component, PropTypes} from 'react';
 
 import CSSModules from 'react-css-modules';
+import classnames from 'classnames';
+import findIndex from 'lodash.findindex';
+
+import messages from './messages';
+
+import shallowEqual from 'shallowEqual';
 
 import styles from './Sidebar.scss';
 
 import Header from './SidebarHeader';
 
+import Title from '../Title/Title';
+
 import Loading from '../Loading/Loading';
 
+// import {getBodyHeight,} from '../../utils/dimensions';
+
 import CompanyForm from '../CompanyForm/CompanyForm';
-import TransactionForm from '../TransactionForm/TransactionForm';
 
 import {editStart as newAppEditStart,} from '../../redux/modules/companies';
-import {editStart as transactionEditStart,} from '../../redux/modules/transactions';
+
+import throttle from 'lodash.throttle';
 
 import events from 'dom-helpers/events';
 
-import {sortMostRecent,} from '../../utils/sort';
+// import Fade from 'react-bootstrap/lib/Fade';
+
+// import {sortMostRecent,} from '../../utils/sort';
+
+import Fab from '../Fab/Fab';
 
 import {
   FormattedMessage,
-  defineMessages,
   intlShape,
 } from 'react-intl';
 
-const messages = defineMessages({
-  ALL_APPS: {
-    id: 'sidebar.all-apps',
-    defaultMessage: 'All Companies',
-  },
+class Group extends Component {
+  static displayName = 'SidebarGroup';
 
-  NewApp: {
-    id: 'sidebar.new-app',
-    defaultMessage: 'Create a new app',
-  },
+  static contextTypes = {
+    router: PropTypes.object.isRequired,
+    intl: intlShape.isRequired,
+  };
 
-  '/dashboard': {
-    id: 'app-dashboard-menu-item-title',
-    defaultMessage: 'Dashboard',
-  },
+  static propTypes = {
+    company: PropTypes.shape({
+      id: PropTypes.string.isRequired,
+    }).isRequired,
+    icon: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    selected: PropTypes.string.isRequired,
+    menus: PropTypes.arrayOf(PropTypes.shape({
+      page: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+    })).isRequired,
+  };
 
-  '/transactions': {
-    id: 'transactions-menu-item-title',
-    defaultMessage: 'Transactions',
-  },
+  constructor(props) {
+    super(props);
 
-  '/accounts': {
-    id: 'accounts-menu-item-title',
-    defaultMessage: 'Chart of Accounts',
-  },
+    const {menus, selected} = this.props;
 
-  '/reports': {
-    id: 'reports-menu-item-title',
-    defaultMessage: 'Reports',
-  },
+    const selectedIndex = findIndex(menus, ({page}) => page === selected);
 
-  '/settings': {
-    id: 'app-settings-menu-item-title',
-    defaultMessage: 'Settings',
-  },
+    this.state = {
+      selectedIndex,
+      open: selectedIndex !== -1,
+    };
+  }
 
-});
+  componentWillReceiveProps({menus, selected}) {
+    const selectedIndex = findIndex(menus, ({page}) => page === selected);
+    (selectedIndex !== this.state.selectedIndex) && this.setState({selectedIndex, open: selectedIndex !== -1,});
+  }
+
+  _renderMenus(company, open, menus, selectedIndex, styles) {
+
+    if (open) {
+      const { intl, } = this.context;
+
+      const goTo = (page, selectedIndex) => {
+        return e => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          this.setState({selectedIndex}, () => {
+            this.context.router.push(`/apps/${company.id}${page}`);
+          });
+        };
+      };
+
+      return (
+        <div className={styles['section_contents']}>
+
+          <div>
+
+            <div>
+
+              {menus.map(({page, title: name}, index) => {
+
+                if (index === selectedIndex) {
+                  return (
+                    <div key={page}>
+
+                      <Title title={intl.formatMessage(messages[`${page}-title`] || messages[page])}/>
+
+                      <div className={styles['subitem']}>
+                        <span>{name}</span>
+                      </div>
+
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={page}>
+                    <a className={styles['subitem']} onClick={goTo(page, index)}>{name}</a>
+                  </div>
+                );
+
+              })}
+
+              {selectedIndex !== -1 && <div style={{top: 322 + (selectedIndex * 28)}} className={styles['overlay']}></div>}
+
+            </div>
+
+          </div>
+
+        </div>
+      );
+    }
+
+    return null;
+  }
+
+  render() {
+    const {selectedIndex, open,} = this.state;
+    const {company, icon, title, styles, menus} = this.props;
+
+    return (
+      <div className={classnames({
+        [styles['section']]: true,
+        [styles['active']]: selectedIndex !== -1,
+        })}>
+
+        <div className={styles['section_header']} onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.setState({open: !this.state.open})
+        }} style={{
+          cursor: 'pointer',
+        }}>
+
+          <i className='material-icons md-36'>{icon}</i>
+
+          <span>
+            {title}
+          </span>
+
+          <span style={{ right: -10, verticalAlign:'middle', position: 'relative', }}
+                className={`material-icons ${styles['open']}`}>
+            <i>{open ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</i>
+          </span>
+
+        </div>
+
+        {this._renderMenus(company, open, menus, selectedIndex, styles)}
+
+      </div>
+    );
+  }
+}
 
 @CSSModules(styles, {
   allowMultiple: true
 })
 class Link extends Component {
+  static displayName = 'SidebarLink';
+  static contextTypes = {
+    intl: intlShape.isRequired,
+  };
   render() {
-
+    const { intl, } = this.context;
     const {selected, page, icon, onClick} = this.props;
 
     if (selected) {
       return (
-        <div styleName="section active">
-          <div styleName="section_header">
-            <i className="material-icons md-36">{icon}</i>
+        <div styleName='section active'>
+          <Title title={intl.formatMessage(messages[`${page}-title`] || messages[page])}/>
+          <div styleName='section_header'>
+            <i className='material-icons md-36'>{icon}</i>
             <span>
               <FormattedMessage {...messages[page]} />
             </span>
@@ -85,9 +202,9 @@ class Link extends Component {
     }
 
     return (
-      <div styleName="section">
-        <a styleName="section_header" onClick={onClick.bind(null, page)}>
-          <i className="material-icons md-36">{icon}</i>
+      <div styleName='section'>
+        <a styleName='section_header' onClick={onClick.bind(null, page)}>
+          <i className='material-icons md-36'>{icon}</i>
           <span>
             <FormattedMessage {...messages[page]} />
           </span>
@@ -99,19 +216,24 @@ class Link extends Component {
 
 const PATHS = {
   '/dashboard': (id) => `/apps/${id}/`,
-  '/transactions': (id) => `/apps/${id}/transactions`,
-  '/accounts': (id) => `/apps/${id}/accounts`,
-  '/reports': (id) => `/apps/${id}/reports`,
-  '/settings': (id) => `/apps/${id}/settings`,
 
-  '/apps': () => '/apps',
-  '/account': () => '/account',
+  '/customers': (id) => `/apps/${id}/customers`,
+  '/vendors':   (id) => `/apps/${id}/vendors`,
+  '/employees': (id) => `/apps/${id}/employees`,
+  '/reports':   (id) => `/apps/${id}/reports`,
+  '/settings':  (id) => `/apps/${id}/settings`,
+
+  '/tax':       (id) => `/apps/${id}/tax`,
+
+  '/apps':      () => '/apps',
+  '/account':   () => '/account',
 };
 
 @CSSModules(styles, {
   allowMultiple: true
 })
 export default class extends Component {
+  static displayName = 'AppSidebar';
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -120,6 +242,7 @@ export default class extends Component {
   };
 
   state = {
+    show: true,
     open: true,
     newAppModalOpen: false,
     newTransactionModalOpen: false,
@@ -132,38 +255,50 @@ export default class extends Component {
     //  });
     //}
 
-    if(document.body.classList.contains('modal-open')){
+    if (document.body.classList.contains('modal-open')) {
       return;
     }
 
-    if(this.refs.menu && !this.state.open && !this.refs.menu.contains(e.target)){
+    if (this.refs.menu && !this.state.open && !this.refs.menu.contains(e.target)) {
       this.setState({
-        open: true
+        open: true,
       });
     }
   };
 
-  componentDidMount(){
+  shouldComponentUpdate(nextProps, nextState){
+    if(typeof nextProps.stale !== 'undefined'){
+      return nextProps.stale !== true;
+    }
+
+    return ! shallowEqual(nextState, this.state) || ! shallowEqual(nextProps, this.props);
+  }
+
+  componentDidMount() {
+    // setTimeout(() => {
+    //   this.setState({
+    //     show: true,
+    //   });
+    // }, 100);
+
+    events.on(window, 'resize', this._handleWindowResize);
     events.on(document, 'click', this._hide, true);
   }
 
-  componentWillUnmount(){
+  componentWillUnmount() {
+    events.off(window, 'resize', this._handleWindowResize);
     events.off(document, 'click', this._hide, true);
   }
 
+  _handleWindowResize = throttle(() => {
+    this.forceUpdate();
+  }, 150);
+
   _onAddClicked = (e) => {
     e.preventDefault();
-    this.context.store.dispatch(newAppEditStart('NEW'));
+    setImmediate(() => this.context.store.dispatch(newAppEditStart('NEW')));
     this.setState({
       newAppModalOpen: true
-    })
-  };
-
-  _onAddTransactionClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    this.setState({
-      newTransactionModalOpen: true
     })
   };
 
@@ -185,19 +320,6 @@ export default class extends Component {
     return form;
   };
 
-  _renderNewTransactionForm = () => {
-    this.context.store.dispatch(transactionEditStart('NEW', []));
-    const form = this.state.newTransactionModalOpen ? (
-      <TransactionForm
-        onCancel={this._close}
-        formKey={'NEW'}
-        company={this.props.company}
-      />
-    ) : null;
-
-    return form;
-  };
-
   _onToggle = (e) => {
     e.stopPropagation();
 
@@ -209,7 +331,9 @@ export default class extends Component {
   _onClick = (path, e) => {
     e.preventDefault();
 
-    this.context.router.push(PATHS[path](this.props.company.id));
+    const { route, } = this.props;
+
+    this.context.router.push(PATHS[path](route.params.companyId));
   };
 
   _onClickCompany = (id, e) => {
@@ -219,112 +343,158 @@ export default class extends Component {
   };
 
   _renderMenu = () => {
+    const { page, company, companies = [], viewer, styles, route, } = this.props;
 
-    if(this.props.company){
+    const {formatMessage,} = this.context.intl;
 
-      const {formatMessage,} = this.context.intl;
+    const closed = !this.state.open;
 
-      const closed = !this.state.open;
+    const apps = closed ? companies.filter(({id}) => id !== route.params.companyId).slice() : [];
+    // apps.sort(sortMostRecent(obj => Date.parse(obj.createdAt)));
 
-      const companies = closed ? this.props.companies.filter(({id}) => id !== this.props.company.id).slice() : [];
-      companies.sort(sortMostRecent(obj => Date.parse(obj.createdAt)));
+    return [
+      <div ref='menu' key={closed ? 'appsMenu' : 'apps'} className={'has-white-links'} styleName={closed ? 'appsMenu unselectable' : 'apps'}>
 
-      return [
-        <div ref="menu" key={closed ? 'appsMenu' : 'apps'} styleName={closed ? 'appsMenu unselectable' : 'apps'}>
+        <div styleName='currentApp' onClick={this._onToggle}>{company ? company.displayName : (lastCompany && lastCompany.displayName ? lastCompany.displayName : '')}</div>
 
-          <div styleName="currentApp" onClick={this._onToggle}>{this.props.company.displayName}</div>
+        {closed && <div styleName='menuSection'>{formatMessage(messages.ALL_APPS)}</div>}
 
-          {closed && <div styleName="menuSection">{formatMessage(messages.ALL_APPS)}</div>}
+        <div style={{ overflowY: 'auto', marginBottom: '15px', }}>
 
-          <div style={{ overflowY: 'auto', marginBottom: '15px', }}>
-
-            {closed && companies.map(company => {
-              return (
-                <a styleName="menuRow" key={company.id} onClick={this._onClickCompany.bind(this, company.id)}>
-                  <span>{company.displayName}</span>
-                  {/*<span styleName="badge">DEV</span>*/}
-                </a>
-              );
-            })}
-
-          </div>
-
-          {closed && <a onClick={this._onAddClicked} role="button" styleName="createApp">{formatMessage(messages.NewApp)}</a>}
+          {closed && apps.map(company => {
+            return (
+              <a styleName='menuRow' key={company.id} onClick={this._onClickCompany.bind(this, company.id)}>
+                <span>{company.displayName}</span>
+                {/*<span styleName='badge'>DEV</span>*/}
+              </a>
+            );
+          })}
 
         </div>
-      ];
+
+        {closed &&
+        <a onClick={this._onAddClicked} role='button' styleName='createApp'>{formatMessage(messages.NewApp)}</a>}
+
+      </div>
+    ];
+
+  }
+
+  componentWillUnmount(){
+    // lastCompany = null;
+  }
+
+  render() {
+    const { show, } = this.state;
+    const { page, company, companies, viewer, styles, route, } = this.props;
+
+    const {formatMessage,} = this.context.intl;
+
+    const OPERATIONS = [/*{
+      page: '/tresors',
+      title: formatMessage(messages['/tresors']),
+    }, */{
+      page: '/sales',
+      title: formatMessage(messages['/sales']),
+    }, {
+      page: '/expenses',
+      title: formatMessage(messages['/expenses']),
+    }, {
+      page: '/accounts',
+      title: formatMessage(messages['/accounts']),
+    },];
+
+    if(company){
+      lastCompany = company;
     }
 
     return (
-      <Loading/>
-    );
-  };
+      // <Fade in={show}>
 
-  render() {
-    return (
-      <div>
+        <div className={''}>
 
-        <div styleName="sidebar">
+          <div styleName='sidebar' className={'height100Percent'} style={{ height: document.body.scrollHeight, }}>
 
-          <Header
-            viewer={this.props.viewer}
-            styles={this.props.styles}
-            onClick={this._onClick}
-          />
-
-          {this._renderMenu()}
-
-          {this.props.company && this.state.open && <div styleName="sections">
-
-            <Link
-              page={'/dashboard'}
-              icon={'grid_on'}
-              selected={this.props.page === '/dashboard'}
+            <Header
+              viewer={viewer}
+              styles={styles}
               onClick={this._onClick}
             />
 
-            <Link
-              page={'/transactions'}
-              icon={'assessment'}
-              selected={this.props.page === '/transactions'}
-              onClick={this._onClick}>
+            {this._renderMenu()}
 
-              <span styleName="action" onClick={this._onAddTransactionClick}>
-                <i className="material-icons md-light" style={{ marginTop: '25%', fontWeight: 700, }}>add</i>
-              </span>
+            {/*company && */this.state.open && <div styleName='sections'>
 
-            </Link>
+              <Link
+                page={'/dashboard'}
+                icon={'grid_on'}
+                selected={page === '/dashboard'}
+                onClick={this._onClick}
+              />
 
-            <Link
-              page={'/accounts'}
-              icon={'credit_card'}
-              selected={this.props.page === '/accounts'}
-              onClick={this._onClick}
-            />
 
-            <Link
-              page={'/reports'}
-              icon={'group_work'}
-              selected={this.props.page === '/reports'}
-              onClick={this._onClick}
-            />
+              <Link
+                page={'/customers'}
+                icon={'local_library'}
+                selected={page === '/customers'}
+                onClick={this._onClick}
+              />
 
-            <Link
-              page={'/settings'}
-              icon={'settings'}
-              selected={this.props.page === '/settings'}
-              onClick={this._onClick}
-            />
+              <Link
+                page={'/vendors'}
+                icon={'import_contacts'}
+                selected={page === '/vendors'}
+                onClick={this._onClick}
+              />
 
-          </div>}
+              <Link
+                page={'/employees'}
+                icon={'work'}
+                selected={page === '/employees'}
+                onClick={this._onClick}
+              />
+
+              <Group
+                company={company ? company : { id: route.params.companyId, }}
+                icon={'assessment'}
+                menus={OPERATIONS}
+                styles={styles}
+                selected={page}
+                title={formatMessage(messages['/transactions'])}/>
+
+              <Link
+                page={'/reports'}
+                icon={'group_work'}
+                selected={page === '/reports'}
+                onClick={this._onClick}
+              />
+
+              <Link
+                page={'/tax'}
+                icon={'gavel'}
+                selected={page === '/tax'}
+                onClick={this._onClick}
+              />
+
+              <Link
+                page={'/settings'}
+                icon={'settings'}
+                selected={page === '/settings'}
+                onClick={this._onClick}
+              />
+
+            </div>}
+
+          </div>
+
+          {this._renderNewAppForm()}
+          <Fab company={{ id: route.params.companyId, }}/>
 
         </div>
 
-        {this._renderNewAppForm()}
-        {this._renderNewTransactionForm()}
-
-      </div>
+      // </Fade>
     );
   }
 }
 
+let lastCompany = null;

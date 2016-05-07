@@ -2,7 +2,11 @@
 
 import Relay from 'react-relay';
 
-import uid from 'uid';
+import uid from '../../utils/uid';
+
+import moment from 'moment';
+
+import { actionTypes, } from 'redux-form';
 
 import update from 'react-addons-update';
 
@@ -33,7 +37,28 @@ const initialState = {
 };
 
 export default function reducer(state = initialState, action = {}) {
+
   switch (action.type) {
+    case actionTypes.CHANGE:
+    case actionTypes.FOCUS:
+    case actionTypes.BLUR:
+    case actionTypes.RESET:
+    case actionTypes.START_SUBMIT:
+    case actionTypes.DESTROY:
+    case actionTypes.INITIALIZE:
+      return function(){
+        switch(action.form){
+          case 'transaction':
+            return {
+              ...state,
+              saveError: {
+                ...state.saveError,
+                [action.key]: null,
+              },
+            };
+          default: return state;
+        }
+      }();
     case SET_ACTIVE_ROW:
       return function () {
         const {editing: {[action.id]: store}} = state;
@@ -41,7 +66,7 @@ export default function reducer(state = initialState, action = {}) {
           ...state,
           editing: {
             ...state.editing,
-            [action.id]: store.setActiveRow(action.rowId),
+            [action.id]: store.setActiveRow(action.rowIndex),
           }
         }
       }();
@@ -135,7 +160,7 @@ export default function reducer(state = initialState, action = {}) {
         ...state,
         editing: {
           ...state.editing,
-          [action.id]: new OperationDataListStore(action.operations, Math.max(3, action.operations.length), 0),
+          [action.id]: new OperationDataListStore(action.operations, Math.max(3, action.operations.length)/*, 0*/),
         }
       };
     case EDIT_STOP:
@@ -143,8 +168,12 @@ export default function reducer(state = initialState, action = {}) {
         ...state,
         editing: {
           ...state.editing,
-          [action.id]: null
-        }
+          [action.id]: null,
+        },
+        saveError: {
+          ...state.saveError,
+          [action.id]: null,
+        },
       };
     case SAVE:
       return state; // 'saving' flag handled by redux-form
@@ -160,7 +189,7 @@ export default function reducer(state = initialState, action = {}) {
         ...state,
         saveError: {
           [action.id]: {
-            id: 'error.unknown',
+            _id: 'error.unknown',
             defaultMessage: 'There was an unknown error. Please try again.',
           }
         }
@@ -182,8 +211,8 @@ export function save({id,}) {
   };
 }
 
-export function setActiveRow(id, rowId) {
-  return {type: SET_ACTIVE_ROW, id, rowId};
+export function setActiveRow(id, rowIndex) {
+  return {type: SET_ACTIVE_ROW, id, rowIndex};
 }
 
 export function addMoreRows(id) {
@@ -242,7 +271,7 @@ class OperationDataListStore {
 
   static createRowObjectData():OperationShape {
     return {
-      _id: uid(),
+      _id: uid.type('T--O'),
       // account: null,
       // type: undefined,
       // amount: undefined,
@@ -293,7 +322,10 @@ class OperationDataListStore {
   };
 
   addMoreRows() {
-    return new OperationDataListStore(this._cache.slice(), this.size + 2);
+    // return new OperationDataListStore(this._cache.slice(), this.size + 2);
+
+    this.size = this.size + 1;
+    return this;
   }
 
   clearRow(index) {
@@ -305,14 +337,22 @@ class OperationDataListStore {
       }
     });
 
-    return new OperationDataListStore(
-      operations,
-      Math.max(operations.length, 3));
+    //return new OperationDataListStore(
+    //  operations,
+    //  Math.max(operations.length, 3));
+
+    this._cache = operations;
+    this.size = Math.max(operations.length, 3);
+    return this;
   }
 
   setActiveRow(rowIndex) {
     // TODO: validate
-    return new OperationDataListStore(this._cache.slice(), rowIndex == this.size - 1 ? this.size + 1 : this.size, rowIndex);
+    // return new OperationDataListStore(this._cache.slice(), rowIndex == this.size - 1 ? this.size + 1 : this.size, rowIndex);
+
+    this.size = rowIndex == this.size - 1 ? this.size + 1 : this.size;
+    this._activeRow = rowIndex;
+    return this;
   }
 
   hasActiveRow(){
@@ -331,7 +371,10 @@ class OperationDataListStore {
       }
     });
 
-    return new OperationDataListStore(operations, this.size);
+    // return new OperationDataListStore(operations, this.size);
+
+    this._cache = operations;
+    return this;
   }
 
   setAmount(index, type, amount){

@@ -1,15 +1,24 @@
-import { createStore as _createStore, applyMiddleware, } from 'redux';
+import {createStore as _createStore, applyMiddleware,} from 'redux';
 
 import createMiddleware from './middleware/clientMiddleware';
 import reducer from './modules/reducer';
 
-export default function createStore(){
+import {enableBatching,} from 'redux-batched-actions';
 
-  const middleware = [ createMiddleware(), ];
+import logger from './logger';
+
+export default function createStore() {
+
+  const middleware = [
+    createMiddleware(),
+    logger,
+  ];
 
   const finalCreateStore = applyMiddleware(...middleware)(_createStore);
 
-  const store = finalCreateStore(reducer);
+  const store = finalCreateStore(
+    enableBatching(reducer)
+  );
 
   if (process.env.NODE_ENV !== 'production' && module.hot) {
     module.hot.accept('./modules/reducer', () => {

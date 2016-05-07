@@ -1,0 +1,118 @@
+Fetch schema:
+
+curl -X GET \
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  https://api.parse.com/1/schemas | python -m json.tool
+
+
+curl -X GET \
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  https://api.parse.com/1/schemas/Game | python -m json.tool
+
+
+Add:
+
+curl -X POST \
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  -d '
+    {
+      "className": "InvoiceItem_JrbOXuSBIa",
+      "fields": {
+        "invoice": {
+          "type": "Pointer",
+          "targetClass": "Invoice_JrbOXuSBIa"
+        },
+        "item": {
+          "type": "Pointer",
+          "targetClass": "Product_JrbOXuSBIa"
+        }
+      }
+    }' \
+  https://api.parse.com/1/schemas/InvoiceItem_JrbOXuSBIa | python -m json.tool
+
+curl -X POST \
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  -d '
+    {
+      "className": "PaymentOfInvoicesItem_JrbOXuSBIa",
+      "fields": {
+        "invoice": {
+          "type": "Pointer",
+          "targetClass": "Invoice_JrbOXuSBIa"
+        },
+        "payment": {
+          "type": "Pointer",
+          "targetClass": "PaymentOfInvoices_JrbOXuSBIa"
+        }
+      }
+    }' \
+  https://api.parse.com/1/schemas/PaymentOfInvoicesItem_JrbOXuSBIa | python -m json.tool
+
+curl -X POST \
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  -d '
+    {
+      "className": "SaleItem_JrbOXuSBIa",
+      "fields": {
+        "sale": {
+          "type": "Pointer",
+          "targetClass": "Sale_JrbOXuSBIa"
+        },
+        "item": {
+          "type": "Pointer",
+          "targetClass": "Product_JrbOXuSBIa"
+        }
+      }
+    }' \
+  https://api.parse.com/1/schemas/SaleItem_JrbOXuSBIa | python -m json.tool
+
+
+Modify:
+
+curl -X PUT \
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  -d '
+    {
+      "className": "City",
+      "fields": {
+        "population": {
+          "type": "Number"
+        }
+      }
+    }' \
+  https://api.parse.com/1/schemas/City | python -m json.tool
+
+curl -X PUT \
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  -d '
+    {
+      "className": "City",
+      "fields": {
+        "population": {
+          "__op": "Delete"
+        }
+      }
+    }' \
+  https://api.parse.com/1/schemas/City | python -m json.tool
+
+Del:
+
+curl -X DELETE\
+  -H "X-Parse-Application-Id: xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT" \
+  -H "X-Parse-Master-Key: bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb" \
+  -H "Content-Type: application/json" \
+  https://api.parse.com/1/schemas/City | python -m json.tool

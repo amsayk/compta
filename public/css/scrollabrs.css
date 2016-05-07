@@ -2,27 +2,31 @@
     width: 10px;
     height: 16px;
 }
+
 .scrollable::-webkit-scrollbar:hover {
     background-color: #f3f3f3;
     border: 1px solid #dbdbdb;
 }
+
 .scrollable::-webkit-scrollbar-button:start:decrement,
 .scrollable::-webkit-scrollbar-button:end:increment {
     display: block;
     height: 0;
     background-color: transparent;
 }
+
 .scrollable::-webkit-scrollbar-track {
     -webkit-background-clip: padding-box;
     background-clip: padding-box;
-    border: solid
-    transparent;
+    border: solid transparent;
     border-width: 0 0 0 4px;
 }
+
 .scrollable::-webkit-scrollbar-track-piece {
     background-color: transparent;
     border-radius: 0;
 }
+
 .scrollable::-webkit-scrollbar-thumb {
     background-color: #515151;
     background-color: rgba(0, 0, 0, .2);
@@ -30,20 +34,37 @@
     background-clip: padding-box;
     border: solid transparent;
     border-width: 0;
-    -webkit-box-shadow: inset 1px 1px 0 rgba(0,0,0,.10),inset 0 -1px 0 rgba(0,0,0,.07);
-    box-shadow: inset 1px 1px 0 rgba(0,0,0,.10),inset 0 -1px 0 rgba(0,0,0,.07);
+    -webkit-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, .10), inset 0 -1px 0 rgba(0, 0, 0, .07);
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, .10), inset 0 -1px 0 rgba(0, 0, 0, .07);
 }
+
 .scrollable::-webkit-scrollbar-thumb:hover {
     background-color: #949494;
 }
+
 .scrollable::-webkit-scrollbar-thumb:active {
     background-color: #3b3b3b;
     background-color: rgba(0, 0, 0, .5);
     -webkit-box-shadow: inset 1px 1px 3px rgba(0, 0, 0, .35);
     box-shadow: inset 1px 1px 3px rgba(0, 0, 0, .35);
 }
+
 .scrollable::-webkit-scrollbar-thumb:vertical,
 .scrollable::-webkit-scrollbar-thumb:horizontal {
     background-color: #c6c6c6;
     border-radius: 0;
+}
+
+.scrollable-shadow {
+    background: /*Shadow covers*/ linear-gradient(white 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(rgba(255, 255, 255, 0), white 70%) 0 100%,
+        /*Shadows*/ radial-gradient(50% 0, farthest-side, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
+    radial-gradient(50% 100%, farthest-side, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
+    background: /*Shadow covers*/ linear-gradient(white 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(rgba(255, 255, 255, 0), white 70%) 0 100%,
+        /*Shadows*/ radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
+    /*Opera doesn 't support this in the shorthand background-size: 100 % 40 px, 100 % 40 px, 100 % 6 px, 100 % 6 px;*/
 }

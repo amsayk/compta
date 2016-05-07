@@ -8,7 +8,9 @@ import {reduxForm} from 'redux-form';
 import transactionValidation, {} from './transactionValidation';
 import * as transactionActions from '../../redux/modules/transactions';
 
-import enhanceWithClickOutside from 'react-click-outside';
+import TransactionLineEditor from './TransactionLineEditor';
+
+import messages from './messages';
 
 import findIndex from 'lodash.findindex';
 
@@ -16,10 +18,7 @@ import TransactionFormRoute from '../../routes/TransactionFormRoute';
 
 import classnames from 'classnames';
 
-// import DatePicker from 'react-datepicker';
 import DateTimePicker from 'react-widgets/lib/DateTimePicker';
-// import Combobox from 'react-widgets/lib/Combobox';
-import Select from 'react-select';
 import moment from 'moment';
 
 import Modal from 'react-bootstrap/lib/Modal';
@@ -32,14 +31,12 @@ import CSSModules from 'react-css-modules';
 
 import throttle from 'lodash.throttle';
 
-import Parse from 'parse';
-
 import events from 'dom-helpers/events';
 
-import {Text,} from '../form/form';
+import enhanceWithClickOutside from '../../utils/react-click-outside';
 
 @enhanceWithClickOutside
-class ClickOutsideWrapper extends Component{
+class ClickOutsideWrapper extends Component {
   handleClickOutside = (e) => {
     // e.preventDefault();
     // e.stopImmediatePropagation();
@@ -62,173 +59,10 @@ const Progress = ({}) => (
 );
 
 import {
-  defineMessages,
   intlShape,
 } from 'react-intl';
 
-function getBodyHeight() {
-  var body = document.body,
-    html = document.documentElement;
-
-  var height = Math.max(body.scrollHeight, body.offsetHeight,
-    html.clientHeight, html.scrollHeight, html.offsetHeight);
-
-  return height;
-}
-
-function getBodyWeight() {
-  var body = document.body,
-    html = document.documentElement;
-
-  var width = Math.max(body.scrollWidth, body.offsetWidth,
-    html.clientWidth, html.scrollWidth, html.offsetWidth);
-
-  return width;
-}
-
-const messages = defineMessages({
-
-  Account: {
-    id: 'transaction-form.th.account',
-    defaultMessage: 'Acccount',
-  },
-
-  DEBIT: {
-    id: 'transaction-form.th.DEBIT',
-    defaultMessage: 'DEBIT',
-  },
-
-  CREDIT: {
-    id: 'transaction-form.th.CREDIT',
-    defaultMessage: 'CREDIT',
-  },
-
-  Description: {
-    id: 'transaction-form.th.Description',
-    defaultMessage: 'Description',
-  },
-
-  Name: {
-    id: 'transaction-form.th.Name',
-    defaultMessage: 'Name',
-  },
-
-  error: {
-    id: 'transaction-form.error.unknown',
-    defaultMessage: 'There was an unknown error. Please try again.',
-  },
-
-  searchPromptText: {
-    id: 'transaction-form.message.searchPromptText',
-    defaultMessage: 'Select Account…',
-  },
-
-  accountPlaceholder: {
-    id: 'transaction-form.message.accountPlaceholder',
-    defaultMessage: 'Select Account…',
-  },
-
-  searchingText: {
-    id: 'transaction-form.message.searchingText',
-    defaultMessage: 'Searching…',
-  },
-
-  clearButton: {
-    id: 'transaction-form.date.clearButton',
-    defaultMessage: 'Select Date',
-  },
-
-  emptyFilter: {
-    id: 'transaction-form.account-combobox.emptyFilter',
-    defaultMessage: 'The filter returned no results',
-  },
-
-  date_label: {
-    id: 'transaction-form.date_label',
-    defaultMessage: 'Journal Date',
-  },
-
-  add_more_lines: {
-    id: 'transaction-form.add_more_lines',
-    defaultMessage: 'Add lines',
-  },
-
-  clear_all_lines: {
-    id: 'transaction-form.clear_all_lines',
-    defaultMessage: 'Clear all lines',
-  },
-
-  memo: {
-    id: 'transaction-form.memo',
-    defaultMessage: 'Enter a note for this journal entry',
-  },
-
-  emailError: {
-    id: 'transaction-form.error.displayName',
-    defaultMessage: 'This Company Name was already used',
-  },
-
-  formTitle: {
-    id: 'transaction-form.message.add-transaction-title',
-    defaultMessage: 'Journal Entry #{transactionNumber}',
-  },
-
-  Total: {
-    id: 'transaction-form.message.total',
-    defaultMessage: 'Total'
-  },
-
-  cancel: {
-    id: 'transaction-form.cancel',
-    defaultMessage: 'Cancel'
-  },
-
-  save: {
-    id: 'transaction-form.action.save',
-    defaultMessage: 'Save'
-  },
-
-  saveAndNew: {
-    id: 'transaction-form.action.save-and-new',
-    defaultMessage: 'Save and new'
-  },
-
-  saving: {
-    id: 'transaction-form.action.saving-transaction',
-    defaultMessage: 'Saving…'
-  },
-
-});
-
-//function asyncValidate({email}) {
-//  // TODO: figure out a way to move this to the server. need an instance of ApiClient
-//  if (!email) {
-//    return Promise.resolve({});
-//  }
-//  return new Promise((resolve, reject) => {
-//    const query = new Parse.Query(Parse.User);
-//    query.equalTo('email', email);
-//
-//    query.first().then(
-//      function (object) {
-//        if (object) {
-//          reject({
-//            email: messages.emailError
-//          });
-//          return;
-//        }
-//
-//        resolve();
-//      },
-//
-//      function () {
-//        reject({
-//          email: messages.error
-//        });
-//      }
-//    );
-//  });
-//}
+import {getBodyHeight, getBodyWidth} from '../../utils/dimensions'
 
 const ItemTypes = {
   OPERATION: 'operation'
@@ -246,11 +80,11 @@ const operationSource = {
     const {id: droppedId, originalIndex} = monitor.getItem();
     const didDrop = monitor.didDrop();
 
-    props.onHover({rowIndex: null, dragging: false});
-
     if (!didDrop) {
       props.moveOp(droppedId, originalIndex);
     }
+
+    props.onHover({rowIndex: null, dragging: false});
   }
 };
 
@@ -266,11 +100,12 @@ const operationTarget = {
     if (draggedId !== overId) {
       const {index: overIndex} = props.findOp(overId);
 
-      props.onHover({rowIndex: overIndex, dragging: true});
-
       props.moveOp(draggedId, overIndex);
+
+      props.onHover({rowIndex: overIndex, dragging: true});
     }
-  }
+  },
+
 };
 
 @DropTarget(ItemTypes.OPERATION, operationTarget, connect => ({
@@ -287,21 +122,19 @@ class DragHandle extends Component {
     connectDropTarget: PropTypes.func.isRequired,
     isDragging: PropTypes.bool.isRequired,
     id: PropTypes.any.isRequired,
-    rowIndex: PropTypes.number.isRequired,
-    activeRow: PropTypes.number,
     findOp: PropTypes.func.isRequired,
     moveOp: PropTypes.func.isRequired,
     onHover: PropTypes.func.isRequired
   };
 
   render() {
-    const {styles, rowIndex, activeRow, isDragging, connectDragSource, connectDropTarget} = this.props;
+    const {styles, isDragging, connectDragSource, connectDropTarget} = this.props;
     const opacity = isDragging ? 0 : 1;
 
     return connectDragSource(connectDropTarget(
       <div
         style={{ opacity }}
-        className={rowIndex === activeRow ? `${styles['secondary-color-sprite']} ${styles['editHandle']}` : `${styles['tertiary-sprite']} ${styles['dragHandle']}`}>
+        className={`${styles['tertiary-sprite']} ${styles['dragHandle']}`}>
       </div>
     ));
   }
@@ -309,7 +142,13 @@ class DragHandle extends Component {
 
 @reduxForm({
   form: 'transaction',
-  fields: ['id', 'date', 'operations', 'memo', 'files',],
+  fields: [
+    'id',
+    'date',
+    'operations',
+    'memo',
+    'files',
+  ],
   validate: transactionValidation,
 }, (state, ownProps) => ({
   company: ownProps.company,
@@ -365,13 +204,27 @@ class TransactionForm extends Component {
 
   _handleWindowResize = throttle(() => {
     this.forceUpdate();
-  }, 200);
+  }, 150);
 
   static _getStyles() {
     return getBodyHeight() - 60 /* HEADER */ - 55 /* FOOTER */;
   }
 
   moveOp = (id, atIndex) => {
+    const {
+      formKey,
+      editing: {
+        [formKey]: store,
+      }
+    } = this.props;
+
+    const {index} = store.find(id);
+
+    // this.props.moveOp(this.props.formKey, index, atIndex);
+    store.move(index, atIndex);
+  };
+
+  drop = (id, atIndex) => {
     const {
       formKey,
       editing: {
@@ -407,10 +260,13 @@ class TransactionForm extends Component {
     const {
       formKey,
       connectDropTarget,
-      // asyncValidating,
       dirty,
       editStop,
-      fields: {id, date, memo,},
+      fields: {
+        id,
+        date,
+        memo,
+      },
       handleSubmit,
       valid,
       invalid,
@@ -429,16 +285,15 @@ class TransactionForm extends Component {
 
       styles,
 
-      setName,
-      setDescription,
-      setAccount,
-      setAmount,
-
       accounts,
     } = this.props;
 
+    if (!store) {
+      return <span/>;
+    }
+
     const handleClose = () => {
-      editStop(formKey);
+      setImmediate(() => editStop(formKey));
       onCancel();
     };
 
@@ -452,13 +307,13 @@ class TransactionForm extends Component {
 
     const minHeight = TransactionForm._getStyles();
 
-    const tableHeight = 36 + (rowsCount * 50) + 50 + 2 + (activeRow ? 2 : 0) + 4 + (activeRow === 0 ? 0 : 2);
+    const tableHeight = 36 + (rowsCount * 50) + 50 + 2;// + (activeRow ? 2 : 0);// + (activeRow === 0 ? 0 : 2);
 
-    const bodyWidth = getBodyWeight() - 60;
+    const bodyWidth = getBodyWidth() - 60;
 
     const tableWidth = bodyWidth - 1;
 
-    const { DEBIT: sumOfDebits, CREDIT: sumOfCredits} = operations.reduce(function({DEBIT, CREDIT}, {type, amount}){
+    const {DEBIT: sumOfDebits, CREDIT: sumOfCredits} = operations.reduce(function ({DEBIT, CREDIT}, {type, amount}) {
       return {
         CREDIT: type === 'CREDIT' ? CREDIT + (amount || 0.0) : CREDIT,
         DEBIT: type === 'DEBIT' ? DEBIT + (amount || 0.0) : DEBIT,
@@ -484,11 +339,11 @@ class TransactionForm extends Component {
     return (
       <Modal styleName={'modal'}
              className={classnames({'valid': !pristine && valid, 'submitting': submitting, 'journal-form form modal-fullscreen': true, [styles['journal-form']]: true, [styles['dragging']]: this.state.dragging, })}
-             show={true} keyboard={false} backdrop={'static'} onHide={() => handleClose()} autoFocus enforceFocus>
+             show={true} keyboard={true} backdrop={false} onHide={() => handleCancel()} autoFocus enforceFocus>
         <div className="modal-header" style={{ background: '#1e3b4d', }}>
 
           <div styleName="title"
-               style={{}}>{formatMessage(messages['formTitle'], {transactionNumber: this.props.company.lastSeqNr + 1})}
+               style={{}}>{formatMessage(messages['formTitle'], {transactionNumber: this.props.company.lastTransactionIndex + 1})}
           </div>
 
           <div styleName="icon">
@@ -501,7 +356,7 @@ class TransactionForm extends Component {
           <div className="scrollable" style={{height: minHeight, overflowY: 'auto'}}>
 
 
-            {saveError && <div styleName="error">{formatMessage(saveError)}</div>}
+            {saveError && <div styleName="error">{formatMessage({ ...saveError, id: saveError._id, })}</div>}
 
             <div className="form-wrapper" style={{padding: 0, margin: 0,}}>
 
@@ -517,24 +372,7 @@ class TransactionForm extends Component {
 
                 <div styleName="date" style={{display: 'inline-block'}}>{formatMessage(messages['date_label'])}</div>
 
-                {/*
-
-                 <DatePicker
-                 selected={moment(date.defaultValue)}
-                 {...{onChange: date.onChange, onBlur: date.onBlur, onFocus: date.onFocus}}
-                 locale={locale}
-                 moment={moment}
-                 minDate={undefined}
-                 maxDate={undefined}
-                 className={styles.datepicker}
-                 weekdays={moment.weekdaysMin()}
-                 tabIndex={-1}
-                 />
-
-                */}
-
                 <DateTimePicker
-                  // onSelect={() => alert('selected!')}
                   {...{onChange: onDateChange, onBlur: onDateBlur, onFocus: onDateFocus}}
                   defaultValue={moment(date.defaultValue).toDate()}
                   // editFormat={"d"}
@@ -556,21 +394,30 @@ class TransactionForm extends Component {
 
                   {connectDropTarget(<div className="line-2-1" style={{}}>
 
-                    <ClickOutsideWrapper onClickOutside={(e) => store.hasActiveRow() && this._setActiveRow(undefined, e)}>
+                    <ClickOutsideWrapper
+                      onClickOutside={(e) => store.hasActiveRow() && this._setActiveRow(undefined, e)}>
 
                       <Table
-                        wrapRow={(Component, rowIndex, {style, className}) => {
+                        renderRow={(Component, rowIndex, {style, className}) => {
 
                           return (
-                            <Component {...{style: {...style/*, borderTop: rowIndex === activeRow ? 'none' : '1px solid #c7c7c7'*/, zIndex: rowIndex === activeRow ? 1 : 0}, className}}/>
+                           <div>
+                            <Component style={{...style, zIndex: 0}} className={`${className} ${styles['table-row-container']} ${styles[`${self.state.rowIndex === rowIndex ? '' : 'not-'}isDragging`]}`}/>
+                            {rowIndex === activeRow && <TransactionLineEditor
+                              styles={this.props.styles}
+                              store={store}
+                              rowIndex={activeRow}
+                              tableWidth={tableWidth}
+                              accounts={accounts}
+                              onClickOutside={(e) => store.hasActiveRow() && this._setActiveRow(undefined, e)}
+                            />}
+                          </div>
                           );
                         }}
+                        onHeaderClick={(e) => self._setActiveRow(0, e)}
                         onRowClick={(e, rowIndex) => self._setActiveRow(rowIndex, e)}
-                        // onRowMouseEnter
-                        // onRowMouseLeave
-                        rowClassNameGetter={(rowIndex) => `${styles.row} ${rowIndex === 0 ? styles['first-row'] : ''} ${rowIndex === activeRow ? styles['row-is-editing'] : ''} table-row ${styles[`${self.state.rowIndex === rowIndex ? '' : 'not-'}isDragging`]}`}
+                        rowClassNameGetter={(rowIndex) => `${styles.row} ${rowIndex === 0 ? styles['first-row'] : ''} table-row`}
                         rowHeight={50}
-                        rowHeightGetter={(rowIndex) => rowIndex === activeRow ? 54 : 50}
                         rowsCount={rowsCount}
                         height={tableHeight}
                         width={tableWidth}
@@ -588,8 +435,8 @@ class TransactionForm extends Component {
                              <Cell {...props}>
                                 <DragHandle
                                   rowIndex={rowIndex}
-                                  activeRow={activeRow}
                                   onHover={self._onHover}
+                                  drop={self.drop}
                                   moveOp={self.moveOp}
                                   findOp={self.findOp}
                                   id={operation.id || operation._id}
@@ -618,7 +465,7 @@ class TransactionForm extends Component {
                           columnKey={'accountCode'}
                           align={'left'}
                           header={<Cell>{formatMessage(messages.Account)}</Cell>}
-                          cell={(props) => <AccountCell {...props} accounts={accounts} styles={styles} activeRow={activeRow} store={store} onChange={ (rowIndex, value) => setAccount(formKey, rowIndex, value) }/>}
+                          cell={(props) => <AccountCell {...props} accounts={accounts} styles={styles} store={store}/>}
                           width={0.295 * tableWidth}
                           footer={<Cell><div className={`${styles['align-Right']} ${opsValid ? '' : styles['invalid']}`}><b style={{}}>{formatMessage(messages.Total)}</b></div></Cell>}
                         />
@@ -628,7 +475,7 @@ class TransactionForm extends Component {
                           columnKey={'debit'}
                           align={'right'}
                           header={<Cell>{formatMessage(messages.DEBIT)}</Cell>}
-                          cell={(props) => <DebitCell {...props} styles={styles} activeRow={activeRow} store={store} onChange={ (rowIndex, value) => setAmount(formKey, rowIndex, 'DEBIT', value) }/>}
+                          cell={(props) => <DebitCell {...props} styles={styles} store={store}/>}
                           width={0.1 * tableWidth}
                           footer={<Cell><div className={opsValid ? '' : styles['invalid']}>{sumOfDebits}</div></Cell>}
                         />
@@ -638,7 +485,7 @@ class TransactionForm extends Component {
                           columnKey={'credit'}
                           align={'right'}
                           header={<Cell>{formatMessage(messages.CREDIT)}</Cell>}
-                          cell={(props) => <CreditCell {...props} styles={styles} activeRow={activeRow} store={store} onChange={ (rowIndex, value) => setAmount(formKey, rowIndex, 'CREDIT', value) }/>}
+                          cell={(props) => <CreditCell {...props} styles={styles} store={store}/>}
                           width={0.1 * tableWidth}
                           footer={<Cell><div className={opsValid ? '' : styles['invalid']}>{sumOfCredits}</div></Cell>}
                         />
@@ -648,7 +495,7 @@ class TransactionForm extends Component {
                           columnKey={'description'}
                           align={'left'}
                           header={<Cell>{formatMessage(messages.Description)}</Cell>}
-                          cell={(props) => <TextValueCell {...props} styles={styles} type={'description'} activeRow={activeRow} store={store} onChange={ (rowIndex, value) => setDescription(formKey, rowIndex, value) } />}
+                          cell={(props) => <TextValueCell {...props} styles={styles} type={'description'} store={store}/>}
                           width={0.25 * tableWidth}
                           flexGrow={1}
                         />
@@ -658,7 +505,7 @@ class TransactionForm extends Component {
                           columnKey={'name'}
                           align={'left'}
                           header={<Cell>{formatMessage(messages.Name)}</Cell>}
-                          cell={(props) => <TextValueCell {...props} styles={styles} type={'name'} activeRow={activeRow} store={store} onChange={ (rowIndex, value) => setName(formKey, rowIndex, value) } />}
+                          cell={(props) => <TextValueCell {...props} styles={styles} type={'name'} store={store}/>}
                           width={0.15 * tableWidth}
                           flexGrow={1}
                         />
@@ -678,6 +525,7 @@ class TransactionForm extends Component {
                       </Table>
 
                     </ClickOutsideWrapper>
+
                   </div>)}
 
                   <div className="line-2-2" style={{minHeight: 30, marginTop: 10, }}>
@@ -737,7 +585,7 @@ class TransactionForm extends Component {
 
           <button
             styleName="button left"
-            onClick={() => handleClose()}
+            onClick={() => handleCancel()}
             disabled={submitting}
             className="btn btn-primary-outline unselectable">{formatMessage(messages['cancel'])}
           </button>
@@ -750,7 +598,7 @@ class TransactionForm extends Component {
               return save({...data})
                     .then(result => {
                       if (result && typeof result.error === 'object') {
-                        return Promise.reject(messages['error']);
+                        return Promise.reject(); // { defaultMessage: messages['error'].defaultMessage, _id: messages['error'].id, }
                       }
 
                       handleClose();
@@ -767,7 +615,7 @@ class TransactionForm extends Component {
               return save({...data})
                     .then(result => {
                       if (result && typeof result.error === 'object') {
-                        return Promise.reject(messages['error']);
+                        return Promise.reject(); // { defaultMessage: messages['error'].defaultMessage, _id: messages['error'].id, }
                       }
 
                       handleClose();
@@ -816,7 +664,7 @@ class TransactionForm extends Component {
     } = this.props;
 
     if (store.getActiveRow() !== rowIndex) {
-      this.props.setActiveRow(this.props.formKey, rowIndex);
+       this.props.setActiveRow(this.props.formKey, rowIndex);
     }
   };
 }
@@ -839,142 +687,40 @@ class AccountCell extends Component {
     styles: PropTypes.object.isRequired,
     store: PropTypes.object.isRequired,
     rowIndex: PropTypes.number.isRequired,
-    activeRow: PropTypes.number,
-    onChange: PropTypes.func.isRequired,
   };
 
   state = {
     open: false,
   };
 
-  constructor(props){
+  constructor(props) {
     super(props);
 
-    const {rowIndex, store, } = this.props;
+    const {rowIndex, store,} = this.props;
 
     const {account: accountCode} = store.getObjectAt(rowIndex);
 
     this.state.value = accountCode;
   }
 
-  componentWillReceiveProps(nextprops){
-    const {rowIndex, store, } = nextprops;
+  componentWillReceiveProps(nextprops) {
+    const {rowIndex, store,} = nextprops;
 
     const {account: accountCode} = store.getObjectAt(rowIndex);
 
-    if(this.state.value !== accountCode){
+    if (this.state.value !== accountCode) {
       this.setState({
         value: accountCode,
       });
     }
   }
 
-  componentDidMount(){
+  componentDidMount() {
     // this._component && this._component.focus();
   }
 
-  _renderEditor = ({rowIndex, accounts, onChange, store, props, styles}) => {
-
-    const { formatMessage, } = this.context.intl;
-
-    //const ListItem = React.createClass({
-    //  render() {
-    //    var person = this.props.item;
-    //
-    //    return (
-    //      <span>
-    //        <strong>{ person.firstName }</strong>
-    //        { " " + person.lastName }
-    //      </span>);
-    //  }
-    //});
-
-    //const Group = React.createClass({
-    //  render() {
-    //    return (<span>
-    //      {this.props.item + ' letters long'}
-    //    </span>);
-    //  }
-    //});
-
-    const self = this;
-
-    return (
-      <Cell {...props}>
-        <div>
-          <Select.Async
-            ref={(component) => this._component = component}
-            clearable
-            labelKey={'name'}
-            valueKey={'code'}
-            value={this.state.value}
-            loadOptions={async(input) => ({options: accounts})}
-            // valueRenderer={ListItem}
-            onChange={(item) => {
-              logInfo('Account Changed');
-
-              store.setAccount(rowIndex, item['code']);
-              self.setState({
-                value: item['code'],
-              });
-            }}
-            onBlur={(e) => {
-              logInfo('Account blurred');
-              // setImmediate(() => onChange(rowIndex, self.state.value));
-              store.setAccount(rowIndex, self.state.value);
-            }}
-            onFocus={(e) => {
-              logInfo('Account focused');
-            }}
-            // optionRenderer
-            placeholder={formatMessage(messages.accountPlaceholder)}
-            searchingText={formatMessage(messages.searchingText)}
-            searchPromptText={formatMessage(messages.searchPromptText)}
-            noResultsText={formatMessage(messages.emptyFilter)}
-          />
-        </div>
-      </Cell>
-    );
-
-    //return (
-    //  <Cell {...props}>
-    //    <div>
-    //      <Combobox
-    //        open={this.state.open}
-    //        onToggle={e => {
-    //          this.setState({open: !this.state.open})
-    //        }}
-    //        caseSensitive={false}
-    //        minLength={1}
-    //        filter='startsWith'
-    //        suggest={true}
-    //        valueField={'code'}
-    //        textField={(item) => {
-    //          return item['name'];
-    //        }}
-    //        defaultValue={accounts[0]}
-    //        data={accounts}
-    //        // itemComponent={ListItem}
-    //        onChange={(value) => {
-    //
-    //        }}
-    //        // groupBy={ item => item._groupCode }
-    //        // groupComponent={Group}
-    //        messages={{
-    //          emptyFilter: formatMessage(messages.emptyFilter)
-    //        }}
-    //      />
-    //    </div>
-    //  </Cell>
-    //);
-  };
-
   render() {
-    const {rowIndex, activeRow, store, styles, accounts, onChange, ...props} = this.props;
-
-    if (rowIndex === activeRow) {
-      return this._renderEditor({rowIndex, store, accounts, onChange, props, styles});
-    }
+    const {accounts, ...props} = this.props;
 
     const accountCode = this.state.value;
 
@@ -982,7 +728,11 @@ class AccountCell extends Component {
 
     return (
       <Cell {...props}>
-        {accountCode ? <div><b>{accounts[index].code.replace(/\./g, '')}</b><span style={{marginLeft: 10, display: 'inline', overflow: 'hidden', textOverflow: 'ellipsis',}} className="">{accounts[index].name}</span></div> : <div/>}
+        {accountCode ? <div>
+          <b>{accounts[index].code.replace(/\./g, '')}</b>
+          <span style={{marginLeft: 10, display: 'inline', overflow: 'hidden', textOverflow: 'ellipsis',}}
+                className="">{accounts[index].name}</span>
+        </div> : <div/>}
       </Cell>
     );
   }
@@ -994,14 +744,12 @@ class DebitCell extends Component {
     styles: PropTypes.object.isRequired,
     store: PropTypes.object.isRequired,
     rowIndex: PropTypes.number.isRequired,
-    activeRow: PropTypes.number,
-    onChange: PropTypes.func.isRequired,
   };
 
-  constructor(props){
+  constructor(props) {
     super(props);
 
-    const {rowIndex, store, } = this.props;
+    const {rowIndex, store,} = this.props;
 
     const {type, amount} = store.getObjectAt(rowIndex);
 
@@ -1010,62 +758,23 @@ class DebitCell extends Component {
     };
   }
 
-  componentWillReceiveProps(nextprops){
-    const {rowIndex, store, } = nextprops;
+  componentWillReceiveProps(nextprops) {
+    const {rowIndex, store,} = nextprops;
 
     const {type, amount} = store.getObjectAt(rowIndex);
 
-    if(this.state.value.type !== type || this.state.value.amount !== amount){
+    if (this.state.value.type !== type || this.state.value.amount !== amount) {
       this.setState({
         value: {type, amount},
       });
     }
   }
 
-  _renderEditor = ({rowIndex, store, onChange, props, styles}) => {
-    return (
-      <Cell {...props}>
-        <div className={''}>
-          <input
-            className={'form-control'}
-            style={{ textAlign: 'right', }}
-            type='text'
-            value={!this.state.value.type || this.state.value.type === 'DEBIT' ? this.state.value.amount : undefined}
-            onBlur={(e) => {
-              logInfo('Debit blurred');
-              // setImmediate(() => onChange(rowIndex, !this.state.value.type || this.state.value.type === 'DEBIT' ? this.state.value.amount : undefined));
-              store.setAmount(rowIndex, 'DEBIT', !this.state.value.type || this.state.value.type === 'DEBIT' ? this.state.value.amount : undefined);
-            }}
-            onFocus={(e) => {
-              logInfo('Debit focused');
-              //const amount = Number(e.target.value) || '';
-              //this.setState({
-              //  value: {type: 'DEBIT', amount}
-              //}, () => store.setAmount(rowIndex, 'DEBIT', amount));
-            }}
-            onChange={(e) => {
-              logInfo('Debit Changed');
-              const amount = parseFloat(e.target.value) || undefined;
-              this.setState({
-                value: {type: this.state.type, amount}
-              }, () => store.setAmount(rowIndex, 'DEBIT', amount));
-            }}/>
-        </div>
-      </Cell>
-    );
-  };
-
   render() {
-    const {rowIndex, activeRow, styles, onChange, store, ...props} = this.props;
-
-    if (rowIndex === activeRow) {
-      return !type || type === 'DEBIT' ? this._renderEditor({rowIndex, onChange, store, props, styles}) : <div/>;
-    }
-
     const {type, amount} = this.state.value;
 
     return (
-      <Cell {...props}>
+      <Cell {...this.props}>
         {!type || type === 'DEBIT' ? <div>{amount}</div> : <div/>}
       </Cell>
     );
@@ -1078,14 +787,12 @@ class CreditCell extends Component {
     styles: PropTypes.object.isRequired,
     store: PropTypes.object.isRequired,
     rowIndex: PropTypes.number.isRequired,
-    activeRow: PropTypes.number,
-    onChange: PropTypes.func.isRequired,
   };
 
-  constructor(props){
+  constructor(props) {
     super(props);
 
-    const {rowIndex, store, } = this.props;
+    const {rowIndex, store,} = this.props;
 
     const {type, amount} = store.getObjectAt(rowIndex);
 
@@ -1094,62 +801,23 @@ class CreditCell extends Component {
     };
   }
 
-  componentWillReceiveProps(nextprops){
-    const {rowIndex, store, } = nextprops;
+  componentWillReceiveProps(nextprops) {
+    const {rowIndex, store,} = nextprops;
 
     const {type, amount} = store.getObjectAt(rowIndex);
 
-    if(this.state.value.type !== type || this.state.value.amount !== amount){
+    if (this.state.value.type !== type || this.state.value.amount !== amount) {
       this.setState({
         value: {type, amount},
       });
     }
   }
 
-  _renderEditor = ({rowIndex, store, onChange, props, styles}) => {
-    return (
-      <Cell {...props}>
-        <div className={''}>
-          <input
-            className={'form-control'}
-            style={{ textAlign: 'right', }}
-            type='text'
-            value={!this.state.value.type || this.state.value.type === 'CREDIT' ? this.state.value.amount : undefined}
-            onBlur={(e) => {
-              logInfo('Credit blurred');
-              // setImmediate(() => onChange(rowIndex, !this.state.value.type || this.state.value.type === 'CREDIT' ? this.state.value.amount : undefined));
-              store.setAmount(rowIndex, 'CREDIT', !this.state.value.type || this.state.value.type === 'CREDIT' ? this.state.value.amount : undefined);
-            }}
-            onFocus={(e) => {
-              logInfo('Credit focused');
-              //const amount = Number(e.target.value) || '';
-              //this.setState({
-              //  value: {type: 'CREDIT', amount}
-              //}, () => store.setAmount(rowIndex, 'CREDIT', amount));
-            }}
-            onChange={(e) => {
-              logInfo('Credit Changed');
-              const amount = parseFloat(e.target.value) || undefined;
-              this.setState({
-                value: {type: this.state.type, amount}
-              }, () => store.setAmount(rowIndex, 'CREDIT', amount));
-            }}/>
-        </div>
-      </Cell>
-    );
-  };
-
   render() {
-    const {rowIndex, activeRow, styles, onChange, store, ...props} = this.props;
-
-    if (rowIndex === activeRow) {
-      return !type || type === 'CREDIT' ? this._renderEditor({rowIndex, onChange, store, props, styles}) : <div/>;
-    }
-
     const {type, amount} = this.state.value;
 
     return (
-      <Cell {...props}>
+      <Cell {...this.props}>
         {!type || type === 'CREDIT' ? <div>{amount}</div> : <div/>}
       </Cell>
     );
@@ -1163,14 +831,12 @@ class TextValueCell extends Component {
     type: PropTypes.oneOf(['name', 'description']).isRequired,
     store: PropTypes.object.isRequired,
     rowIndex: PropTypes.number.isRequired,
-    activeRow: PropTypes.number,
-    onChange: PropTypes.func.isRequired,
   };
 
-  constructor(props){
+  constructor(props) {
     super(props);
 
-    const {rowIndex, store, type, } = this.props;
+    const {rowIndex, store, type,} = this.props;
 
     const {[type]: value} = store.getObjectAt(rowIndex);
 
@@ -1179,84 +845,22 @@ class TextValueCell extends Component {
     };
   }
 
-  componentWillReceiveProps(nextprops){
-    const {rowIndex, store, type, } = nextprops;
+  componentWillReceiveProps(nextprops) {
+    const {rowIndex, store, type,} = nextprops;
 
     const {[type]: value} = store.getObjectAt(rowIndex);
 
-    if(this.state.value !== value){
+    if (this.state.value !== value) {
       this.setState({
         value,
       });
     }
   }
 
-  _renderEditor = ({rowIndex, store, type, onChange, props, styles}) => {
-    return (
-      <Cell {...props}>
-        <div className={''}>
-          <input
-            className={'form-control'}
-            style={{}}
-            type='text'
-            value={this.state.value}
-            onBlur={(e) => {
-              logInfo(type, ' blurred');
-              // setImmediate(() => onChange(rowIndex, this.state.value));
-              switch (type){
-                case 'name':
-                  store.setName(rowIndex, this.state.value);
-                  break;
-
-                case 'description':
-                  store.setDescription(rowIndex, this.state.value);
-                  break;
-              }
-            }}
-            onFocus={(e) => {
-              logInfo(type, ' focused');
-            }}
-            onChange={(e) => {
-              logInfo(type, ' Changed');
-              this.setState({
-                value: e.target.value,
-              }, () => {
-                switch (type){
-                case 'name':
-                  store.setName(rowIndex, this.state.value);
-                  break;
-
-                case 'description':
-                  store.setDescription(rowIndex, this.state.value);
-                  break;
-              }
-              })
-            }}/>
-        </div>
-      </Cell>
-    );
-  };
-
   render() {
-    const {
-      rowIndex,
-      type,
-      activeRow,
-      styles,
-      store,
-      onChange,
-      ...props
-    } = this.props;
-
-    if (rowIndex === activeRow) {
-      return this._renderEditor({rowIndex, onChange, type, store, props, styles});
-    }
-
-    const value = this.state.value;
-
     return (
-      <Cell {...props}>
-        <div>{value}</div>
+      <Cell {...this.props}>
+        <div>{this.state.value}</div>
       </Cell>
     );
   }
@@ -1268,7 +872,7 @@ function wrapWithC(Component, props) {
       return React.createElement(
         Component, {
           ...props,
-          accounts: this.props.root.accounts,
+          accounts: this.props.viewer.accounts,
         },
         this.props.children
       );
@@ -1279,8 +883,8 @@ function wrapWithC(Component, props) {
     initialVariables: {},
 
     fragments: {
-      root: () => Relay.QL`
-        fragment on Query {
+      viewer: () => Relay.QL`
+        fragment on User {
 
           accounts{
             id,
@@ -1310,6 +914,8 @@ module.exports = (props) => (
   />
 );
 
-function logInfo(...messages){
-  return console.log(...messages);
+function logInfo(...messages) {
+  if (process.env.NODE_ENV !== 'production') {
+    return console.log(...messages);
+  }
 }

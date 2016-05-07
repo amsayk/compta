@@ -1,3 +1,8 @@
+#!/usr/bin/env babel-node --optional es7.asyncFunctions
+
+require("babel-core/register");
+require("babel-polyfill");
+
 import * as fs from 'fs';
 import {sync as globSync} from 'glob';
 import {sync as mkdirpSync} from 'mkdirp';
@@ -16,8 +21,8 @@ const defaultMessages = globSync(MESSAGES_PATTERN)
   .reduce((collection, descriptors) => {
     descriptors.forEach(({id, defaultMessage}) => {
       if (collection.hasOwnProperty(id)) {
-        return;
-        // throw new Error(`Duplicate message id: ${id}`);
+        // return;
+        throw new Error(`Duplicate message id: ${id}`);
       }
 
       collection[id] = defaultMessage;
@@ -28,4 +33,53 @@ const defaultMessages = globSync(MESSAGES_PATTERN)
 
 
 mkdirpSync(LANG_DIR);
-fs.writeFileSync(LANG_DIR + 'en.json', JSON.stringify(defaultMessages, null, 2));
+fs.writeFileSync(LANG_DIR + 'fr.json', JSON.stringify(defaultMessages, null, 2));
+
+// if (process.env.TRANSLATE === 'yes') {
+//
+//   const messages = {};
+//
+//   const doTranslate = function () {
+//
+//     const MsTranslator = require('mstranslator');
+//
+//     const client = new MsTranslator({
+//       client_id: process.env.MICROSOFT_AZURE_CLIENT_ID
+//       , client_secret: process.env.MICROSOFT_AZURE_CLIENT_SECRET,
+//     }, true);
+//
+//     return function (key, text) {
+//       return new Promise((resolve, reject) => {
+//
+//         client.translate({text, from: 'en', to: 'fr-FR'}, function (error, translation) {
+//           if (error)  reject(error);
+//
+//           console.log('Got translation for ', text, ' = ', translation);
+//
+//           resolve({key, translation});
+//
+//           if(key){
+//             messages[key] = translation;
+//           }
+//
+//         });
+//
+//       });
+//     };
+//   }();
+//
+//   (async function () {
+//
+//     await doTranslate(null, 'Hello world');
+//     await doTranslate(null, 'Hello world');
+//
+//     await Object.keys(defaultMessages).reduce((promise, key) => {
+//       const text = defaultMessages[key];
+//       return promise.then(() => doTranslate(key, text));
+//     }, Promise.resolve());
+//
+//     fs.writeFileSync(LANG_DIR + 'fr.json', JSON.stringify(messages, null, 2));
+//
+//   })();
+//
+// }

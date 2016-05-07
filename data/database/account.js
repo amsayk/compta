@@ -1,10 +1,8 @@
 import Parse from 'parse';
 
-import {encode_period} from './utils';
+export default (company) => {
 
-export default (company, period) => {
-
-  const name = `Account_${company.id}_${encode_period(period)}`;
+  const name = `Account_${company.id}`;
 
   class Account extends Parse.Object {
     __type = 'Account';

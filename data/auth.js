@@ -1,12 +1,7 @@
 import Parse from 'parse';
 
-Parse.initialize(
-  process.env.APPLICATION_ID,
-  process.env.JAVASCRIPT_KEY
-);
-
 export function logIn(email, password, cb) {
-  return Parse.User.logIn(email, "default").then(function(user){
+  return Parse.User.logIn(email, 'default').then(function(user){
     return user.toJSON();
   });
 }

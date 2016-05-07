@@ -1,0 +1,3 @@
+.rv-radial-chart__series--pie > path {
+  stroke: none!important;
+}

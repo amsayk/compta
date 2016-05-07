@@ -1,0 +1,71 @@
+.stage-notes {
+  resize: none;
+  border: none;
+  width: 420px;
+  display: inline;
+  height: 82px;
+  color: #404040;
+  cursor: text;
+  padding-top: 12px;
+  // margin-left: -7px;
+}
+.floatLeft {
+  float: left;
+}
+
+.stage-view-notes {
+   width: 395px;
+   height: 65px;
+}
+
+.notes-status-success{
+ color: green;
+}
+.notes-status-error{
+ color: red;
+}
+.notes-status-saving{
+ color: inherit;
+}
+.notes-status {
+  font-style: italic;
+  padding-top: 5px;
+  margin-left: 7px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: gray;
+}
+
+.notes-input {
+  width: 395px;
+  height: 65px;
+  padding: 0px 6px;
+  line-height: 20px;
+  resize: none;
+  cursor: text;
+}
+.dijitTextArea {
+  overflow-y: auto;
+}
+.notes-view:hover {
+  background-color: #E3EAF3;
+}
+.notes-view{
+  height: 100%;
+  width: 100%;
+  // padding: 8px 0;
+  border-radius: 2px;
+}
+
+.notes-add:hover {
+  color: #365ebf;
+  text-decoration: underline;
+}
+
+.notes-add {
+  font-size: 0.8rem;
+  margin-left: 7px;
+  text-decoration: none;
+  color: #365ebf;
+  cursor: pointer;
+}

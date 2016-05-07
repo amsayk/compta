@@ -12,6 +12,12 @@ import styles from './CompanyForm.scss';
 
 import CSSModules from 'react-css-modules';
 
+import getFieldValue from '../utils/getFieldValue';
+
+import {
+  fromGlobalId,
+} from 'graphql-relay';
+
 import Parse from 'parse';
 
 import {Text, Select,} from '../form/form';
@@ -19,116 +25,43 @@ import {Text, Select,} from '../form/form';
 import {Company,} from '../../utils/types';
 
 const Progress = ({}) => (
-  <div className="mdl-progress mdl-js-progress mdl-progress__indeterminate is-upgraded">
-    <div className="progressbar bar bar1" style={{width: '0%'}}></div>
-    <div className="bufferbar bar bar2" style={{width: '100%'}}></div>
-    <div className="auxbar bar bar3" style={{width: '0%'}}></div>
+  <div className='mdl-progress mdl-js-progress mdl-progress__indeterminate is-upgraded'>
+    <div className='progressbar bar bar1' style={{width: '0%'}}></div>
+    <div className='bufferbar bar bar2' style={{width: '100%'}}></div>
+    <div className='auxbar bar bar3' style={{width: '0%'}}></div>
   </div>
 );
 
 import {
   FormattedMessage,
   FormattedRelative,
-  defineMessages,
   intlShape,
 } from 'react-intl';
 
-const messages = defineMessages({
+import makeAlias from  '../../utils/makeAlias';
 
-  error: {
-    id: 'error.unknown',
-    description: '',
-    defaultMessage: 'There was an unknown error. Please try again.',
-  },
+import messages from './messages';
 
-  displayNameError: {
-    id: 'error.displayName',
-    description: '',
-    defaultMessage: 'This Company Name was already used',
-  },
-
-  formTitle: {
-    id: 'message.add-company-title',
-    description: '',
-    defaultMessage: 'Create a new company',
-  },
-
-  formSubtitle: {
-    id: 'message.add-company-subtitle',
-    description: '',
-    defaultMessage: 'Just give it a name first…',
-  },
-
-  displayNameLabel: {
-    id: 'label.displayName',
-    description: '',
-    defaultMessage: 'What should we call it?'
-  },
-
-  displayNameDesc: {
-    id: 'description.displayName',
-    description: '',
-    defaultMessage: `This is how we’ll reference it. Don’t use any special characters, and start your name with a letter.`
-  },
-
-  displayNamePlaceholder: {
-    id: 'placeholder.displayName',
-    description: '',
-    defaultMessage: 'Pick a good name…'
-  },
-
-  periodTypeLabel: {
-    id: 'label.periodType',
-    description: '',
-    defaultMessage: 'What type of Period do you need?'
-  },
-
-  MONTHLY: {
-    id: 'MONTHLY',
-    description: '',
-    defaultMessage: 'MONTHLY'
-  },
-
-  TRIMESTERLY: {
-    id: 'TRIMESTERLY',
-    description: '',
-    defaultMessage: 'TRIMESTERLY'
-  },
-
-  cancel: {
-    id: 'cancel',
-    description: '',
-    defaultMessage: 'Cancel'
-  },
-
-  save: {
-    id: 'action.save-company',
-    description: '',
-    defaultMessage: 'Create it!'
-  },
-
-  saving: {
-    id: 'action.saving-company',
-    description: '',
-    defaultMessage: 'Saving…'
-  },
-
-});
-
-function asyncValidate({displayName}) {
+function asyncValidate({displayName, id}) {
   // TODO: figure out a way to move this to the server. need an instance of ApiClient
   if (!displayName) {
     return Promise.resolve({});
   }
   return new Promise((resolve, reject) => {
     const query = new Parse.Query(Company);
-    query.equalTo('displayNameLowerCase', displayName.toLowerCase());
+    query.equalTo('displayNameLowerCase', makeAlias(displayName));
+
+    if(id){
+      const {id: localId} = fromGlobalId(id);
+
+      query.notEqualTo('objectId', localId);
+    }
 
     query.first().then(
       function (object) {
         if (object) {
           reject({
-            displayName: messages.displayNameError
+            displayName: messages.displayNameError,
           });
           return;
         }
@@ -138,7 +71,7 @@ function asyncValidate({displayName}) {
 
       function () {
         reject({
-          displayName: messages.error
+          displayName: messages.error,
         });
       }
     );
@@ -147,13 +80,17 @@ function asyncValidate({displayName}) {
 
 @reduxForm({
     form: 'company',
-    fields: ['id', 'displayName', 'periodType',],
+    fields: [
+      'id',
+      'displayName',
+      'periodType',
+    ],
     validate: companyValidation,
     asyncValidate,
     asyncBlurFields: ['displayName'],
   }, (state, ownProps) => ({
     saveError: state.companies.saveError,
-    initialValues: ownProps.company || {periodType: 'MONTHLY',}, // Pass company on edit
+    initialValues: ownProps.company || { id: ownProps.formKey, periodType: 'MONTHLY', }, // Pass company on edit
   }),
   dispatch => bindActionCreators(companyActions, dispatch))
 @CSSModules(styles, {})
@@ -161,6 +98,7 @@ export default class CompanyForm extends Component {
   static contextTypes = {
     intl: intlShape.isRequired,
     router: PropTypes.object.isRequired,
+    store: PropTypes.object.isRequired,
   };
 
   static propTypes = {
@@ -186,7 +124,11 @@ export default class CompanyForm extends Component {
       dirty,
       formKey,
       editStop,
-      fields: {id, displayName, periodType,},
+      fields: {
+        id,
+        displayName,
+        periodType,
+      },
       handleSubmit,
       valid,
       invalid,
@@ -204,15 +146,32 @@ export default class CompanyForm extends Component {
       onCancel();
     };
 
+    if(process.env.NODE_ENV !== 'production'){
+      // console.group();
+      //
+      // console.log('Values', [id, displayName, periodType].map(e => e));
+      // console.log('Valid', [id, displayName, periodType].filter(e => e.valid).map(e => e));
+      // console.log('Invalid', [id, displayName, periodType].filter(e => !e.valid).map(e => e));
+      //
+      // console.log('Form valid', valid);
+      // console.log('Form invalid', invalid);
+      // console.log('Form pristine', pristine);
+      // console.log('Form dirty', dirty);
+      //
+      // console.log('Save error', saveError);
+      //
+      // console.groupEnd();
+    }
+
     return (
 
       <Modal styleName={'modal'}
-             className={classnames({'valid': !pristine && valid, 'submitting': submitting, form: true})} show={true}
-             keyboard={false} backdrop={'static'} onHide={() => handleClose()} autoFocus enforceFocus>
+             className={classnames({'valid': !pristine && valid, 'submitting': submitting, form: true, 'app-modal': true,})} show={true}
+             keyboard={false} backdropStyle={{opacity: 0.5,}} backdrop={'static'} onHide={() => handleClose()} autoFocus enforceFocus>
         <Modal.Header>
-          <div className="title">{formatMessage(messages['formTitle'])}
+          <div className='title'>{formatMessage(messages['formTitle'])}
           </div>
-          <div className="subtitle">{formatMessage(messages['formSubtitle'])}</div>
+          <div className='subtitle'>{formatMessage(messages['formSubtitle'])}</div>
         </Modal.Header>
         <Modal.Body>
 
@@ -230,34 +189,43 @@ export default class CompanyForm extends Component {
             props={{...displayName, error: displayName.error && formatMessage(displayName.error)}}
           />
 
-          {saveError && <div styleName="error">{formatMessage(saveError)}</div>}
+          {saveError && <div styleName='error'>{formatMessage({ ...saveError, id: saveError._id, })}</div>}
           {submitting && <Progress/>}
 
         </Modal.Body>
         <Modal.Footer>
 
           <button
-            styleName="button"
+            styleName='button'
             onClick={() => handleClose()}
             disabled={submitting}
-            className="btn btn-primary-outline unselectable">{formatMessage(messages['cancel'])}
+            className='btn btn-primary-outline unselectable'>{formatMessage(messages['cancel'])}
           </button>
 
           <button
-            styleName="button"
-            onClick={handleSubmit((data) => {
-              return save({...data, viewer: this.props.viewer, root: this.props.root})
+            styleName='button'
+            onClick={handleSubmit((data, dispatch) => {
+              // return Promise.reject({
+              //   displayName: messages['error'],
+              // });
+              return save({...data, viewer: this.props.viewer})
                     .then(result => {
-                      if (result && typeof result.error === 'object') {
-                        return Promise.reject(messages['error']);
-                      }
 
-                      handleClose();
-                      setImmediate(() => {this.context.router.push(`/apps/${result.result.id}/`);})
+                      const handleResponse = (result) => {
+                        if (result && typeof result.error === 'object') {
+                          return Promise.reject(); // { defaultMessage: messages['error'].defaultMessage, _id: messages['error'].id, }
+                        }
+
+                        handleClose();
+                        setImmediate(() => {this.context.router.push(`/apps/${result.result.id}/`);});
+                        return Promise.resolve();
+                      };
+
+                      return handleResponse(result);
                     });
             })}
             disabled={pristine || invalid || submitting}
-            className={"btn btn-primary unselectable" + (!pristine && valid ? ' green' : '')}>
+            className={'btn btn-primary unselectable' + (!pristine && valid ? ' green' : '')}>
             {' '}{formatMessage(submitting ? messages['saving'] : messages['save'])}
           </button>
 

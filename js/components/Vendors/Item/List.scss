@@ -1,0 +1,468 @@
+.list-stage {
+    padding-bottom: 5px;
+    border-bottom: 1px solid #d6e0ed;
+    top: 0;
+    left: 0;
+}
+.directoryList.list {
+    top: 155px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.list-stage .top-stage {
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+.list-stage .actions-sort, .list-stage .searchBox {
+    display: block;
+    margin: 0;
+    padding: 0px 15px 10px 15px;
+}
+.dijitInline {
+    display: inline-block;
+    border: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+
+
+.dijitReset {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    line-height: normal;
+    color: inherit;
+}
+.dijitComboBox input {
+    padding-right: 30px;
+}
+.dijitSelect .dijitButtonText{
+// , textarea, *:not(.ha-text-field) > input[type=text], input[type=password] {
+    outline: none;
+    height: 34px;
+    border: 1px solid #c7c7c7;
+    padding: 0 8px;
+    background-clip: border-box;
+    border-radius: 2px;
+    transition-property: border;
+    transition-duration: 0.35s;
+    font-size: 1rem;
+    background-color: white;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    width: 100%;
+    vertical-align: middle;
+}
+.list-stage .searchBox .dijitInputInner {
+    font-size: 0.9rem;
+}
+.list-stage .searchBox .dijitButtonNode {
+    background-size: 13px;
+    background-position: 7px 11px;
+}
+.dijitComboBox.searchBox .dijitArrowButton {
+    background-repeat: no-repeat;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgb3ZlcmZsb3c9InZpc2libGUiPjxwYXRoIGZpbGw9IiM5ODk4OTgiIGQ9Ik02MS45NjEgNTIuMDk0bC0xMC45NDUtMTAuOTM4Yy0xLjgyMi0xLjgyLTQuMzkxLTIuMzk4LTYuNzEzLTEuNzg1bC0yLjk5Ni0yLjk5NmMyLjg2OS0zLjg5OCA0LjQ4Mi04LjU0NyA0LjQ4Ni0xMy40OCAwLTYuMTEzLTIuMzg1LTExLjg2My02LjcwOS0xNi4xOTEtNC4zMjYtNC4zMjEtMTAuMDc3LTYuNzA0LTE2LjE5NS02LjcwNC02LjExOSAwLTExLjg3MSAyLjM4My0xNi4xOTIgNi43MDMtOC45MjggOC45MjYtOC45MzIgMjMuNDUzIDAgMzIuMzc5IDQuMzIgNC4zMjggMTAuMDcyIDYuNzA3IDE2LjE5MSA2LjcwNyA0LjkzMyAwIDkuNTg4LTEuNjEzIDEzLjQ4OC00LjQ4NGwyLjk5NCAzYy0uNjExIDIuMzI0LS4wMzkgNC44OTUgMS43NzkgNi43MTFsMTAuOTQ1IDEwLjk0MWMxLjM2NSAxLjM2MyAzLjE1IDIuMDQzIDQuOTMxIDIuMDQzIDEuNzg1IDAgMy41NzItLjY4IDQuOTM2LTIuMDQzIDIuNzE5LTIuNzIzIDIuNzE5LTcuMTQxIDAtOS44NjN6bS01MC4zMzQtMTcuOTQyYy02LjIxOS02LjIxOS02LjIxOS0xNi4zMDEgMC0yMi41MiAzLjExMS0zLjEwOSA3LjE4Ni00LjY2IDExLjI2Mi00LjY2IDQuMDc0IDAgOC4xNSAxLjU1MSAxMS4yNjQgNC42NiA2LjIxNyA2LjIxOSA2LjIxNyAxNi4zMDUtLjAwNCAyMi41Mi0zLjExIDMuMTA5LTcuMTg2IDQuNjY4LTExLjI2IDQuNjY4LTQuMDc3IDAtOC4xNTEtMS41NTgtMTEuMjYyLTQuNjY4eiIvPjwvc3ZnPg==");
+    background-size: 18px;
+    background-position: 4px 8px;
+}
+.dijitSelect .dijitButtonNode, .dijitComboBox .dijitButtonNode {
+    height: 34px;
+    width: 30px;
+    display: inline-block;
+    margin-left: -30px;
+}
+.dijitTextBox .dijitButtonNode {
+    border-width: 0;
+}
+.dijitButtonNode {
+    transition-property: background-color;
+    transition-duration: 0.3s;
+}
+.dijitSelect, .dijitSelect *, .dijitButtonNode, .dijitButtonNode * {
+    cursor: pointer;
+}
+.dijitButtonNode {
+    border: 0 none;
+    margin: 0;
+    line-height: normal;
+    vertical-align: middle;
+    text-align: center;
+    white-space: nowrap;
+}
+.dijitComboBox.searchBox .dijitArrowButton .dropDownImage {
+    display: none;
+}
+
+.dijitSelect .dijitDownArrowButton .dropDownImage, .dijitComboBox .dijitDownArrowButton .dropDownImage {
+    margin: 10px 0 0 10px;
+}
+.dijitSelect, .dijitSelect *, .dijitButtonNode, .dijitButtonNode * {
+    cursor: pointer;
+}
+.dijitButtonNode * {
+    vertical-align: middle;
+}
+.dijitToggleButton, .dijitButton, .dijitDropDownButton, .dijitComboButton {
+    margin: 0.2em;
+    vertical-align: middle;
+}
+.actions-sort :global .dropdown-toggle{
+
+}
+.actions-sort :global .dropdown-toggle:after{
+  color: #000;
+}
+.bbutton, .button {
+    background-clip: padding-box;
+    border-radius: 2px;
+    font-family: "HelveticaNeueRoman", Helvetica, Arial, sans-serif;
+    min-width: 80px;
+    cursor: pointer;
+    font-size: 1rem;
+    height: 34px;
+    line-height: 34px;
+    padding: 0 20px;
+    border: 0;
+    margin: 0px;
+    box-sizing: border-box;
+    color: #365ebf;
+    box-shadow: inset 0 0 0 1px #dcdcdc;
+    background-image: -webkit-linear-gradient(top, #fff 0%, #f2f2f2 100%);
+    background-image: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);
+    -webkit-font-smoothing: subpixel-antialiased;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    white-space: nowrap;
+}
+.list-stage .actions-sort, .list-stage .searchBox {
+    display: block;
+    margin: 0;
+    padding: 0px 15px 10px 15px;
+}
+.list-stage .actions-sort .bbutton, .list-stage .searchBox .button {
+    width: 210px;
+    margin: 0;
+    padding-left: 10px;
+    padding-right: 15px;
+    text-align: left;
+}
+.dijitDropDownButton {
+    padding: 0 15px;
+}
+.list-stage .actions-sort .button span:first-child, .list-stage .searchBox .button span:first-child {
+    width: 165px;
+    display: inline-block;
+}
+.button .caret-up, .button:link .caret-up, [type=button] .caret-up, [type=submit] .caret-up {
+    display: inline-block;
+    width: 0 !important;
+    height: 0 !important;
+    vertical-align: middle;
+    border-bottom: 6px solid #404040;
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+    content: "";
+    background-color: transparent;
+    margin-left: 5px;
+    border-top-color: #404040;
+}
+
+.dgrid {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    height: 30em;
+    display: block;
+}
+.dgrid {
+    height: auto;
+    background: transparent;
+    color: #666;
+    border: 0 none;
+}
+.dgrid-scroller {
+    // overflow-x: hidden;
+    overflow-y: auto;
+    position: absolute;
+    top: 0px;
+    margin-top: 25px;
+    bottom: 0px;
+    width: 100%;
+}
+.dgrid .dgrid-scroller, .dgrid .dgrid-row, .dgrid .dgrid-cell {
+    outline: 0 none;
+}
+.dgrid * {
+    box-sizing: border-box !important;
+}
+.dgrid .dgrid-scroller {
+    // position: static;
+    // overflow-y: visible;
+    margin: 0 !important;
+}
+
+
+.directoryList .dgrid .dgrid-scroller {
+    position: absolute;
+    overflow-y: auto;
+    z-index: 1;
+}
+.directoryList .dgrid .dgrid-content {
+    border-bottom: 0px;
+}
+.dgrid .dgrid-content {
+    font-size: 0.9rem;
+    color: #404040;
+    background-color: #fff;
+    border-bottom: 1px solid #c7c7c7;
+}
+
+.dgrid-content {
+    position: relative;
+    height: 99%;
+}
+.directoryList .dgrid-selected {
+    background-color: inherit;
+}
+
+.dgrid .dgrid-row {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+}
+
+.directoryList.list .directory-list-item {
+    margin-right: 15px;
+    margin-left: 15px;
+}
+.directoryList .dgrid-selected .directory-list-item a {
+    background-color: #f3f8fe;
+}
+
+.directoryList .link {
+    display: block;
+    padding: 8px 20px 8px 20px;
+    border-bottom: 1px solid #d6e0ed;
+    color: #404040;
+}
+.directoryList .link .display-name {
+    font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+    width: 170px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    height: 16px;
+}
+.directoryList .link .balance {
+    font-size: 13px;
+}
+
+.split-view .hideDirectory ~ .pane-toggle {
+    -webkit-animation: 0.3s hideLink cubic-bezier(0.42, 0, 0.58, 1) forwards;
+    animation: 0.3s hideLink cubic-bezier(0.42, 0, 0.58, 1) forwards;
+}
+.directory-pane .pane-toggle {
+    padding: 19px 5px 0 5px;
+}
+
+.split-view .directory {
+    overflow: hidden;
+}
+
+.split-view .directory.showDirectory {
+    -webkit-animation: 0.3s showDirectory ease-out forwards;
+    animation: 0.3s showDirectory ease-out forwards;
+}
+@keyframes showDirectory{
+  0% {
+    width: 30px;
+    opacity: 0;
+    transform: translateX(-242px);
+}
+70% {
+    width: 260px;
+    opacity: 0.8;
+    transform: translateX(10px);
+}
+100% {
+    width: 242px;
+    transform: translateX(0);
+    opacity: 1;
+}
+}
+
+@keyframes hideLink{
+  0% {
+    transform: translateX(200px);
+}
+100% {
+    transform: translateX(0);
+}
+}
+
+.list-stage .back-link {
+    margin: 0;
+    margin-bottom: 0;
+    padding: 0px 10px 0px 10px;
+    color: #365ebf;
+}
+.inlineBlock {
+    display: inline-block;
+}
+.list-stage .addNew {
+    float: right;
+    cursor: pointer;
+    font-size: 22px;
+}
+
+.hi {
+    color: #7090ab;
+}
+.hi {
+    display: inline-block;
+    font-family: harmonyicons;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.directory-pane .half-hamburger-left-arrow {
+    display: inline-block;
+    background: url("../../images/hamburger-arrow.svg") no-repeat 3px 1px;
+    width: 24px;
+    height: 20px;
+    background-size: 300%;
+}
+.directory-pane .pane-toggle-directory-button {
+    margin-right: 15px;
+    margin-left: 15px;
+    font-size: 20px;
+    line-height: 23px;
+    cursor: pointer;
+}
+.floatRight {
+    float: right;
+}
+.hi-create:before {
+    content: "\f05f";
+}
+
+.directory-pane .half-hamburger-right-arrow {
+    display: inline-block;
+    background: url("../../images/hamburger-arrow.svg") no-repeat 4px -32px;
+    width: 24px;
+    height: 20px;
+    background-size: 300%;
+}
+
+.directory-pane .pane-toggle-button {
+    cursor: pointer;
+}
+
+.flex-fixed {
+    flex: 0 0 auto;
+}
+
+.flex-columns{
+  flex: 1;
+  flex-direction: row;
+  width: 100%;
+}
+.flex-columns>.flex-flexible {
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  overflow: auto;
+}
+.directory-pane.flex-fixed {
+}
+.flex-columns>.flex-fixed {
+  -webkit-flex: 0 0 auto;
+  -ms-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+.directory-pane {
+  // display: table-cell;
+  min-width: 30px;
+}
+.body {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    position: relative;
+}
+.flex-flexible {
+  flex: 1;
+  overflow: auto;
+}
+.flex-children {
+  display: flex;
+}
+
+.link:hover .display-name,
+.list-stage .back-link:hover{
+  text-decoration: underline;
+}
+
+.list-stage .back-link .backArrow {
+    height: 17px;
+    width: 17px;
+    display: inline-block;
+    background-size: 134px;
+    background-position: 0 -20px;
+    // vertical-align: top;
+    cursor: pointer;
+}
+
+.arrow-sprite, .dijitCalendarIncrementControl {
+    background-repeat: no-repeat;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NzIiIGhlaWdodD0iMzk1Ij48cG9seWdvbiBmaWxsPSIjNDE0MTQxIiBwb2ludHM9IjIzMC4yNjYsNzguNTIxIDIyMi4yNjYsNzAuODgxIDI0Mi41NjYsNTAuNTIxIDIyMi4yNjYsMzAuNDYzIDIzMC44MDksMjIuNTIxIDI1OC41NjYsNTAuMjIxIi8+PHBvbHlnb24gZmlsbD0iIzQxNDE0MSIgcG9pbnRzPSI1OC43MjgsNzguNTIxIDY2LjcyOCw3MC44ODEgNDYuNDI3LDUwLjUyMSA2Ni43MjgsMzAuNDYzIDU4LjE4NSwyMi41MjEgMzAuNDI4LDUwLjIyMSIvPjxwb2x5Z29uIGZpbGw9IiM0MTQxNDEiIHBvaW50cz0iNjUyLjU3Nyw0MC4zNzEgNjQ0LjkzOCwzMi4zNzEgNjI0LjU3Nyw1Mi42NzIgNjA0LjUxOSwzMi4zNzEgNTk2LjU3Nyw0MC45MTQgNjI0LjI3Niw2OC42NzIiLz48cG9seWdvbiBmaWxsPSIjNDE0MTQxIiBwb2ludHM9IjQ2MC43ODEsNjAuNjcyIDQ1My4xNDEsNjguNjcyIDQzMi43ODEsNDguMzcxIDQxMi43MjMsNjguNjcyIDQwNC43ODEsNjAuMTI5IDQzMi40OCwzMi4zNzEiLz48cG9seWdvbiBmaWxsPSIjNTE3MEI1IiBwb2ludHM9IjIzMC4yNjYsMTc0LjUyMSAyMjIuMjY2LDE2Ni44ODEgMjQyLjU2NiwxNDYuNTIxIDIyMi4yNjYsMTI2LjQ2MyAyMzAuODA5LDExOC41MjEgMjU4LjU2NiwxNDYuMjIxIi8+PHBvbHlnb24gZmlsbD0iIzUxNzBCNSIgcG9pbnRzPSI1OC43MjgsMTc0LjUyMSA2Ni43MjgsMTY2Ljg4MSA0Ni40MjcsMTQ2LjUyMSA2Ni43MjgsMTI2LjQ2MyA1OC4xODUsMTE4LjUyMSAzMC40MjgsMTQ2LjIyMSIvPjxwb2x5Z29uIGZpbGw9IiM1MTcwQjUiIHBvaW50cz0iNjUyLjU3NywxMzYuMzcxIDY0NC45MzgsMTI4LjM3MSA2MjQuNTc3LDE0OC42NzIgNjA0LjUxOSwxMjguMzcxIDU5Ni41NzcsMTM2LjkxNCA2MjQuMjc2LDE2NC42NzIiLz48cG9seWdvbiBmaWxsPSIjNTE3MEI1IiBwb2ludHM9IjQ2MC43ODEsMTU2LjY3MiA0NTMuMTQxLDE2NC42NzIgNDMyLjc4MSwxNDQuMzcxIDQxMi43MjMsMTY0LjY3MiA0MDQuNzgxLDE1Ni4xMjkgNDMyLjQ4LDEyOC4zNzEiLz48cG9seWdvbiBmaWxsPSIjQjNCMkIzIiBwb2ludHM9IjIzMC4yNjYsMjcwLjUyMSAyMjIuMjY2LDI2Mi44ODEgMjQyLjU2NiwyNDIuNTIxIDIyMi4yNjYsMjIyLjQ2MyAyMzAuODA5LDIxNC41MjEgMjU4LjU2NiwyNDIuMjIxIi8+PHBvbHlnb24gZmlsbD0iI0IzQjJCMyIgcG9pbnRzPSI1OC43MjgsMjcwLjUyMSA2Ni43MjgsMjYyLjg4MSA0Ni40MjcsMjQyLjUyMSA2Ni43MjgsMjIyLjQ2MyA1OC4xODUsMjE0LjUyMSAzMC40MjgsMjQyLjIyMSIvPjxwb2x5Z29uIGZpbGw9IiNCM0IyQjMiIHBvaW50cz0iNjUyLjU3NywyMzIuMzcxIDY0NC45MzgsMjI0LjM3MSA2MjQuNTc3LDI0NC42NzIgNjA0LjUxOSwyMjQuMzcxIDU5Ni41NzcsMjMyLjkxNCA2MjQuMjc2LDI2MC42NzIiLz48cG9seWdvbiBmaWxsPSIjQjNCMkIzIiBwb2ludHM9IjQ2MC43ODEsMjUyLjY3MiA0NTMuMTQxLDI2MC42NzIgNDMyLjc4MSwyNDAuMzcxIDQxMi43MjMsMjYwLjY3MiA0MDQuNzgxLDI1Mi4xMjkgNDMyLjQ4LDIyNC4zNzEiLz48cG9seWdvbiBmaWxsPSIjZmZmIiBwb2ludHM9IjIzMC4yNjYsMzc2LjUyMSAyMjIuMjY2LDM2OC44ODEgMjQyLjU2NiwzNDguNTIxIDIyMi4yNjYsMzI4LjQ2MyAyMzAuODA5LDMyMC41MjEgMjU4LjU2NiwzNDguMjIxIi8+PHBvbHlnb24gZmlsbD0iI2ZmZiIgcG9pbnRzPSI1OC43MjgsMzc2LjUyMSA2Ni43MjgsMzY4Ljg4MSA0Ni40MjcsMzQ4LjUyMSA2Ni43MjgsMzI4LjQ2MyA1OC4xODUsMzIwLjUyMSAzMC40MjgsMzQ4LjIyMSIvPjxwb2x5Z29uIGZpbGw9IiNmZmYiIHBvaW50cz0iNjUyLjU3NywzMzguMzcxIDY0NC45MzgsMzMwLjM3MSA2MjQuNTc3LDM1MC42NzIgNjA0LjUxOSwzMzAuMzcxIDU5Ni41NzcsMzM4LjkxNCA2MjQuMjc2LDM2Ni42NzIiLz48cG9seWdvbiBmaWxsPSIjZmZmIiBwb2ludHM9IjQ2MC43ODEsMzU4LjY3MiA0NTMuMTQxLDM2Ni42NzIgNDMyLjc4MSwzNDYuMzcxIDQxMi43MjMsMzY2LjY3MiA0MDQuNzgxLDM1OC4xMjkgNDMyLjQ4LDMzMC4zNzEiLz48L3N2Zz4=");
+}
+
+.ddijitDropDownButton {
+  padding: 0 15px;
+}
+
+.bbutton {
+  background-clip: padding-box;
+  border-radius: 2px;
+  font-family: "HelveticaNeueRoman", Helvetica, Arial, sans-serif;
+  min-width: 80px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  height: 34px;
+  line-height: 34px;
+  padding: 0 20px;
+  border: 0;
+  margin: 0px;
+  box-sizing: border-box;
+  color: #365ebf;
+  box-shadow: inset 0 0 0 1px #dcdcdc;
+  background-image: -webkit-linear-gradient(top, #fff 0%, #f2f2f2 100%);
+  background-image: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);
+  -webkit-font-smoothing: subpixel-antialiased;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.dijitDropDownButton {
+  margin: 0.2em;
+  vertical-align: middle;
+}
+
+.unselectable{
+  -webkit-user-select: none;
+}

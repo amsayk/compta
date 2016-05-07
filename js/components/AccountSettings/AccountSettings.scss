@@ -1,16 +1,29 @@
 .settings-page {
-  padding: 120px 0 80px;
+  padding: 0;
+}
+
+.settings-page-body{
+  padding: 24px 0 0;
 }
 
 .toolbar {
+  z-index: 1;
+
   position: fixed;
   top: 0;
   right: 0;
-  left: 300px;
-  background: #353446;
+  left: 225px;
   height: 96px;
-  color: #fff;
   transition: left .5s ease-in;
+
+  border-bottom: 1px solid #e3eaf3;;
+
+  font-family: HelveticaNeueRoman, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+
+  background-image: -webkit-linear-gradient(bottom, #f6f8fb 0%, #f9fafb 100%);
+  background-image: linear-gradient(to top, #f6f8fb 0%, #f9fafb 100%);
+  background-color: #f3f5f8;
 }
 
 .title {
@@ -32,9 +45,11 @@ body.fonts_loaded .section {
 }
 
 .subsection {
-  font-size: 18px;
   vertical-align: bottom;
   margin-right: 10px;
+
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  font-size: 2.2rem;
 }
 
 .details {
@@ -45,7 +60,7 @@ body.fonts_loaded .section {
 .actions {
   position: absolute;
   right: 14px;
-  bottom: 14px;
+  bottom: 20px;
 }
 
 .fieldset {
@@ -173,7 +188,12 @@ body.fonts_loaded .button {
   min-width: 110px;
   padding: 0 16px;
   font-size: 14px;
-  //color: #169cee;
+}
+
+.button.btn-danger {
+  color: #fff;
+  background-color: #d9534f;
+  border-color: #d9534f;
 }
 
 .unselectable {
@@ -185,5 +205,8 @@ body.fonts_loaded .button {
 .primary:focus, .primary:hover {
   background-color: #0e69a1;
 }
-          
+
+.button.btn-danger:hover, .button.btn-danger:focus {
+  background-color: #ce2e4b;
+}
           

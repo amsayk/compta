@@ -6,24 +6,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  left: 300px;
-  background: #353446;
-  height: 96px;
-  color: #fff;
-  transition: left .5s ease-in;
-}
-
-.title {
-  position: absolute;
-  left: 14px;
-  bottom: 10px;
-}
-
-.toolbar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 300px;
+  left: 225px;
   background: #353446;
   height: 96px;
   color: #fff;
@@ -49,9 +32,11 @@ body.fonts_loaded .section {
 }
 
 .subsection {
-  font-size: 18px;
   vertical-align: bottom;
   margin-right: 10px;
+
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  font-size: 2.2rem;
 }
 
 .details {
@@ -62,5 +47,5 @@ body.fonts_loaded .section {
 .actions {
   position: absolute;
   right: 14px;
-  bottom: 14px;
+  bottom: 20px;
 }

@@ -6,8 +6,7 @@ import CSSModules from 'react-css-modules';
 
 import styles from './Forgot.scss';
 
-import config from '../../config';
-import DocumentMeta from 'react-document-meta';
+import Title from '../Title/Title';
 
 import {
   defineMessages,
@@ -18,21 +17,21 @@ const messages = defineMessages({
 
   abort: {
     id: 'forgot-page.abort-message',
-    defaultMessage: 'Never mind, go back'
+    defaultMessage: 'Retour à la page de connexion'
   },
 
   help: {
     id: 'forgot.help-message',
     defaultMessage:
-      `<span>That's okay. Enter your email and we'll send</span>
-            <br/><span>you a way to reset your password.
+      `<span>C'est bon. Entrez votre email et nous vous enverrons</span>
+            <br/><span>un moyen de réinitialiser votre mot de passe.
             </span>`
   },
 
   Forgot: {
-    id: 'title.forgot',
+    id: 'forgot-page.title.forgot',
     description: '',
-    defaultMessage: 'Reset your password',
+    defaultMessage: 'Réinitialiser votre mot de passe',
   },
 
   defaultForgotEmail: {
@@ -44,25 +43,25 @@ const messages = defineMessages({
   title: {
     id: 'forgot-form.title',
     description: '',
-    defaultMessage: 'Reset your password',
+    defaultMessage: 'Réinitialiser votre mot de passe',
   },
 
   email: {
     id: 'forgot-page.label.email',
     description: '',
-    defaultMessage: 'Email',
+    defaultMessage: 'E-mail',
   },
 
   error: {
-    id: 'error.login',
+    id: 'forgot-page.error.login',
     description: '',
-    defaultMessage: 'You must enter a valid e-mail address.'
+    defaultMessage: 'Vous devez entrer une adresse email valide.'
   },
 
   reset: {
     id: 'forgot-page.action-reset',
     description: '',
-    defaultMessage: 'Reset password'
+    defaultMessage: 'Continuer'
   },
 
 });
@@ -126,26 +125,26 @@ class Forgot extends Component {
   _renderForm = () => {
     const { formatMessage, formatHTMLMessage, } = this.context.intl;
     return (
-      <div styleName="forgot" style={{ marginTop: '-220px' }}>
+      <div styleName='forgot' style={{ marginTop: '-220px' }}>
 
-        <i className="material-icons md-dark md-inactive" style={{fontSize: 80}}>account_balance_wallet</i>
+        <i className='material-icons md-dark md-inactive' style={{fontSize: 80}}>account_balance_wallet</i>
 
-        <form styleName="form" onSubmit={this.handleSubmit}>
+        <form styleName='form' onSubmit={this.handleSubmit}>
 
 
-          <div styleName="header">{formatMessage(messages.title)}</div>
+          <div styleName='header'>{formatMessage(messages.title)}</div>
 
-          <label styleName="row">
+          <label styleName='row'>
 
-            <div styleName="label">{formatMessage(messages.email)}</div>
+            <div styleName='label'>{formatMessage(messages.email)}</div>
 
-            <div styleName="input">
-              <input type="text" ref="email" defaultValue={formatMessage(messages.defaultForgotEmail)} autoFocus/>
+            <div styleName='input'>
+              <input type='text' ref='email' defaultValue={formatMessage(messages.defaultForgotEmail)} autoFocus/>
             </div>
 
           </label>
 
-          <div styleName="message">
+          <div styleName='message'>
 
             <span
               dangerouslySetInnerHTML={{
@@ -155,19 +154,19 @@ class Forgot extends Component {
 
           </div>
 
-          {this.state.error && <div styleName="error">
+          {this.state.error && <div styleName='error'>
             {formatMessage(messages.error)}
           </div>}
 
-          <div styleName="footer">
+          <div styleName='footer'>
 
-            <div styleName="verticalCenter" style={{width:'100%'}}>
-              <a href="javascript:;" onClick={this._onAbort}>{formatMessage(messages.abort)}</a>
+            <div styleName='verticalCenter' style={{width:'100%'}}>
+              <a href='javascript:;' onClick={this._onAbort}>{formatMessage(messages.abort)}</a>
             </div>
 
           </div>
 
-          <input type="submit" styleName="submit" value={formatMessage(messages.reset)}/>
+          <input type='submit' styleName='submit' value={formatMessage(messages.reset)}/>
 
         </form>
 
@@ -178,8 +177,8 @@ class Forgot extends Component {
   render() {
     const { formatMessage, } = this.context.intl;
     return (
-      <div className="index" style={{background: '#06283d', height:'100vh', minHeight: '600px', position: 'relative'}}>
-        <DocumentMeta title={formatMessage(config.app.title) + ' | ' + formatMessage(messages.Forgot)}/>
+      <div className='index' style={{background: '#06283d', height:'100vh', minHeight: '600px', position: 'relative'}}>
+        <Title title={'Compta'}/>
         {this._renderForm()}
       </div>
     );

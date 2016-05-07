@@ -1,0 +1,182 @@
+.page {
+  padding: 96px 0 0;
+}
+
+.toolbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 225px;
+  height: 96px;
+  transition: left .5s ease-in;
+  border-bottom: 1px solid #e3eaf3;;
+
+  background-image: -webkit-linear-gradient(bottom, #f6f8fb 0%, #f9fafb 100%);
+  background-image: linear-gradient(to top, #f6f8fb 0%, #f9fafb 100%);
+  background-color: #f3f5f8;
+}
+
+.title {
+  position: absolute;
+  left: 14px;
+  bottom: 10px;
+}
+
+body.fonts_loaded .section {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.section {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #757985;
+  text-transform: uppercase;
+  font-size: 8px;
+  letter-spacing: 1.6px;
+}
+
+.subsection {
+  vertical-align: bottom;
+  margin-right: 10px;
+
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  font-size: 2.2rem;
+}
+
+.details {
+  color: #80848f;
+  font-size: 12px;
+}
+
+.index {
+  padding: 25px 30px;
+}
+
+body.fonts_loaded .create {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.create {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 14px;
+  font-size: 14px;
+  border-radius: 5px;
+  color: #fff;
+  background: #169cee;
+
+  position: absolute;
+  right: 36px;
+  bottom: 24px;
+}
+
+.fancyMoney {
+  font-size: 3.6rem;
+}
+.fancyMoney {
+  font-family: "DinNext", Arial, sans-serif;
+  letter-spacing: -0.05em;
+  font-size: 2.0rem;
+  font-weight: 100;
+  color: #404040;
+}
+
+.plan {
+  float: right;
+  width: 300px;
+  padding: 14px 12px;
+  position: relative;
+  border-left: 1px solid #e3eaf3;
+}
+
+.count {
+  float: left;
+  margin-right: 12px;
+}
+
+body.fonts_loaded .number {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.number {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #373a3c;
+  font-size: 18px;
+}
+
+.money-section {
+  font-size: 12px;
+  color: #373a3c;
+  margin: 0 0 6px;
+}
+
+.apps {
+  //max-width: 1000px;
+  margin: 0 auto;
+}
+
+.apps li > div:hover {
+}
+
+.s-btn{
+  height: 34px;
+}
+
+ul {
+  list-style: none;
+}
+
+.apps li{
+  position: relative;
+  font-size: 24px;
+
+  margin: 14px 0;
+}
+
+.apps li > div {
+  display: block;
+  cursor: pointer;
+  border-radius: 5px;
+
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e3eaf3;
+}
+
+.icon {
+  display: inline-block;
+  float: left;
+  width: 56px;
+  height: 56px;
+  margin-top: 16px;
+  margin-right: 15px;
+  margin-left: 10px;
+}
+
+.details {
+  padding: 24px 0;
+  font-size: 12px;
+}
+
+.inline-block{
+  display: inline-block;
+}
+
+.actions{
+  margin-right: 16px;
+  position: absolute;
+  right: 14px;
+  bottom: 20px;
+}
+
+.appname {
+  display: inline-block;
+  font-size: 22px;
+  max-width: 180px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  color: #373a3c;
+}
+
+// End page

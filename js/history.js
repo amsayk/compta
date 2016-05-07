@@ -1,5 +1,13 @@
-import { createHistory } from 'history';
+import { createHistory, useBeforeUnload, } from 'history';
 
-import { useRouterHistory } from 'react-router';
+import { useRouterHistory, } from 'react-router';
 
-export default useRouterHistory(createHistory)();
+import { getBeforeUnloadMessage, } from './utils/unbeforeunload';
+
+const history = useBeforeUnload(useRouterHistory(createHistory))();
+
+history.listenBeforeUnload(function () {
+  return process.env.NODE_ENV !== 'production' ? null : getBeforeUnloadMessage();
+});
+
+export default history;

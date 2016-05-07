@@ -61,7 +61,7 @@ var FixedDataTableBufferedRows = React.createClass({
   },
 
   componentDidMount: function componentDidMount() {
-    setTimeout(this._updateBuffer, 1000);
+    // setTimeout(this._updateBuffer, 1000);
   },
 
   componentWillReceiveProps: function componentWillReceiveProps( /*object*/nextProps) {
@@ -111,10 +111,10 @@ var FixedDataTableBufferedRows = React.createClass({
 
       this._staticRowArray[i] = React.createElement(FixedDataTableRow, {
         key: i,
-        wrapRow: this.props.wrapRow,
         isScrolling: props.isScrolling,
         index: rowIndex,
         width: props.width,
+        renderRow: this.props.renderRow,
         height: currentRowHeight,
         scrollLeft: Math.round(props.scrollLeft),
         offsetTop: Math.round(rowOffsetTop),

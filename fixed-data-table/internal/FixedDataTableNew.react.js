@@ -530,7 +530,7 @@ var FixedDataTable = React.createClass({
     var state = this.state;
 
     return React.createElement(FixedDataTableBufferedRows, {
-      wrapRow: this.props.wrapRow,
+      renderRow: this.props.renderRow,
       isScrolling: this._isScrolling,
       defaultRowHeight: state.rowHeight,
       firstRowIndex: state.firstRowIndex,

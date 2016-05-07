@@ -1,0 +1,35 @@
+.dijitMenuItem.addNew {
+  background: #e3eaf3;
+  box-shadow: 0 1px rgba(110, 139, 168, 0.55);
+  position: relative;
+  margin: 0;
+}
+
+.dijitMenuItem {
+  padding: 6px 8px;
+  border: none;
+}
+
+.hi {
+  color: #7090ab;
+}
+
+.dijitMenuItem.addNew .hi {
+  display: block;
+}
+
+.dijitMenuItem .comboboxRow {
+  overflow: hidden;
+  padding: 1px 0 2px 0;
+}
+
+.dijitMenuItem .comboboxAddNewLabel {
+  font-family: "HelveticaNeueRoman", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-font-smoothing: subpixel-antialiased;
+  font-size: 1.3rem;
+  color: #365ebf;
+  background: none;
+  display: inline-block;
+  margin-right: 4px;
+}

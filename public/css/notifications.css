@@ -1,0 +1,37 @@
+.drawer-modal .modal-sm{
+    width: auto;
+}
+.drawer-modal {
+    position: fixed;
+    left: 10px;
+    bottom: 50px;
+    right: initial;
+    top: initial;
+    margin-left: 12px;
+}
+.drawer-modal .modal-content{
+    border: none;
+}
+.drawer-modal .alert{
+    margin-bottom: 0;
+}
+.drawer--success {
+    left: initial;
+    right: 10px;
+}
+.drawer--danger {
+    left: initial;
+    right: 250px;
+}
+.drawer__item {
+   width: 250px;
+}
+
+.alert-custom.drawer__item{
+  width: auto;
+}
+
+.alert.alert-custom{
+  padding: 0;
+  margin: 0;
+}

@@ -11,23 +11,12 @@ import styles from './Accounts.scss';
 import AccountsRoute from '../../routes/AccountsRoute';
 
 import {
-  defineMessages,
   intlShape,
 } from 'react-intl';
 
-const Title = (company) => ({
-  id: 'accounts-page.title',
-  defaultMessage: company.displayName,
-});
+const Title = (company) => company.displayName;
 
-const messages = defineMessages({
-
-  Subtitle: {
-    id: 'accounts-page.title',
-    defaultMessage: 'Chart of Accounts',
-  },
-
-});
+import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
 class Accounts extends Component {
@@ -63,35 +52,37 @@ class Accounts extends Component {
   };
 
   render() {
+    const { route, viewer, company, companies, } = this.props;
     const {formatMessage,} = this.context.intl;
     return (
-      <div className="">
+      <div className=''>
 
         <Sidebar
-          viewer={this.props.viewer}
-          company={this.props.company}
-          companies={this.props.companies}
-          root={this.props.root}
-          page="/accounts"
+          route={route}
+          viewer={viewer}
+          company={company}
+          companies={companies.edges.map(({ node: company, }) => company)}
+          viewer={viewer}
+          page='/accounts'
         />
 
-        <div className="content">
+        <div className='content'>
 
-          <div styleName="page">
+          <div styleName='page'>
 
-            <div styleName="toolbar">
+            <div styleName='toolbar'>
 
-              <div styleName="title">
-                <div styleName="section">{formatMessage(Title(this.props.company))}</div>
+              <div styleName='title'>
+                <div styleName='section'>{Title(company)}</div>
 
                 <div>
-                  <span styleName="subsection">{formatMessage(messages.Subtitle)}</span>
-                  <span styleName="details"></span>
+                  <span styleName='subsection'>{formatMessage(messages.Subtitle)}</span>
+                  <span styleName='details'></span>
                 </div>
 
               </div>
 
-              <div styleName="actions"></div>
+              <div styleName='actions'></div>
 
             </div>
 
@@ -118,9 +109,9 @@ function wrapWithC(Component, props) {
       return React.createElement(
         Component, {
           ...props,
-          companies: this.props.root.companies,
-          company: this.props.root.company,
-          root: this.props.root,
+          companies: this.props.viewer.companies,
+          company: this.props.viewer.company,
+          viewer: this.props.viewer,
         },
         this.props.children
       );
@@ -128,21 +119,30 @@ function wrapWithC(Component, props) {
   }
 
   return Relay.createContainer(CWrapper, {
-    initialVariables: {companyId: props.params.app, period: 'M1/2016', first: 1000},
+    initialVariables: {companyId: props.params.app, first: 1000},
 
     fragments: {
-      root: () => Relay.QL`
-        fragment on Query {
+      viewer: () => Relay.QL`
+        fragment on User {
           id,
+          objectId,
+          displayName,
+          username,
+          email,
+          createdAt,
+          updatedAt,
+          sessionToken,
 
           company(id: $companyId){
+
+            objectId,
 
             id,
             displayName,
             periodType,
-            lastSeqNr,
+            lastTransactionIndex, lastPaymentsTransactionIndex,
 
-            accounts(period: $period, first: $first){
+            accounts(first: $first){
               edges{
                 node {
                   id,
@@ -152,13 +152,18 @@ function wrapWithC(Component, props) {
 
           },
 
-          companies{
-            id,
-            displayName,
-            periodType,
-            lastSeqNr,
-            createdAt,
-            updatedAt,
+          companies(first: 100000){
+            edges{
+              node{
+                objectId,
+                id,
+                displayName,
+                periodType,
+                lastTransactionIndex, lastPaymentsTransactionIndex,
+                createdAt,
+                updatedAt,
+              }
+            }
           },
 
         }
@@ -167,29 +172,34 @@ function wrapWithC(Component, props) {
   });
 }
 
-module.exports = (props) => (
-  <Relay.RootContainer
-    Component={wrapWithC(Accounts, props)}
-    route={new AccountsRoute({companyId: props.params.app, period: 'M1/2016'})}
-    renderLoading={function() {
-      return (
-        <div className="loading">
+module.exports = (props) => {
+  const route = new AccountsRoute({companyId: props.params.app});
+  return (
+    <Relay.RootContainer
+      forceFetch={true}
+      Component={wrapWithC(Accounts, { ...props, route, })}
+      route={route}
+      renderLoading={function() {
+        return (
+          <div className='loading'>
 
-          <Sidebar
-            viewer={props.viewer}
-            company={props.company}
-            companies={props.companies || []}
-            page="/accounts"
-          />
+            <Sidebar
+              route={route}
+              viewer={props.viewer}
+              company={props.company}
+              companies={props.companies || []}
+              page='/accounts'
+            />
 
-          <div className="content">
+            <div className='content'>
 
-              <Loading/>
+                <Loading/>
+
+            </div>
 
           </div>
-
-        </div>
-      );
-    }}
-  />
-);
+        );
+      }}
+    />
+  );
+};

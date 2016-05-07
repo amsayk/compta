@@ -1,0 +1,387 @@
+/*
+
+input {
+    display:block;
+    padding: 2px;
+}
+
+input:focus {
+    outline-color: #236DCD;
+}
+
+input[type=search] {
+    color: #236DCD;
+    border-radius: 4px;
+}
+
+input[type=search]::-webkit-search-cancel-button  {
+    -webkit-appearance: none;
+    position:relative;
+    height: 16px;
+    width: 16px;
+    background: #d5d5d5;
+    color:#fff;
+    font-size: 1.1em;
+    text-shadow: 0 1px 0 #666;
+    border-radius: 50%;
+    margin:0;
+    cursor:pointer;
+    box-shadow: inset 0 2px 5px -2px #666;
+}
+
+input[type=search]::-webkit-search-cancel-button:hover {
+    background: #aaa;
+}
+
+input[type=search]::-webkit-search-cancel-button:active {
+    background: #f99;
+}
+
+input[type=search]::-webkit-search-cancel-button:before {
+    content: "×";
+    position:absolute;
+    top:0px;
+    right:3px;
+}
+
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    cursor:pointer;
+    display:block;
+    width:8px;
+    color: #333;
+    text-align:center;
+    position:relative;
+}
+
+input[type=number]::-webkit-inner-spin-button:hover {
+    color: #236DCD;
+}
+
+input[type=number]::-webkit-inner-spin-button:before,
+input[type=number]::-webkit-inner-spin-button:after {
+    content: "^";
+    position:absolute;
+    right: 0;
+    font-family:monospace;
+    line-height:
+}
+
+input[type=number]::-webkit-inner-spin-button:before {
+    top:0px;
+}
+
+input[type=number]::-webkit-inner-spin-button:after {
+    bottom:0px;
+    -webkit-transform: rotate(180deg);
+}
+
+*/
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+select, textarea, *:not(.ha-text-field) > input[type=text].form-control{
+    outline: none;
+    height: 34px;
+    padding: 0 8px;
+
+    border-radius: 2px;
+    -webkit-appearance: none;
+    border: 1px solid #c7c7c7;
+
+    transition-property: border;
+    transition-duration: 0.35s;
+    font-size: 1rem;
+}
+
+textarea:hover, *:not(.ha-text-field) > input[type=text]:hover, .form-control:hover, .rw-combobox:hover, .rw-widget.rw-state-focus:focus {
+    border-color: #a0a0a0!important;
+    box-shadow: 0 0 0 2px rgba(161, 161, 161, 0.25)!important;
+}
+
+textarea:focus, *:not(.ha-text-field) > input[type=text]:focus, .form-control:focus, .rw-widget.rw-state-focus {
+    border-color: #365ebf!important;
+    box-shadow: 0 0 0 2px rgba(161, 161, 161, 0.25)!important;
+}
+
+textarea, textarea.form-control {
+    height: auto;
+    resize: vertical;
+    width: 100%;
+    overflow-y: auto;
+}
+textarea, textarea.form-control {
+    -webkit-appearance: none;
+    padding: 8px;
+    overflow: auto;
+}
+
+.rw-popup-container.rw-dropup {
+  margin-bottom: 3px;
+}
+.rw-popup-container:not(.rw-dropup) {
+  top: 105%!important;
+}
+
+.rw-widget.rw-state-focus .rw-input, .rw-widget.rw-state-focus:hover .rw-input {
+    border-bottom-color: #66afe9!important;
+}
+
+.rw-widget.rw-open, .rw-widget.rw-open .rw-input{
+    border-bottom-left-radius: 0!important;
+}
+
+.rw-calendar .rw-header .rw-btn-view {
+  background-color: #FFFFFF!important;
+}
+
+.rw-state-selected {
+}
+
+.rw-multiselect, .rw-combobox input.rw-input,
+.rw-datetimepicker input.rw-input,
+.rw-numberpicker input.rw-input {
+  box-shadow: none!important;
+}
+
+.rw-select.rw-btn, .rw-select > .rw-btn {
+    height: 35px!important;
+}
+
+.rw-datetimepicker input.rw-input{
+  height: 35px!important;
+}
+.rw-combobox input.rw-input{
+  /*height: 100%!important;*/
+  height: 35px!important;
+}
+
+.intl-tel-input {
+  display: block!important;
+}
+
+.intl-tel-input .country {
+    text-align: left;
+}
+
+.intl-tel-input.expanded .form-control {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.intl-tel-input .flag-dropdown:focus,
+.intl-tel-input .selected-flag:focus{
+    outline: 0;
+}
+
+.intl-tel-input .country-list {
+    top: 103%;
+}
+
+.has-danger .form-control.form-control-danger,
+.has-danger .form-control.form-control-danger:hover,
+.has-danger .form-control.form-control-danger:focus {
+    border-color: #d9534f!important;
+}
+
+.has-error.rw-datetimepicker{
+  border-color: #d9534f!important;
+}
+
+.modal .row{
+  margin-left: 0!important;
+  margin-right: 0!important;
+}
+
+textarea.form-control.has-error,
+.rw-combobox.has-error,
+.rw-combobox.has-error:hover,
+.rw-combobox.has-error:focus{
+  border-color: #d9534f!important;
+}
+
+input.form-control.has-error,
+input.form-control.has-error:focus,
+input.form-control.has-error:hover{
+  border-color: #d9534f!important;
+}
+
+.rw-dropdownlist > .rw-select,
+.rw-dropdownlist.rw-rtl > .rw-select {
+  border-width: 1px!important;
+}
+
+.rw-combobox .rw-popup {
+  padding: 0!important;
+}
+
+.rw-combobox .rw-list{
+  padding: 0 0 5px!important;
+  margin-bottom: : 5px!important;
+  max-height: 220px!important;
+}
+.rw-combobox .rw-list .rw-list-option{
+  border-radius: 0!important;
+  margin-top: 1px!important;
+  margin-bottom: 1px!important;
+  padding-top: 3px!important;
+  padding-bottom: 3px!important;
+}
+.rw-combobox:not(.no-new) .rw-list .rw-list-option:first-child{
+  padding: 0!important;
+  margin-top: 0!important;
+  border: none!important;
+}
+.rw-combobox.no-new .rw-list .rw-list-option.rw-state-selected,
+.rw-combobox .rw-list .rw-list-option:not(:first-child).rw-state-selected{
+  background-color: #365ebf!important;
+  border-color: #ffffff!important;
+  color: #ffffff!important;
+}
+
+.rw-combobox.no-new .rw-list-option:hover,
+.rw-combobox .rw-list-option:not(:first-child):hover {
+  background-color: #365ebf!important;
+  border-color: #ffffff!important;
+  color: #ffffff!important;
+}
+
+/*.rw-dropdownlist .rw-list .rw-list-option{
+  border-radius: 0!important;
+  margin-top: 1px!important;
+  margin-bottom: 1px!important;
+  padding-top: 3px!important;
+  padding-bottom: 3px!important;
+}
+.rw-dropdownlist .rw-list .rw-list-option.rw-state-selected{
+  background-color: #365ebf!important;
+  border-color: #ffffff!important;
+  color: #ffffff!important;
+}
+
+.rw-dropdownlist .rw-list-option:hover {
+  background-color: #365ebf!important;
+  border-color: #ffffff!important;
+  color: #ffffff!important;
+}*/
+
+.rw-combobox.no-new .rw-list-option,
+.rw-combobox .rw-list-option:not(:first-child){
+  margin: auto 1px;
+}
+
+/* <span class="required">*</span> */
+
+.required {
+  color: #dc3c1e;
+  margin-right: 2px;
+}
+
+::-webkit-input-placeholder{
+  font-style: italic;
+  font-size: normal;
+}
+
+.rw-combobox,
+.rw-numberpicker,
+.rw-dropdownlist {
+  background-image: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);
+}
+
+.rw-combobox .rw-input,
+.rw-numberpicker .rw-input,
+.rw-dropdownlist .rw-input {
+  /*background-image: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);*/
+}
+
+.first-col{
+  padding-left: 0!important;
+}
+
+.last-col{
+  padding-right: 0!important;
+}
+
+.dropdown-toggle::after{
+  color: #fff;
+}
+
+.rw-datetimepicker .rw-select{
+  border-left: none!important;
+}
+
+.rw-datetimepicker .rw-i{
+  display: none!important;
+}
+
+.rw-datetimepicker.rw-state-focus .rw-i,
+.rw-datetimepicker:hover .rw-i{
+  display: block!important;
+}
+
+.rw-datetimepicker:hover {
+  background-color: initial!important;
+}
+
+.rw-calendar-popup{
+  font-size: 0.9rem!important;
+}
+
+fieldset {
+  padding: 0!important;
+  margin-bottom: 0!important;
+  margin-top: 0!important;
+}
+
+.billingAddress{
+  width: 215px!important;
+  height: 6.6em!important;
+  resize: none!important;
+}
+
+label {
+  margin-bottom: 0!important;
+}
+
+textarea.memo{
+  height: 86px!important;
+  width: 350px!important;
+  resize: none!important;
+}
+
+.form-control, .rw-widget {
+  border-radius: 2px!important;
+}
+
+.rw-combobox, .rw-datetimepicker, .rw-numberpicker, .rw-dropdownlist {
+  padding-right: 30px!important;
+}
+.rw-datetimepicker .rw-select,
+.rw-select.rw-btn,
+.rw-select > .rw-btn {
+  width: 30px!important;
+}
+
+.rw-i-calendar:before {
+  color: #2e4d6f!important;
+}
+
+.rw-datetimepicker{
+  display: block!important;
+}
+
+.rw-combobox.rw-state-focus .rw-btn {
+  background: #365ebf!important;
+}
+
+.rw-combobox.rw-state-focus .rw-btn .rw-i {
+  color: #fff!important;
+}
+
+.mailingAddress, .billingAddress{
+  height: 92.3906px!important;
+}

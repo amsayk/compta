@@ -2,15 +2,14 @@ import Relay from 'react-relay';
 
 export default class extends Relay.Route {
   static queries = {
-    root: () => Relay.QL`
+    viewer: () => Relay.QL`
       query {
-        root
+        viewer
       }
     `,
   };
   static paramDefinitions = {
     companyId: {required: true},
-    period: {required: true},
   };
   static routeName = 'TransactionsRoute';
 }

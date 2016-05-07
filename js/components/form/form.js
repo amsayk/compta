@@ -5,6 +5,7 @@ import CSSModules from 'react-css-modules';
 import styles from './form.scss';
 
 import events from 'dom-helpers/events';
+import contains from 'dom-helpers/query/contains';
 
 import classnames from 'classnames';
 
@@ -16,15 +17,13 @@ import {
 const messages = defineMessages({
 
   MONTHLY: {
-    id: 'MONTHLY',
-    description: '',
-    defaultMessage: 'MONTHLY'
+    id: 'form.MONTHLY',
+    defaultMessage: 'Mensuelle'
   },
 
   TRIMESTERLY: {
-    id: 'TRIMESTERLY',
-    description: '',
-    defaultMessage: 'TRIMESTERLY'
+    id: 'form.TRIMESTERLY',
+    defaultMessage: 'Trimestrielle'
   },
 
 });
@@ -34,20 +33,20 @@ export class Text extends Component {
   render() {
     const {name, description, placeholder, autoFocus, props,} = this.props;
     return (
-      <div styleName="field">
+      <div styleName='field'>
 
-        <div styleName="left" style={{width:'50%'}}>
-          <div styleName="label centered" style={{padding:'0 24px'}}>
-            <div styleName="text">{name}</div>
+        <div styleName='left' style={{width:'50%'}}>
+          <div styleName='label centered' style={{padding:'0 24px'}}>
+            <div styleName='text'>{name}</div>
             {description && !(props.error && props.touched && !props.pristine) ?
-              <div styleName="description">{description}</div> : null}
-            {props.error && props.touched && !props.pristine && <div className="text-danger">{props.error}</div>}
+              <div styleName='description'>{description}</div> : null}
+            {props.error && props.touched && !props.pristine && <div className='text-danger'>{props.error}</div>}
           </div>
         </div>
 
-        <div styleName="right" style={{marginLeft:'50%'}}>
+        <div styleName='right' className='ha-text-field' style={{marginLeft:'50%'}}>
           <input className={props.error && props.touched && !props.pristine ? 'text-danger' : ''}
-                 autoFocus={autoFocus} {...props} type="text" styleName="text_input" style={{height:'80px'}}
+                 autoFocus={autoFocus} {...props} type='text' styleName='text_input' style={{height:'80px'}}
                  placeholder={placeholder}/>
         </div>
 
@@ -59,7 +58,7 @@ export class Text extends Component {
 @CSSModules(styles, {allowMultiple: true})
 export class Select extends Component {
   static contextTypes = {
-    intl: intlShape.isRequired
+    intl: intlShape.isRequired,
   };
   state = {
     open: false
@@ -70,21 +69,14 @@ export class Select extends Component {
     })
   };
   _hide = (e) => {
-    //if(!e.target.classList.contains(this.props.styles.option)){
-    //  this.setState({
-    //    open: false
-    //  });
-    //}
-
-     if (this.refs.dropdown && !this.refs.dropdown.contains(e.target)) {
+    if (this.refs.dropdown && !contains(this.refs.dropdown, e.target)) {
       this.setState({
         open: false
       });
-     }
+    }
   };
 
   componentWillReceiveProps() {
-    // this._hide()
   }
 
   componentDidMount() {
@@ -101,7 +93,7 @@ export class Select extends Component {
 
   render() {
     const {formatMessage,} = this.context.intl;
-    const {name, description, values, props,} = this.props;
+    const {name, description, values, styles, props,} = this.props;
 
     const onChange = (e, value) => {
       e.nativeEvent.stopImmediatePropagation();
@@ -116,35 +108,14 @@ export class Select extends Component {
         return (
           <div style={{overflow: 'hidden', transition: 'all .5s cubic-bezier(1,0,0,1)', }}>
 
-            <div ref="dropdown" className={classnames({'clearfix select-dropdown': true, open: this.state.open})} onClick={this.dropdownClickHandler}>
+            <div ref='dropdown' className={classnames({'clearfix select-dropdown': true, open: this.state.open})} onClick={this.dropdownClickHandler}>
 
-              <div className={`dropdown-menu ${this.props.styles.menu}`}>
+              <div className={`dropdown-menu ${styles.menu}`}>
                 {values.map(([value, displayName]) => {
                   return (
-                    //<MenuItem
-                    //  // {...props}
-                    //  active={value === props.value}
-                    //  onSelect={(e) => {
-                    //    e.preventDefault();
-                    //    e.stopPropagation();
-                    //    props.onChange(value)
-                    //  }}
-                    //  onClick={(e) => {
-                    //    e.preventDefault();
-                    //    e.stopPropagation();
-                    //  }}
-                    //  eventKey={value}
-                    //  key={value}>
-                    //
-                    //  <div className="option">{displayName}
-                    //  </div>
-                    //
-                    //</MenuItem>
-
                     <a key={value} onClick={(e) => onChange(e, value)} className={''}>
-                      <div className={this.props.styles.option}>{displayName}</div>
+                      <div className={styles.option}>{displayName}</div>
                     </a>
-
                   );
                 })}
               </div>
@@ -156,27 +127,27 @@ export class Select extends Component {
       }
 
       return (
-        <div className={this.props.styles.dropdown} onClick={this._toggle}>
-          <div className={this.props.styles.current}>
-            <div className={this.props.styles.option}>{formatMessage(messages[props.value || props.defaultValue])}</div>
+        <div className={styles.dropdown} onClick={this._toggle}>
+          <div className={styles.current}>
+            <div className={styles.option}>{formatMessage(messages[props.value || props.initialValue])}</div>
           </div>
         </div>
       );
     };
 
     return (
-      <div styleName="field">
+      <div styleName='field'>
 
-        <div styleName="left" style={{width:'50%'}}>
-          <div styleName="label centered" style={{padding:'0 24px'}}>
-            <div styleName="text">{name}</div>
+        <div styleName='left' style={{width:'50%'}}>
+          <div styleName='label centered' style={{padding:'0 24px'}}>
+            <div styleName='text'>{name}</div>
             {description && !(props.error && props.touched && !props.pristine) ?
-              <div styleName="description">{description}</div> : null}
-            {props.error && props.touched && !props.pristine && <div className="text-danger">{props.error}</div>}
+              <div styleName='description'>{description}</div> : null}
+            {props.error && props.touched && !props.pristine && <div className='text-danger'>{props.error}</div>}
           </div>
         </div>
 
-        <div styleName="right" style={{marginLeft:'50%'}}>
+        <div styleName='right' style={{marginLeft:'50%'}}>
 
           {_renderValues()}
 

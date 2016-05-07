@@ -9,6 +9,8 @@ const SAVE = 'compta/account/SAVE';
 const SAVE_SUCCESS = 'compta/account/SAVE_SUCCESS';
 const SAVE_FAIL = 'compta/account/SAVE_FAIL';
 
+import { actionTypes, } from 'redux-form';
+
 const initialState = {
   editing: {},
   saveError: {}
@@ -16,6 +18,26 @@ const initialState = {
 
 export default function reducer(state = initialState, action = {}) {
   switch (action.type) {
+    case actionTypes.CHANGE:
+    case actionTypes.FOCUS:
+    case actionTypes.BLUR:
+    case actionTypes.RESET:
+    case actionTypes.START_SUBMIT:
+    case actionTypes.DESTROY:
+    case actionTypes.INITIALIZE:
+      return function(){
+        switch(action.form){
+          case 'account':
+            return {
+              ...state,
+              saveError: {
+                ...state.saveError,
+                [action.key]: null,
+              },
+            };
+          default: return state;
+        }
+      }();
     case EDIT_START:
       return {
         ...state,
@@ -29,8 +51,12 @@ export default function reducer(state = initialState, action = {}) {
         ...state,
         editing: {
           ...state.editing,
-          [action.id]: false
-        }
+          [action.id]: false,
+        },
+        saveError: {
+          ...state.saveError,
+          [action.id]: null,
+        },
       };
     case SAVE:
       return state; // 'saving' flag handled by redux-form

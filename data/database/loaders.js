@@ -1,9 +1,9 @@
 import Parse from 'parse';
 import DataLoader from 'dataloader';
 
-export const parseIDLoader = fieldLoader('objectId', false, (obj) => obj.id);
+import { DEFAULT_LIMIT, } from '../constants';
 
-export const parsePeriodLoader = fieldLoader('period', true, (obj) => obj.get('period'));
+export const parseIDLoader = fieldLoader('objectId', false, (obj) => obj.id);
 
 // Perform only one load for several queries per type!
 export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => {
@@ -14,13 +14,14 @@ export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => 
       console.log(`DataLoader table query for type ${Type}`);
     }
 
-    const query = new Parse.Query(Type);
-    query.limit(1000);
+    const query = new Parse.Query(Queries[Type]);
+    query.descending('updatedAt,createdAt');
+    query.limit(DEFAULT_LIMIT);
     query.find().then(
       function (objects) {
 
         if (process.env.NODE_ENV !== 'production') {
-          console.log(`DataLoader table query for type ${Type} found:`, JSON.stringify(objects));
+          // console.log(`DataLoader table query for type ${Type} found:`, JSON.stringify(objects));
         }
 
         cb(null, objects);
@@ -32,11 +33,19 @@ export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => 
   }
 
   const types = {};
+  const Queries = {};
+  const typesKeys = [];
+  const seen = {};
   keys.forEach(function (Type) {
     types[Type.className] = (types[Type.className] || 0) + 1;
+    if(!seen[Type.className]){
+      typesKeys.push(Type.className);
+      Queries[Type.className] = Type;
+      seen[Type.className] = true;
+    }
   });
 
-  const typesKeys = Object.keys(types);
+  // const typesKeys = Object.keys(types);
 
   let remaining = typesKeys.length;
   const results = {};
@@ -47,18 +56,100 @@ export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => 
       results[Type] = err ? null : objects;
 
       if (--remaining === 0) {
-        resolve(typesKeys.reduce(function (result, Type) {
+        resolve(keys.reduce(function (result, { className: Type, }) {
 
           if (results[Type]) {
-            for (let i = 0; i < types[Type]; i++) {
-              result.push(results[Type]);
-            }
+            // for (let i = 0, len = types[Type]; i < len; i++) {
+            //   result.push(results[Type]);
+            // }
+
+            result.push(results[Type]);
 
           } else {
 
-            for (let i = 0; i < types[Type]; i++) {
-              result.push(new Error(`Error fetching ${Type.name}`));
-            }
+            // for (let i = 0, len = types[Type]; i < len; i++) {
+            //   result.push(new Error(`Error fetching ${Type.name}`));
+            // }
+
+            result.push(new Error(`Error fetching ${Type.name}`));
+          }
+
+          return result;
+        }, []));
+      }
+    });
+  });
+
+}), {
+  cache: true,
+  cacheKeyFn: ({className}) => className,
+});
+
+// Perform only one load for several queries per type!
+export const parseTableCountLoader = new DataLoader(keys => new Promise((resolve) => {
+
+  function count(Type, cb) {
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`DataLoader table count query for type ${Type}`);
+    }
+
+    const query = new Parse.Query(Queries[Type]);
+    query.count().then(
+      function (count) {
+
+        if (process.env.NODE_ENV !== 'production') {
+          // console.log(`DataLoader table query for type ${Type} found:`, JSON.stringify(objects));
+        }
+
+        cb(null, count);
+      },
+      function (error) {
+        cb(error);
+      }
+    );
+  }
+
+  const types = {};
+  const Queries = {};
+  const typesKeys = [];
+  const seen = {};
+  keys.forEach(function (Type) {
+    types[Type.className] = (types[Type.className] || 0) + 1;
+    if(!seen[Type.className]){
+      typesKeys.push(Type.className);
+      Queries[Type.className] = Type;
+      seen[Type.className] = true;
+    }
+  });
+
+  // const typesKeys = Object.keys(types);
+
+  let remaining = typesKeys.length;
+  const results = {};
+
+  typesKeys.forEach(function (Type) {
+
+    count(Type, function (err, count) {
+      results[Type] = err ? null : count;
+
+      if (--remaining === 0) {
+        resolve(keys.reduce(function (result, { className: Type, }) {
+
+          if (results[Type] !== null) {
+            // for (let i = 0, len = types[Type]; i < len; i++) {
+            //   result.push(results[Type]);
+            // }
+
+            result.push(results[Type]);
+
+          } else {
+
+            // for (let i = 0, len = types[Type]; i < len; i++) {
+            //   result.push(new Error(`Error counting ${Type.name}`));
+            // }
+
+            result.push(new Error(`Error counting ${Type.name}`));
           }
 
           return result;
@@ -81,14 +172,14 @@ function fieldLoader(field, isPlural, fieldGetter) {
         console.log(`DataLoader table query for type ${Type}`);
       }
 
-      const query = new Parse.Query(Type);
+      const query = new Parse.Query(types[Type]);
+      query.limit(keys.length);
       query.containedIn(field, keys);
-      query.limit(1000);
       return query.find().then(
         function (objects) {
 
           if (process.env.NODE_ENV !== 'production') {
-            console.log(`DataLoader table query for type ${Type} found:`, JSON.stringify(objects));
+            // console.log(`DataLoader table query for type ${Type} found:`, JSON.stringify(objects));
           }
 
           cb(null, objects);
@@ -100,27 +191,35 @@ function fieldLoader(field, isPlural, fieldGetter) {
     }
 
     const queries = {};
+    const types = {};
+    const queriesKeys = [];
+    const seen = {};
     keys.forEach(function ([Type, key]) {
       queries[Type.className] = (queries[Type.className] || []).concat([key]);
+      if(!seen[Type.className]){
+        queriesKeys.push(Type.className);
+        types[Type.className] = Type;
+        seen[Type.className] = true;
+      }
     });
 
-    const queriesKeys = Object.keys(queries);
+    // const queriesKeys = Object.keys(queries);
 
     let remaining = queriesKeys.length;
     const results = {};
 
     queriesKeys.forEach(function (Type) {
-      const keys = queries[Type];
+      const props = queries[Type];
 
-      fetch(Type, keys, function (err, objects) {
+      fetch(Type, props, function (err, objects) {
         results[Type] = err ? null : objects;
 
         if (--remaining === 0) {
-          resolve(queriesKeys.reduce((result, Type) => {
+          resolve(keys.reduce((result, [ { className: Type, }, id ]) => {
 
             if (results[Type]) {
 
-              keys.forEach(function (key) {
+              // props.forEach(function (key) {
 
                 if (isPlural) {
 
@@ -128,7 +227,7 @@ function fieldLoader(field, isPlural, fieldGetter) {
 
                   results[Type].forEach(function (value) {
 
-                    if (key === fieldGetter(value)) {
+                    if (id === fieldGetter(value)) {
                       found.push(value);
                     }
 
@@ -138,11 +237,14 @@ function fieldLoader(field, isPlural, fieldGetter) {
 
                 } else {
 
-                  let found;
+                  let found = undefined;
 
                   results[Type].forEach(function (value) {
+                    if(found){
+                      return;
+                    }
 
-                    if (key === fieldGetter(value)) {
+                    if (id === fieldGetter(value)) {
                       found = value;
                     }
 
@@ -151,18 +253,18 @@ function fieldLoader(field, isPlural, fieldGetter) {
                   if (found) {
                     result.push(found);
                   } else {
-                    result.push(new Error(`Error fetching ${key}`));
+                    result.push(new Error(`${Type}: Error fetching ${id}`));
                   }
                 }
 
 
-              });
+              // });
 
             } else {
 
-              keys.forEach(function (key) {
-                result.push(isPlural ? [] : new Error(`Error fetching ${key}`));
-              });
+              // props.forEach(function (key) {
+                result.push(isPlural ? [] : new Error(`${Type}: Error fetching ${key}`));
+              // });
 
             }
 
@@ -180,31 +282,44 @@ function fieldLoader(field, isPlural, fieldGetter) {
 
 export const parseSeqLoader = function () {
 
+  // const Seq = Parse.Object.extend('Seq');
+
+  function getCurrentSeqObject() {
+    // const query = new Parse.Query(Seq);
+    // return query.get(process.env.SEQ_ID);
+
+    return Parse.Cloud.run('getCurrentSeq');
+  }
+
   let _seq,
     _promise;
 
   function getKey(key){
-    return () => _seq.get('sequence_' + key);
+    return () => _seq.get(key);
   }
 
   function doLoad(key) {
-    _promise = Parse.Cloud.run('getCurrentSeq');
+    _promise = getCurrentSeqObject();
 
     return _promise.then(
-      function ({result}) {
+      function ({ result: obj, }) {
 
-        _seq = result;
+        _seq = obj;
         _promise = undefined;
 
-        return _seq.get('sequence_' + key);
+        return _seq.has(key) ? _seq.get(key) : function(){
+          console.warn('Key is null `', key, '`');
+          return 1000;
+        }();
       }
     );
   }
 
   return {
     load(key){
-      if (_seq && _seq.has('sequence_' + key)) {
-        return Parse.Promise.as(_seq.get('sequence_' + key));
+
+      if (_seq && _seq.has(key)) {
+        return Parse.Promise.as(_seq.get(key));
       }
 
       if(_promise){
@@ -215,7 +330,14 @@ export const parseSeqLoader = function () {
     },
     clear(key){
       if (_seq) {
-        _seq.unset('sequence_' + key);
+        _seq.unset(key);
+      }
+    },
+    clearCompany(id){
+      if (_seq) {
+        // _seq.unset(`transaction_sequence_${id}`);
+        // _seq.unset(`payments_transaction_sequence_${id}`);
+        _seq = null;
       }
     },
     clearAll(){
