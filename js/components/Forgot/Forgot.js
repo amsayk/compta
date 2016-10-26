@@ -23,7 +23,7 @@ const messages = defineMessages({
   help: {
     id: 'forgot.help-message',
     defaultMessage:
-      `<span>C'est bon. Entrez votre email et nous vous enverrons</span>
+      `<span>Aucun problème. Entrez votre email et nous vous enverrons</span>
             <br/><span>un moyen de réinitialiser votre mot de passe.
             </span>`
   },
@@ -66,7 +66,7 @@ const messages = defineMessages({
 
 });
 
-class Forgot extends Component {
+class Forgot extends React.Component {
 
   static contextTypes = {
     router: PropTypes.object.isRequired,
@@ -125,7 +125,7 @@ class Forgot extends Component {
   _renderForm = () => {
     const { formatMessage, formatHTMLMessage, } = this.context.intl;
     return (
-      <div styleName='forgot' style={{ marginTop: '-220px' }}>
+      <div styleName='forgot' style={{ height: 'auto' }}>
 
         <i className='material-icons md-dark md-inactive' style={{fontSize: 80}}>account_balance_wallet</i>
 
@@ -138,7 +138,7 @@ class Forgot extends Component {
 
             <div styleName='label'>{formatMessage(messages.email)}</div>
 
-            <div styleName='input'>
+            <div styleName='input' className={'ha-text-field'}>
               <input type='text' ref='email' defaultValue={formatMessage(messages.defaultForgotEmail)} autoFocus/>
             </div>
 

@@ -1,0 +1,295 @@
+.top-stage{
+  //margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+.s-btn{
+  height: 34px;
+  //width: 160px;
+}
+
+.header :global .dropdown-menu{
+  left: -80px;
+}
+
+.back-link{
+  margin: 0;
+  margin-bottom: 0;
+  padding:0 10px 0 10px;
+
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+}
+
+.arrow-sprite {
+  background-repeat: no-repeat;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NzIiIGhlaWdodD0iMzk1Ij48cG9seWdvbiBmaWxsPSIjNDE0MTQxIiBwb2ludHM9IjIzMC4yNjYsNzguNTIxIDIyMi4yNjYsNzAuODgxIDI0Mi41NjYsNTAuNTIxIDIyMi4yNjYsMzAuNDYzIDIzMC44MDksMjIuNTIxIDI1OC41NjYsNTAuMjIxIi8+PHBvbHlnb24gZmlsbD0iIzQxNDE0MSIgcG9pbnRzPSI1OC43MjgsNzguNTIxIDY2LjcyOCw3MC44ODEgNDYuNDI3LDUwLjUyMSA2Ni43MjgsMzAuNDYzIDU4LjE4NSwyMi41MjEgMzAuNDI4LDUwLjIyMSIvPjxwb2x5Z29uIGZpbGw9IiM0MTQxNDEiIHBvaW50cz0iNjUyLjU3Nyw0MC4zNzEgNjQ0LjkzOCwzMi4zNzEgNjI0LjU3Nyw1Mi42NzIgNjA0LjUxOSwzMi4zNzEgNTk2LjU3Nyw0MC45MTQgNjI0LjI3Niw2OC42NzIiLz48cG9seWdvbiBmaWxsPSIjNDE0MTQxIiBwb2ludHM9IjQ2MC43ODEsNjAuNjcyIDQ1My4xNDEsNjguNjcyIDQzMi43ODEsNDguMzcxIDQxMi43MjMsNjguNjcyIDQwNC43ODEsNjAuMTI5IDQzMi40OCwzMi4zNzEiLz48cG9seWdvbiBmaWxsPSIjNTE3MEI1IiBwb2ludHM9IjIzMC4yNjYsMTc0LjUyMSAyMjIuMjY2LDE2Ni44ODEgMjQyLjU2NiwxNDYuNTIxIDIyMi4yNjYsMTI2LjQ2MyAyMzAuODA5LDExOC41MjEgMjU4LjU2NiwxNDYuMjIxIi8+PHBvbHlnb24gZmlsbD0iIzUxNzBCNSIgcG9pbnRzPSI1OC43MjgsMTc0LjUyMSA2Ni43MjgsMTY2Ljg4MSA0Ni40MjcsMTQ2LjUyMSA2Ni43MjgsMTI2LjQ2MyA1OC4xODUsMTE4LjUyMSAzMC40MjgsMTQ2LjIyMSIvPjxwb2x5Z29uIGZpbGw9IiM1MTcwQjUiIHBvaW50cz0iNjUyLjU3NywxMzYuMzcxIDY0NC45MzgsMTI4LjM3MSA2MjQuNTc3LDE0OC42NzIgNjA0LjUxOSwxMjguMzcxIDU5Ni41NzcsMTM2LjkxNCA2MjQuMjc2LDE2NC42NzIiLz48cG9seWdvbiBmaWxsPSIjNTE3MEI1IiBwb2ludHM9IjQ2MC43ODEsMTU2LjY3MiA0NTMuMTQxLDE2NC42NzIgNDMyLjc4MSwxNDQuMzcxIDQxMi43MjMsMTY0LjY3MiA0MDQuNzgxLDE1Ni4xMjkgNDMyLjQ4LDEyOC4zNzEiLz48cG9seWdvbiBmaWxsPSIjQjNCMkIzIiBwb2ludHM9IjIzMC4yNjYsMjcwLjUyMSAyMjIuMjY2LDI2Mi44ODEgMjQyLjU2NiwyNDIuNTIxIDIyMi4yNjYsMjIyLjQ2MyAyMzAuODA5LDIxNC41MjEgMjU4LjU2NiwyNDIuMjIxIi8+PHBvbHlnb24gZmlsbD0iI0IzQjJCMyIgcG9pbnRzPSI1OC43MjgsMjcwLjUyMSA2Ni43MjgsMjYyLjg4MSA0Ni40MjcsMjQyLjUyMSA2Ni43MjgsMjIyLjQ2MyA1OC4xODUsMjE0LjUyMSAzMC40MjgsMjQyLjIyMSIvPjxwb2x5Z29uIGZpbGw9IiNCM0IyQjMiIHBvaW50cz0iNjUyLjU3NywyMzIuMzcxIDY0NC45MzgsMjI0LjM3MSA2MjQuNTc3LDI0NC42NzIgNjA0LjUxOSwyMjQuMzcxIDU5Ni41NzcsMjMyLjkxNCA2MjQuMjc2LDI2MC42NzIiLz48cG9seWdvbiBmaWxsPSIjQjNCMkIzIiBwb2ludHM9IjQ2MC43ODEsMjUyLjY3MiA0NTMuMTQxLDI2MC42NzIgNDMyLjc4MSwyNDAuMzcxIDQxMi43MjMsMjYwLjY3MiA0MDQuNzgxLDI1Mi4xMjkgNDMyLjQ4LDIyNC4zNzEiLz48cG9seWdvbiBmaWxsPSIjZmZmIiBwb2ludHM9IjIzMC4yNjYsMzc2LjUyMSAyMjIuMjY2LDM2OC44ODEgMjQyLjU2NiwzNDguNTIxIDIyMi4yNjYsMzI4LjQ2MyAyMzAuODA5LDMyMC41MjEgMjU4LjU2NiwzNDguMjIxIi8+PHBvbHlnb24gZmlsbD0iI2ZmZiIgcG9pbnRzPSI1OC43MjgsMzc2LjUyMSA2Ni43MjgsMzY4Ljg4MSA0Ni40MjcsMzQ4LjUyMSA2Ni43MjgsMzI4LjQ2MyA1OC4xODUsMzIwLjUyMSAzMC40MjgsMzQ4LjIyMSIvPjxwb2x5Z29uIGZpbGw9IiNmZmYiIHBvaW50cz0iNjUyLjU3NywzMzguMzcxIDY0NC45MzgsMzMwLjM3MSA2MjQuNTc3LDM1MC42NzIgNjA0LjUxOSwzMzAuMzcxIDU5Ni41NzcsMzM4LjkxNCA2MjQuMjc2LDM2Ni42NzIiLz48cG9seWdvbiBmaWxsPSIjZmZmIiBwb2ludHM9IjQ2MC43ODEsMzU4LjY3MiA0NTMuMTQxLDM2Ni42NzIgNDMyLjc4MSwzNDYuMzcxIDQxMi43MjMsMzY2LjY3MiA0MDQuNzgxLDM1OC4xMjkgNDMyLjQ4LDMzMC4zNzEiLz48L3N2Zz4=");
+}
+
+.inlineBlock{
+  display: inline-block;
+}
+
+.back-link .backArrow {
+  height: 17px;
+  width: 17px;
+  display: inline-block;
+  background-size: 134px;
+  background-position: 0 -20px;
+  //vertical-align: top;
+  cursor: pointer;
+
+  //margin-right: 3px;
+}
+
+.page {
+  padding: 0;
+}
+
+.page :global(.loading-spinner) {
+  padding: 10% 45%;
+}
+
+.toolbar {
+  position: relative;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 96px;
+  transition: left .5s ease-in;
+}
+
+.top{
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 165px; // --sidebar-width
+
+  padding: 0;
+
+  background-image: -webkit-linear-gradient(bottom, #f6f8fb 0%, #f9fafb 100%);
+  background-image: linear-gradient(to top, #f6f8fb 0%, #f9fafb 100%);
+  background-color: #f3f5f8;
+
+  border-bottom: 1px solid #e3eaf3;
+}
+
+.title {
+  position: absolute;
+  //left: 14px;
+  bottom: 10px;
+}
+
+body.fonts_loaded .section {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.section {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #757985;
+  text-transform: uppercase;
+  font-size: 8px;
+  letter-spacing: 1.6px;
+}
+
+.subsection {
+  vertical-align: bottom;
+  margin-right: 10px;
+
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  font-size: 2.2rem;
+}
+
+.details {
+  color: #80848f;
+  font-size: 12px;
+}
+
+.index {
+  padding: 25px 30px;
+}
+
+body.fonts_loaded .create {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+
+.fancyMoney {
+  font-size: 3.6rem;
+}
+.fancyMoney {
+  font-family: "DinNext", Arial, sans-serif;
+  letter-spacing: -0.05em;
+  font-size: 2.0rem;
+  font-weight: 100;
+  color: #404040;
+}
+
+.declaration{
+  position: absolute;
+  left: calc((100% - 165px - 200px - 50px) / 2);
+  bottom: 10px;
+
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+}
+.actions{
+  margin-right: 16px;
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+}
+
+.s-btn{
+  height: 34px;
+}
+
+.stage-content {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.stage-content {
+  transition: opacity .10s linear .20s, max-height .05s linear .20s;
+  max-height: 500px;
+}
+.stage-content {
+  margin-top: 10px;
+}
+
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+
+
+body .tableRow {
+  display: table-row;
+  vertical-align: top;
+}
+
+body .tableCell {
+  display: table-cell;
+  vertical-align: top;
+}
+
+
+body .table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+
+.loading{
+
+}
+
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+.stretch {
+  width: 100%;
+  height: 100%;
+}
+
+.tab-content {
+  padding-left: 0;
+  margin: 0 0 14px;
+  -webkit-box-shadow: #cccccc 0 1px 0, #f1f1f1 0 4px 0;
+  -moz-box-shadow: #cccccc 0 1px 0, #f1f1f1 0 4px 0;
+  -ms-box-shadow: #cccccc 0 1px 0, #f1f1f1 0 4px 0;
+  -o-box-shadow: #cccccc 0 1px 0, #f1f1f1 0 4px 0;
+  box-shadow: #cccccc 0 1px 0, #f1f1f1 0 4px 0;
+  border-bottom: 0;
+}
+.tab-content {
+  padding-top: 40px;
+  margin: 0;
+}
+
+.tab-content .tab-pane {
+  font-family: "HelveticaNeueRoman", Helvetica, Arial, sans-serif;
+  border: 0;
+  display: inline-block;
+  position: relative;
+  background-color: transparent;
+  color: #666666;
+  padding: 6px 30px 13px 30px;
+  text-align: center;
+  font-size: 1rem;
+  cursor: pointer;
+  border-bottom: 4px solid transparent;
+}
+.tab-content .selected {
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  border-bottom: 4px solid #3965CE;
+}
+
+.tab-content .tab-pane:first-child:after {
+  display: block;
+  content: " ";
+  position: absolute;
+  top: 5px;
+  right: 0;
+  height: 23px;
+  width: 1px;
+  border-right: 1px dotted #999;
+}
+
+
+.vat-ops-table{
+  font-family: HelveticaNeueRoman, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.vat-ops-table :global .fixedDataTableLayout_main {
+  // border-bottom: 2px solid #d3d3d3 !important;
+}
+
+.row {
+  border-bottom: 1px solid #c7c7c7;
+  //cursor: pointer;
+
+  color: #000;
+}
+
+.row :global(.fixedDataTableCellLayout_main.public_fixedDataTableCell_main) {
+  border-color: #c7c7c7;
+  border-style: dotted;
+  border-bottom: 1px solid #c7c7c7;
+}
+
+.row:hover :global(.fixedDataTableCellLayout_main),
+.row.selected :global(.fixedDataTableCellLayout_main){
+  background-color: #f3f8fe;
+}
+
+.part-header{
+  font-family: "HelveticaNeueBold", Helvetica, Arial, sans-serif;
+  margin-bottom: 12px;
+}
+
+.part-footer{
+  //margin-top: 12px;
+}
+
+.part-footer :global .public_fixedDataTable_header{
+  height: 0!important;
+  border-bottom: none!important;
+}
+
+.part-footer .row :global(.fixedDataTableCellLayout_main.public_fixedDataTableCell_main) {
+  border-color: transparent;
+  border-style: hidden;
+  border-bottom: 1px solid #c7c7c7;
+}
+
+.totals-table :global .public_fixedDataTable_main {
+  //float: right;
+}

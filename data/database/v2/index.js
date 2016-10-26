@@ -4,106 +4,134 @@
  *
  */
 
-import Parse from 'parse';
+const Parse = require('parse');
 
-import Account from '../Account';
-import Company from '../Company';
-import Transaction from '../Transaction';
-import Operation from '../Operation';
-import Bank from '../Bank';
-import Customer from './Customer';
-import Employee from './Employee';
-import Vendor from './Vendor';
+const Account = require('../Account');
+const Company = require('../Company');
+const Transaction = require('../Transaction');
+const Operation = require('../Operation');
 
-import Product from '../Product';
+const Bank = require('../Bank');
 
-import Expense from './Expense';
-import Sale from './Sale';
-import Invoice from './Invoice';
-import Bill from './Bill';
-import PaymentOfInvoices from './PaymentOfInvoices';
-import PaymentOfBills from './PaymentOfBills';
+const People = require('./People');
 
-import InvoiceItem from '../InvoiceItem';
-import PaymentOfInvoicesItem from '../PaymentOfInvoicesItem';
-import PaymentOfBillsItem from '../PaymentOfBillsItem';
+const Product = require('../Product');
 
-import ExpenseItem from '../ExpenseItem';
-import BillItem from '../BillItem';
+const VATDeclaration = require('../VATDeclaration');
 
-import SaleItem from '../SaleItem';
+const File = require('../File');
 
-import concat from 'lodash.concat';
-import map from 'lodash.map';
-import compact from 'lodash.compact';
-import group from 'lodash.groupby';
+const Expense = require('./Expense');
+const Sale = require('./Sale');
 
-import chartOfAccounts from '../accounts.json';
+const InvoiceItem = require('../InvoiceItem');
+const PaymentOfInvoicesItem = require('../PaymentOfInvoicesItem');
+const PaymentOfBillsItem = require('../PaymentOfBillsItem');
 
-import moment from 'moment';
+const ExpenseItem = require('../ExpenseItem');
+const BillItem = require('../BillItem');
 
-import { DEFAULT_RECENT_DAYS, } from '../constants';
+const SaleItem = require('../SaleItem');
 
-import { parseIDLoader, parseTableLoader, parseTableCountLoader, } from '../loaders';
+const concat = require('lodash.concat');
+const map = require('lodash.map');
+const compact = require('lodash.compact');
+const group = require('lodash.groupby');
 
-export function getViewer() {
+const chartOfAccounts = require('../accounts.json');
+
+const moment = require('moment');
+
+const { DEFAULT_RECENT_DAYS, } = require('../../constants');
+
+const { parseIDLoader, parseTableLoader, parseTableCountLoader, } = require('../loaders');
+
+module.exports.getViewer = function getViewer() {
   return Parse.User.current();
-}
+};
 
-export function getUser(id) {
+module.exports.getUser = function getUser(id) {
   return parseIDLoader.load([Parse.User, id]);
-}
+};
 
-export function getProduct(info) { return getTypeById(Product, info); }
+module.exports.getVATDeclaration = function getVATDeclaration(info) { return getTypeById(VATDeclaration, info); };
 
-export function getBank(info) { return getTypeById(Bank, info); }
-export function getEmployee(info) { return getTypeById(Employee, info); }
-export function getCustomer(info) { return getTypeById(Customer, info); }
-export function getVendor(info) { return getTypeById(Vendor, info); }
-export function getExpense(info) { return getTypeById(Expense, info); }
-export function getSale(info) { return getTypeById(Sale, info); }
-export function getInvoice(info) { return getTypeById(Invoice, info); }
-export function getBill(info) { return getTypeById(Bill, info); }
-export function getPaymentOfInvoices(info) { return getTypeById(PaymentPaymentOfInvoices, info); }
-export function getPaymentOfBills(info) { return getTypeById(PaymentPaymentOfBills, info); }
+module.exports.getCompanyVATDeclarationHistory = function getCompanyVATDeclarationHistory(company){
+  const qry = new Parse.Query(VATDeclaration({ id: company.id, }));
+  qry.descending('periodStart');
+  qry.limit(100000);
+  return qry.find();
+};
+module.exports.getVATDeclarationAtDate = function getVATDeclarationAtDate(companyId, date){
+  const qry = new Parse.Query(VATDeclaration({ id: companyId, }));
 
-export function getInvoiceItem(info) { return getTypeById(InvoiceItem, info); }
-export function getPaymentOfInvoicesItem(info) { return getTypeById(PaymentOfInvoicesItem, info); }
-export function getPaymentOfBillsItem(info) { return getTypeById(PaymentOfBillsItem, info); }
+  qry.lessThanOrEqualTo('periodStart', new Date(date));
+  qry.greaterThanOrEqualTo('periodEnd', new Date(date));
 
-export function getExpenseItem(info) { return getTypeById(ExpenseItem, info); }
-export function getBillItem(info) { return getTypeById(BillItem, info); }
-export function getSaleItem(info) { return getTypeById(SaleItem, info); }
+  return qry.first();
+};
+module.exports.getVATDeclarationById = function getVATDeclarationById({ id: companyId, }, id){
+  const Type = VATDeclaration({ id: companyId, });
+  return parseIDLoader.load([Type, id]);
+};
+module.exports.getCompanyCurrentVATDeclaration = function getCompanyCurrentVATDeclaration(company){
+  return Parse.Cloud.run('getCompanyCurrentVATDeclaration', { companyId: company.id, });
+};
 
-export function getTransaction(info) {
+module.exports.getProduct = function getProduct(info) { return getTypeById(Product, info); };
+module.exports.getFile = function getFile(info) { return getTypeById(File, info); };
+
+module.exports.getBank = function getBank(info) { return getTypeById(Bank, info); };
+
+module.exports.getEmployee = function getEmployee(info) { return getTypeById(People, info); };
+module.exports.getCustomer = function getCustomer(info) { return getTypeById(People, info); };
+module.exports.getVendor = function getVendor(info) { return getTypeById(People, info); };
+
+module.exports.getExpense = function getExpense(info) { return getTypeById(Expense, info); };
+module.exports.getSale = function getSale(info) { return getTypeById(Sale, info); };
+module.exports.getInvoice = function getInvoice(info) { return getTypeById(Sale, info); };
+
+module.exports.getBill = function getBill(info) { return getTypeById(Expense, info); };
+module.exports.getPaymentOfInvoices = function getPaymentOfInvoices(info) { return getTypeById(Sale, info); };
+module.exports.getPaymentOfBills = function getPaymentOfBills(info) { return getTypeById(Expense, info); };
+
+module.exports.getInvoiceItem = function getInvoiceItem(info) { return getTypeById(InvoiceItem, info); };
+module.exports.getPaymentOfInvoicesItem = function getPaymentOfInvoicesItem(info) { return getTypeById(PaymentOfInvoicesItem, info); };
+module.exports.getPaymentOfBillsItem = function getPaymentOfBillsItem(info) { return getTypeById(PaymentOfBillsItem, info); };
+
+module.exports.getExpenseItem = function getExpenseItem(info) { return getTypeById(ExpenseItem, info); };
+module.exports.getBillItem = function getBillItem(info) { return getTypeById(BillItem, info); };
+module.exports.getSaleItem = function getSaleItem(info) { return getTypeById(SaleItem, info); };
+
+module.exports.getTransaction = function getTransaction(info) {
   return getTypeById(Transaction, info);
-}
+};
 
-export function getCompany(id) {
+module.exports.getCompany = function getCompany(id) {
   return parseIDLoader.load([Company, id]);
-}
+};
 
-export function getCompanies() {
+module.exports.getCompanies = function getCompanies() {
   return parseTableLoader.load(Company);
-}
+};
 
-export function getCompanyProducts(company) {
+module.exports.getCompanyProducts = function getCompanyProducts(company) {
   return parseTableLoader.load(Product({id: company.id}));
-}
+};
 
-export function getBankAccounts() {
+module.exports.getBankAccounts = function getBankAccounts() {
 
   return [
     { ...chartOfAccounts['5.1.6.1.1'], icon: 'attach_money', __type: 'Bank', },
     { ...chartOfAccounts['5.1.4.1'], icon: 'account_balance', __type: 'Bank', },
   ];
-}
+};
 
-export function getOperation(info) {
+module.exports.getOperation = function getOperation(info) {
   return getTypeById(Operation, info);
-}
+};
 
-export function getOperationsByCategories({ companyId, from, to, type, categories, }) {
+module.exports.getOperationsByCategories = function getOperationsByCategories({ companyId, from, to, type, categories, }) {
   const qry = new Parse.Query(Operation({ id: companyId, }));
 
   if(process.env.NODE_ENV !== 'production'){
@@ -123,182 +151,761 @@ export function getOperationsByCategories({ companyId, from, to, type, categorie
   qry.ascending('date');
   qry.limit(100000);
   return qry.find();
-}
+};
 
-export function getAccount(info) {
+module.exports.getAccount = function getAccount(info) {
   return getTypeById(Account, info);
-}
+};
 
-export function getCompanyAccounts(company) {
+module.exports.getCompanyAccounts = function getCompanyAccounts(company) {
   return parseTableLoader.load(Account({id: company.id}));
-}
+};
 
-export function getTransactions(company) {
+module.exports.getTransactions = function getTransactions(company) {
   return parseTableLoader.load(Transaction({id: company.id}));
-}
+};
 
-export function getTransactionOperations({ companyId, id, }) {
+module.exports.getTransactionOperations = function getTransactionOperations({ companyId, id, }) {
   const qry = new Parse.Query(Operation({ id: companyId, }));
   qry.equalTo('transaction', Transaction({ id: companyId, }).createWithoutData(id));
   qry.limit(100000);
   return qry.find();
-}
+};
 
-export function getTransactionByType({ type, companyId, id, }) {
+module.exports.getTransactionByType = function getTransactionByType({ type, companyId, id, }) {
   const qry = new Parse.Query(Transaction({ id: companyId, }));
   qry.equalTo('transactionType', type);
 
   switch(type){
-    case 'Invoice':           qry.equalTo('invoice', Invoice({ id: companyId, }).createWithoutData(id)); break;
+    case 'Invoice':           qry.equalTo('invoice', Sale({ id: companyId, }).createWithoutData(id)); break;
     case 'Sale':              qry.equalTo('sale', Sale({ id: companyId, }).createWithoutData(id)); break;
-    case 'PaymentOfInvoices': qry.equalTo('paymentOfInvoices', PaymentOfInvoices({ id: companyId, }).createWithoutData(id)); break;
+    case 'PaymentOfInvoices': qry.equalTo('paymentOfInvoices', Sale({ id: companyId, }).createWithoutData(id)); break;
 
-    case 'Bill':           qry.equalTo('bill', Bill({ id: companyId, }).createWithoutData(id)); break;
+    case 'Bill':           qry.equalTo('bill', Expense({ id: companyId, }).createWithoutData(id)); break;
     case 'Expense':        qry.equalTo('expense', Expense({ id: companyId, }).createWithoutData(id)); break;
-    case 'PaymentOfBills': qry.equalTo('paymentOfBills', PaymentOfBills({ id: companyId, }).createWithoutData(id)); break;
+    case 'PaymentOfBills': qry.equalTo('paymentOfBills', Expense({ id: companyId, }).createWithoutData(id)); break;
   }
 
   return qry.first();
-}
+};
 
-export function getCompanyExpenses(company) {
+module.exports.declaration_sales_getTotalVAT = function declaration_sales_getTotalVAT(company, declaration) {
+  const Type = Sale({ id: company.id, });
+
+  const { periodStart, periodEnd, settings: { regime, }} = declaration;
+
+  function isStandard() {
+    return regime === 1 || regime === 'Standard';
+  }
+
+  function getQuery() { // Invoices + Sales
+    // const query = function(){
+    //   const q0 = new Parse.Query(Type);
+    //   q0.equalTo('kind', 'Invoice');
+    //
+    //   const q1 = new Parse.Query(Type);
+    //   q1.equalTo('kind', 'Sale');
+    //
+    //   return Parse.Query.or(
+    //     q0,
+    //     q1);
+    // }();
+
+    const query = new Parse.Query(Type);
+    query.containedIn('kind', [ 'Invoice', 'Sale', ]);
+
+    query.greaterThanOrEqualTo('date', new Date(periodStart));
+    query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+    if(isStandard()){
+      query.equalTo('balanceDue', 0.0);
+    }
+
+    return query;
+  }
+
+  return new Promise((resolve) => {
+    let totalVAT = 0.0;
+
+    getQuery().each(
+      function(obj){
+        totalVAT += obj.get('VAT');
+      }, {
+        success: function(){
+          resolve(totalVAT);
+        },
+
+        error: function(error){
+          reject(error);
+        }
+      }
+    );
+
+  });
+};
+
+module.exports.declaration_expenses_getTotalVAT = function declaration_expenses_getTotalVAT(company, declaration) {
+  const Type = Expense({ id: company.id, });
+
+  const { periodStart, periodEnd, settings: { regime, }} = declaration;
+
+  function isStandard() {
+    return regime === 1 || regime === 'Standard';
+  }
+
+  function getQuery() { // Bills + Expenses
+    // const query = function(){
+    //   const q0 = new Parse.Query(Type);
+    //   q0.equalTo('kind', 'Expense');
+    //
+    //   const q1 = new Parse.Query(Type);
+    //   q1.equalTo('kind', 'Bill');
+    //
+    //   return Parse.Query.or(
+    //     q0,
+    //     q1);
+    // }();
+
+    const query = new Parse.Query(Type);
+    query.containedIn('kind', [ 'Bill', 'Expense', ]);
+
+    query.greaterThanOrEqualTo('date', new Date(periodStart));
+    query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+    if(isStandard()){
+      query.equalTo('balanceDue', 0.0);
+    }
+
+    return query;
+  }
+
+  return new Promise((resolve) => {
+    let totalVAT = 0.0;
+
+    getQuery().each(
+      function(obj){
+        totalVAT += obj.get('VAT');
+      }, {
+        success: function(){
+          resolve(totalVAT);
+        },
+
+        error: function(error){
+          reject(error);
+        }
+      }
+    );
+
+  });
+};
+
+module.exports._getCompanyVATDeclarationSales = function _getCompanyVATDeclarationSales(company, declaration) {
+  const Type = Sale({ id: company.id, });
+
+  const { periodStart, periodEnd, settings: { regime, }} = declaration;
+
+  function isStandard() {
+    return regime === 1 || regime === 'Standard';
+  }
+
+  function getOperationsQuery() {
+    const query = new Parse.Query(Operation({ id: company.id, }));
+
+    query.greaterThanOrEqualTo('date', new Date(periodStart));
+    query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+    query.equalTo('isSale', true);
+
+    return query;
+  }
+
+  function invoices() {
+
+    function getInvoicesQuery() { // Invoices
+      const query = new Parse.Query(Type);
+      query.equalTo('kind', 'Invoice');
+
+      query.greaterThanOrEqualTo('date', new Date(periodStart));
+      query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+      if(isStandard()){
+        query.equalTo('balanceDue', 0.0);
+      }
+
+      return query;
+    }
+
+    const opsQuery = getOperationsQuery();
+    opsQuery.include([ 'invoice', 'invoiceItem' ]);
+
+    opsQuery.exists('invoice');
+    opsQuery.matchesQuery('invoice', getInvoicesQuery());
+
+    return opsQuery.find();
+  }
+
+  function sales() {
+    function getSalesQuery() { // Sales
+      const query = new Parse.Query(Type);
+      query.equalTo('kind', 'Sale');
+
+      query.greaterThanOrEqualTo('date', new Date(periodStart));
+      query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+      return query;
+    }
+
+    const opsQuery = getOperationsQuery();
+    opsQuery.include([ 'sale', 'saleItem' ]);
+
+    opsQuery.exists('sale');
+    opsQuery.matchesQuery('sale', getSalesQuery());
+
+    return opsQuery.find();
+  }
+
+  function report() {
+    return new Promise((resolve) => {
+      let totalHT = 0.0;
+      let totalVAT = 0.0;
+
+      function getCountQuery() { // Invoices + Sales
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'Invoice', 'Sale', ]);
+
+        query.greaterThanOrEqualTo('date', new Date(periodStart));
+        query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+        if(isStandard()){
+          query.equalTo('balanceDue', 0.0);
+        }
+
+        return query;
+      }
+
+      getCountQuery().each(
+        function(obj){
+          totalHT += obj.get('totalHT');
+          totalVAT += obj.get('VAT');
+        }, {
+          success: function(){
+            resolve({ totalVAT, totalHT, });
+          },
+
+          error: function(error){
+            reject(error);
+          }
+        }
+      );
+
+    });
+  }
+
+  return Promise.all([
+    report(),
+    invoices(),
+    sales(),
+
+  ]).then(([ { ...propsReport, }, invoices, sales, ]) => ({ ...propsReport, sales: concat(invoices, sales), }));
+};
+
+module.exports._getCompanyVATDeclarationExpenses = function _getCompanyVATDeclarationExpenses(company, declaration) {
+  const Type = Expense({ id: company.id, });
+
+  const { periodStart, periodEnd, settings: { regime, }} = declaration;
+
+  function isStandard() {
+    return regime === 1 || regime === 'Standard';
+  }
+
+  function getOperationsQuery() {
+    const query = new Parse.Query(Operation({ id: company.id, }));
+
+    query.greaterThanOrEqualTo('date', new Date(periodStart));
+    query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+    query.equalTo('isExpense', true);
+
+    return query;
+  }
+
+  function bills() {
+
+    function getBillsQuery() { // Bills
+      const query = new Parse.Query(Type);
+      query.equalTo('kind', 'Bill');
+
+      query.greaterThanOrEqualTo('date', new Date(periodStart));
+      query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+      if(isStandard()){
+        query.equalTo('balanceDue', 0.0);
+      }
+
+      return query;
+    }
+
+    const opsQuery = getOperationsQuery();
+    opsQuery.include([ 'bill', 'billItem' ]);
+
+    opsQuery.exists('bill');
+    opsQuery.matchesQuery('bill', getBillsQuery());
+
+    return opsQuery.find();
+  }
+
+  function expenses() {
+    function getExpensesQuery() { // Expenses
+      const query = new Parse.Query(Type);
+      query.equalTo('kind', 'Expense');
+
+      query.greaterThanOrEqualTo('date', new Date(periodStart));
+      query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+      query.equalTo('payeeType', 2);
+
+      return query;
+    }
+
+    const opsQuery = getOperationsQuery();
+    opsQuery.include([ 'expense', 'expenseItem' ]);
+
+    opsQuery.exists('expense');
+    opsQuery.matchesQuery('expense', getExpensesQuery());
+
+    return opsQuery.find();
+  }
+
+  function report() {
+    return new Promise((resolve) => {
+      let totalHT = 0.0;
+      let totalVAT = 0.0;
+
+      function getCountQuery() { // Bills + Expenses
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'Bill', 'Expense', ]);
+
+        query.greaterThanOrEqualTo('date', new Date(periodStart));
+        query.lessThanOrEqualTo('date', new Date(periodEnd));
+
+        if(isStandard()){
+          query.equalTo('balanceDue', 0.0);
+        }
+
+        return query;
+      }
+
+      getCountQuery().each(
+        function(obj){
+          totalHT += obj.get('totalHT');
+          totalVAT += obj.get('VAT');
+        }, {
+          success: function(){
+            resolve({ totalVAT, totalHT, });
+          },
+
+          error: function(error){
+            reject(error);
+          }
+        }
+      );
+
+    });
+  }
+
+  return Promise.all([
+    report(),
+    bills(),
+    expenses(),
+
+  ]).then(([ { ...propsReport, }, bills, expenses, ]) => ({ ...propsReport, expenses: concat(bills, expenses), }));
+};
+
+// module.exports.getCompanyVATDeclarationSales = function getCompanyVATDeclarationSales(company, declaration) {
+//   const Type = Sale({ id: company.id, });
+//
+//   const { periodStart, periodEnd, settings: { regime, }} = declaration;
+//
+//   function isStandard() {
+//     return regime === 1 || regime === 'Standard';
+//   }
+//
+//   function sales() {
+//     function getSalesQuery() { // Sales: Invoices + Sales
+//       const query = new Parse.Query(Type);
+//       query.containedIn('kind', [ 'Sale', 'Invoice', ]);
+//
+//       query.greaterThanOrEqualTo('date', new Date(periodStart));
+//       query.lessThanOrEqualTo('date', new Date(periodEnd));
+//
+//       if(isStandard()){
+//             query.equalTo('balanceDue', 0.0);
+//           }
+//
+//       return query;
+//     }
+//
+//     const opsQuery = getSalesQuery();
+//     return opsQuery.find();
+//   }
+//
+//   function report() {
+//     return new Promise((resolve) => {
+//       let totalHT = 0.0;
+//       let totalVAT = 0.0;
+//
+//       function getCountQuery() { // Invoices + Sales
+//         const query = new Parse.Query(Type);
+//         query.containedIn('kind', [ 'Invoice', 'Sale', ]);
+//
+//         query.greaterThanOrEqualTo('date', new Date(periodStart));
+//         query.lessThanOrEqualTo('date', new Date(periodEnd));
+//
+//         if(isStandard()){
+//           query.equalTo('balanceDue', 0.0);
+//         }
+//
+//         return query;
+//       }
+//
+//       getCountQuery().each(
+//         function(obj){
+//           totalHT += obj.get('totalHT');
+//           totalVAT += obj.get('VAT');
+//         }, {
+//           success: function(){
+//             resolve({ totalVAT, totalHT, });
+//           },
+//
+//           error: function(error){
+//             reject(error);
+//           }
+//         }
+//       );
+//
+//     });
+//   }
+//
+//   return Promise.all([
+//     report(),
+//     sales(),
+//
+//   ]).then(([ { ...props, }, sales, ]) => ({ ...props, sales, }));
+// }
+//
+// module.exports.getCompanyVATDeclarationExpenses = function getCompanyVATDeclarationExpenses(company, declaration) {
+//   const Type = Expense({ id: company.id, });
+//
+//   const { periodStart, periodEnd, settings: { regime, }} = declaration;
+//
+//   function isStandard() {
+//     return regime === 1 || regime === 'Standard';
+//   }
+//
+//   function expenses() {
+//     function getExpensesQuery() { // Expenses: Bills + Expenses
+//       const query = new Parse.Query(Type);
+//       query.containedIn('kind', [ 'Expense', 'Bill', ]);
+//
+//       query.greaterThanOrEqualTo('date', new Date(periodStart));
+//       query.lessThanOrEqualTo('date', new Date(periodEnd));
+//
+//       if(isStandard()){
+//         query.equalTo('balanceDue', 0.0);
+//       }
+//
+//       return query;
+//     }
+//
+//     const opsQuery = getExpensesQuery();
+//     return opsQuery.find();
+//   }
+//
+//   function report() {
+//     return new Promise((resolve) => {
+//       let totalHT = 0.0;
+//       let totalVAT = 0.0;
+//
+//       function getCountQuery() { // Bills + Expenses
+//         const query = new Parse.Query(Type);
+//         query.containedIn('kind', [ 'Bill', 'Expense', ]);
+//
+//         query.greaterThanOrEqualTo('date', new Date(periodStart));
+//         query.lessThanOrEqualTo('date', new Date(periodEnd));
+//
+//         if(isStandard()){
+//           query.equalTo('balanceDue', 0.0);
+//         }
+//
+//         return query;
+//       }
+//
+//       getCountQuery().each(
+//         function(obj){
+//           totalHT += obj.get('totalHT');
+//           totalVAT += obj.get('VAT');
+//         }, {
+//           success: function(){
+//             resolve({ totalVAT, totalHT, });
+//           },
+//
+//           error: function(error){
+//             reject(error);
+//           }
+//         }
+//       );
+//
+//     });
+//   }
+//
+//   return Promise.all([
+//     report(),
+//     expenses(),
+//
+//   ]).then(([ { ...props, }, expenses, ]) => ({ ...props, expenses, }));
+// }
+
+module.exports.getObjectFiles = function getObjectFiles(obj, type) {
+  const companyId = obj.get('company').id;
+  const Type = File({ id: companyId, });
+
+  const qry = new Parse.Query(Type);
+
+  switch (type){
+    case 'Invoice':
+
+      qry.equalTo('invoice', obj);
+      break;
+
+    case 'Sale':
+
+      qry.equalTo('sale', obj);
+      break;
+
+    case 'PaymentOfInvoices':
+
+      qry.equalTo('paymentOfInvoices', obj);
+      break;
+
+    case 'Expense':
+
+      qry.equalTo('expense', obj);
+      break;
+
+    case 'Bill':
+
+      qry.equalTo('bill', obj);
+      break;
+
+    case 'PaymentOfBills':
+
+      qry.equalTo('paymentOfBills', obj);
+      break;
+
+    case 'Transaction':
+
+      qry.equalTo('transaction', obj);
+      break;
+
+    case 'Operation':
+
+      qry.equalTo('operation', obj);
+      break;
+
+  }
+
+  qry.equalTo('type', type);
+
+  qry.descending('createdAt');
+
+  return qry.find().catch(() => []);
+};
+
+module.exports.getObjectFile = function getObjectFile(obj, type) {
+  const companyId = type === 'Logo' ? obj.id : obj.get('company').id;
+  const Type = File({ id: companyId, });
+
+  const qry = new Parse.Query(Type);
+
+  switch (type){
+    // case 'Avatar':
+    //
+    //   qry.equalTo('owner', obj);
+    //   break;
+
+    case 'Logo':
+
+      qry.equalTo('company', obj);
+      break;
+
+    case 'Vendor':
+
+      qry.equalTo('vendor', obj);
+      break;
+
+    case 'Customer':
+
+      qry.equalTo('customer', obj);
+      break;
+
+    case 'Employee':
+
+      qry.equalTo('employee', obj);
+      break;
+
+    case 'Item':
+
+      qry.equalTo('item', obj);
+      break;
+  }
+
+  qry.equalTo('type', type);
+
+  qry.descending('createdAt');
+
+  return qry.first();
+};
+
+module.exports.getCompanyExpenses = function getCompanyExpenses(company) {
   return parseTableLoader.load(Expense({id: company.id}));
-}
-export function getCompanySales(company) {
+};
+module.exports.getCompanySales = function getCompanySales(company) {
   return parseTableLoader.load(Sale({id: company.id}));
-}
-export function getCompanyInvoices(company) {
-  return parseTableLoader.load(Invoice({id: company.id}));
-}
-export function getCompanyInvoicesTotalCount(company) {
-  return countByType(Invoice({id: company.id}));
-}
-export function getCompanyBills(company) {
-  return parseTableLoader.load(Bill({id: company.id}));
-}
-export function getCompanyBillsTotalCount(company) {
-  return countByType(Bill({id: company.id}));
-}
-export function getCompanyPaymentsOfInvoices(company) {
-  return parseTableLoader.load(PaymentOfInvoices({id: company.id}));
-}
-export function getCompanyPaymentsOfBills(company) {
-  return parseTableLoader.load(PaymentOfBills({id: company.id}));
-}
+};
+module.exports.getCompanyInvoices = function getCompanyInvoices(company) {
+  return parseTableLoader.load(Sale({id: company.id}));
+};
+module.exports.getCompanyInvoicesTotalCount = function getCompanyInvoicesTotalCount(company) {
+  return countByType(Sale({id: company.id}));
+};
+module.exports.getCompanyBills = function getCompanyBills(company) {
+  return parseTableLoader.load(Expense({id: company.id}));
+};
+module.exports.getCompanyBillsTotalCount = function getCompanyBillsTotalCount(company) {
+  return countByType(Expense({id: company.id}));
+};
+module.exports.getCompanyPaymentsOfInvoices = function getCompanyPaymentsOfInvoices(company) {
+  return parseTableLoader.load(Sale({id: company.id}));
+};
+module.exports.getCompanyPaymentsOfBills = function getCompanyPaymentsOfBills(company) {
+  return parseTableLoader.load(Expense({id: company.id}));
+};
 
-export function getInvoiceItems(invoice) {
-  const qry = new Parse.Query(InvoiceItem({id: invoice.get('company').id}));
-  qry.equalTo('invoice', Parse.Object.extend('Invoice_' + invoice.get('company').id).createWithoutData(invoice.id));
+module.exports.getInvoiceItems = function getInvoiceItems(invoice) {
+  const companyId = invoice.get('company').id;
+  const Type = InvoiceItem({ id: companyId, });
+
+  const qry = new Parse.Query(Type);
+
+  qry.equalTo('invoice', Sale({ id: companyId, }).createWithoutData(invoice.id));
   qry.include([ 'invoice', 'item' ]);
+
   qry.ascending('index');
+
   return qry.find();
-}
-export function getBillItems(bill) {
-  const qry = new Parse.Query(BillItem({id: bill.get('company').id}));
-  qry.equalTo('bill', Parse.Object.extend('Bill_' + bill.get('company').id).createWithoutData(bill.id));
+};
+module.exports.getBillItems = function getBillItems(bill) {
+  const companyId = bill.get('company').id;
+  const Type = BillItem({ id: companyId, });
+
+  const qry = new Parse.Query(Type);
+
+  qry.equalTo('bill', Expense({id: companyId}).createWithoutData(bill.id));
+
   qry.include([ 'bill' ]);
   qry.ascending('index');
-  return qry.find();
-}
 
-export function getAccountsByCategories(categories) {
+  return qry.find();
+};
+
+module.exports.getAccountsByCategories = function getAccountsByCategories(categories) {
   return Object.keys(chartOfAccounts).reduce(function (accounts, code) {
     const account = chartOfAccounts[code];
     (categories.indexOf(account._categoryCode) !== -1) && accounts.push(account);
     return accounts;
   }, []);
-}
+};
 
-export function getInvoicePayments(invoice) {
+module.exports.getInvoicePayments = function getInvoicePayments(invoice) {
   const qry = new Parse.Query(PaymentOfInvoicesItem({id: invoice.get('company').id}));
-  qry.equalTo('invoice', Parse.Object.extend('Invoice_' + invoice.get('company').id).createWithoutData(invoice.id));
+  qry.equalTo('invoice', Parse.Object.extend('Sale_' + invoice.get('company').id).createWithoutData(invoice.id));
   qry.include(['payment', 'invoice']);
   qry.descending('date');
   return qry.find();
-}
-export function getPaymentOfInvoicesItems(payment) {
+};
+module.exports.getPaymentOfInvoicesItems = function getPaymentOfInvoicesItems(payment) {
   const qry = new Parse.Query(PaymentOfInvoicesItem({id: payment.get('company').id}));
-  qry.equalTo('payment', Parse.Object.extend('PaymentOfInvoices_' + payment.get('company').id).createWithoutData(payment.id));
+  qry.equalTo('payment', Parse.Object.extend('Sale_' + payment.get('company').id).createWithoutData(payment.id));
   qry.include(['payment', 'invoice']);
   return qry.find();
-}
-export function getBillPayments(bill) {
+};
+module.exports.getBillPayments = function getBillPayments(bill) {
   console.assert(bill.get('company').id);
   const qry = new Parse.Query(PaymentOfBillsItem({id: bill.get('company').id}));
-  qry.equalTo('bill', Parse.Object.extend('Bill_' + bill.get('company').id).createWithoutData(bill.id));
+  qry.equalTo('bill', Parse.Object.extend('Expense_' + bill.get('company').id).createWithoutData(bill.id));
   qry.include(['payment', 'bill']);
   qry.descending('date');
   return qry.find();
-}
-export function getPaymentOfBillsItems(payment) {
+};
+module.exports.getPaymentOfBillsItems = function getPaymentOfBillsItems(payment) {
   const qry = new Parse.Query(PaymentOfBillsItem({id: payment.get('company').id}));
-  qry.equalTo('payment', Parse.Object.extend('PaymentOfBills_' + payment.get('company').id).createWithoutData(payment.id));
+  qry.equalTo('payment', Parse.Object.extend('Expense_' + payment.get('company').id).createWithoutData(payment.id));
   qry.include(['payment', 'bill']);
   return qry.find();
-}
+};
 
-export function getCompanyPeople(company) {
-  // return Parse.Promise.when([
-  //   getCompanyVendors(company),
-  //   getCompanyCustomers(company),
-  //   getCompanyEmployees(company),
-  // ]).then(([ vendors, customers, employees ]) => concat(vendors, customers, employees));
-
+module.exports.getCompanyPeople = function getCompanyPeople(company) {
   return parseTableLoader.load(
     Parse.Object.extend('People_' + company.id));
-}
+};
 
-export function getCompanyVendors(company) {
-  const qry = new Parse.Query(Vendor({id: company.id}));
-  qry.equalTo('type', 'Vendor');
+module.exports.getCompanyVendors = function getCompanyVendors(company) {
+  const qry = new Parse.Query(People({id: company.id}));
+  qry.equalTo('kind', 'Vendor');
   return qry.find();
+};
 
-  // return parseTableLoader.load(Vendor({id: company.id}));
-}
-
-export function getCompanyCustomers(company) {
-  const qry = new Parse.Query(Vendor({id: company.id}));
-  qry.equalTo('type', 'Customer');
+module.exports.getCompanyCustomers = function getCompanyCustomers(company) {
+  const qry = new Parse.Query(People({id: company.id}));
+  qry.equalTo('kind', 'Customer');
   return qry.find();
+};
 
-  // return parseTableLoader.load(Customer({id: company.id}));
-}
-
-export function getCompanyEmployees(company) {
-  const qry = new Parse.Query(Vendor({id: company.id}));
-  qry.equalTo('type', 'Employee');
+module.exports.getCompanyEmployees = function getCompanyEmployees(company) {
+  const qry = new Parse.Query(People({id: company.id}));
+  qry.equalTo('kind', 'Employee');
   return qry.find();
+};
 
-  // return parseTableLoader.load(Employee({id: company.id}));
-}
-
-export function getSaleItems(sale) {
+module.exports.getSaleItems = function getSaleItems(sale) {
   const qry = new Parse.Query(SaleItem({id: sale.get('company').id}));
   qry.equalTo('sale', Parse.Object.extend('Sale_' + sale.get('company').id).createWithoutData(sale.id));
   qry.include([ 'sale', 'item' ]);
   qry.ascending('index');
   return qry.find();
-}
-export function getExpenseItems(expense) {
+};
+module.exports.getExpenseItems = function getExpenseItems(expense) {
   const qry = new Parse.Query(ExpenseItem({id: expense.get('company').id}));
   qry.equalTo('expense', Parse.Object.extend('Expense_' + expense.get('company').id).createWithoutData(expense.id));
   qry.include([ 'expense' ]);
   qry.ascending('index');
   return qry.find();
-}
+};
 
-export function getChartAccountList() {
+module.exports.getChartAccountList = function getChartAccountList() {
   return Object.keys(chartOfAccounts).reduce(function (accounts, code) {
     accounts.push(chartOfAccounts[code]);
     return accounts;
   }, []);
-}
+};
 
-export function queryOpenInvoices(company, {from,}) {
-  const Type = Invoice({id: company.id});
+module.exports.queryOpenInvoices = function queryOpenInvoices(company, {from,}) {
+  const Type = Sale({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
+
+    query.equalTo('kind', 'Invoice');
 
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(365, 'days').toDate());
@@ -307,18 +914,18 @@ export function queryOpenInvoices(company, {from,}) {
   }
 
   return getQuery().find();
-}
+};
 
-export function queryCustomerOpenInvoices(company, {from, id,}) {
-  const Type = Invoice({id: company.id});
+module.exports.queryCustomerOpenInvoices = function queryCustomerOpenInvoices(company, {from, id,}) {
+  const Type = Sale({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Invoice');
+    query.equalTo('kind', 'Invoice');
 
     query.equalTo('customer',
-      Parse.Object.extend(`People_${company.id}`).createWithoutData(id))
+      Parse.Object.extend(`People_${company.id}`).createWithoutData(id));
 
     if(from){
       query.greaterThanOrEqualTo('date',
@@ -330,15 +937,15 @@ export function queryCustomerOpenInvoices(company, {from, id,}) {
   }
 
   return getQuery().find();
-}
+};
 
-export function querySalesRecentlyPaid(company, {from,}) {
+module.exports.querySalesRecentlyPaid = function querySalesRecentlyPaid(company, {from,}) {
 
   function getSalesQuery() {
     const Type = Sale({id: company.id});
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Sale');
+    query.equalTo('kind', 'Sale');
 
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(DEFAULT_RECENT_DAYS, 'days').toDate());
@@ -346,10 +953,10 @@ export function querySalesRecentlyPaid(company, {from,}) {
   }
 
   function getPaymentsOfInvoicesQuery() {
-    const Type = PaymentOfInvoices({id: company.id});
+    const Type = Sale({id: company.id});
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'PaymentOfInvoices');
+    query.equalTo('kind', 'PaymentOfInvoices');
 
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(DEFAULT_RECENT_DAYS, 'days').toDate());
@@ -359,36 +966,38 @@ export function querySalesRecentlyPaid(company, {from,}) {
   const mainQuery = Parse.Query.or(
     getSalesQuery(), getPaymentsOfInvoicesQuery());
 
-  return mainQuery.find();
-}
+  mainQuery.ascending('date');
 
-export function queryOverdueInvoices(company, {from,}) {
-  const Type = Invoice({id: company.id});
+  return mainQuery.find();
+};
+
+module.exports.queryOverdueInvoices = function queryOverdueInvoices(company, {from,}) {
+  const Type = Sale({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Invoice');
+    query.equalTo('kind', 'Invoice');
 
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(365, 'days').toDate());
     query.greaterThan('balanceDue', 0.0);
-    query.lessThan('dueDate', moment().toDate());
+    query.lessThan('dueDate', moment().startOf('day').toDate());
     return query;
   }
 
   return getQuery().find();
-}
-export function queryCustomerOverdueInvoices(company, {from, id,}) {
-  const Type = Invoice({id: company.id});
+};
+module.exports.queryCustomerOverdueInvoices = function queryCustomerOverdueInvoices(company, {from, id,}) {
+  const Type = Sale({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Invoice');
+    query.equalTo('kind', 'Invoice');
 
     query.equalTo('customer',
-      Parse.Object.extend(`People_${company.id}`).createWithoutData(id))
+      Parse.Object.extend(`People_${company.id}`).createWithoutData(id));
 
     if(from){
       query.greaterThanOrEqualTo('date',
@@ -396,15 +1005,15 @@ export function queryCustomerOverdueInvoices(company, {from, id,}) {
     }
 
     query.greaterThan('balanceDue', 0.0);
-    query.lessThan('dueDate', moment().toDate());
+    query.lessThan('dueDate', moment().startOf('day').toDate());
     return query;
   }
 
   return getQuery().find();
-}
+};
 
-export function queryInvoices(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer, }, last365Days = true) {
-  const Type = Invoice({id: company.id});
+function queryInvoices(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer, }, last365Days = true) {
+  const Type = Sale({id: company.id});
 
   if(type !== 'invoices' && type !== 'open' && type !== 'overdue' && type !== 'recent' && type !== 'ALL'){
     return Promise.resolve({count: 0, results: []});
@@ -413,31 +1022,47 @@ export function queryInvoices(company, { offset, limit, type, status, from, to, 
   function getQuery(doSort = true) {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Invoice');
+    query.equalTo('kind', 'Invoice');
 
-    switch (sortKey && doSort) {
-      case 'date':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-        break;
-      case 'dueDate':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'balanceDue':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'total':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
+    if(doSort){
+
+      switch (sortKey) {
+        case 'date':
+          query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
+          break;
+        case 'dueDate':
+          query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+          if(sortKey === 1){
+            query.addDescending('date');
+          }
+          break;
+        case 'balanceDue':
+          query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+          if(sortKey === 1){
+            query.addDescending('date');
+          }
+          break;
+        case 'total':
+          query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
+          if(sortKey === 1){
+            query.addDescending('date');
+          }
+          break;
+        case 'totalHT':
+          query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+          if(sortKey === 1){
+            query.addDescending('date');
+          }
+          break;
+        case 'VAT':
+          query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'VAT,date' : 'VAT');
+          if(sortKey === 1){
+            query.addDescending('date');
+          }
+          break;
+      }
     }
+
     switch (status) {
       case 'closed':
         query.equalTo('balanceDue', 0.0);
@@ -449,7 +1074,7 @@ export function queryInvoices(company, { offset, limit, type, status, from, to, 
 
       case 'overdue':
         query.greaterThan('balanceDue', 0.0);
-        query.lessThan('dueDate', moment().toDate());
+        query.lessThan('dueDate', moment().startOf('day').toDate());
         break;
     }
     if(customer){
@@ -494,9 +1119,9 @@ export function queryInvoices(company, { offset, limit, type, status, from, to, 
       q.limit(limit);
       return q.find();
     }()
-  ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+  ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, invoicesSumOfTotals : sumOfTotals, invoicesSumOfBalances : sumOfBalances, results, }));
 }
-export function querySales(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, customer,}, last365Days = true) {
+function querySales(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, customer,}, last365Days = true) {
   const Type = Sale({id: company.id});
 
   if(type !== 'sales' && type !== 'recent' && type !== 'money' && type !== 'ALL'){
@@ -506,24 +1131,38 @@ export function querySales(company, {offset, limit, type, from, to, sortKey = 'd
   function getQuery(doSort = true) {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Sale');
+    query.equalTo('kind', 'Sale');
 
-    switch (sortKey && doSort) {
-      case 'date':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-        break;
-      case 'balanceDue':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'total':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
+    if (doSort) {
+      switch (sortKey) {
+        case 'date':
+          query[sortDir === -1 ? 'descending' : 'ascending']('date');
+          break;
+        case 'balanceDue':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'total':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'totalHT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'VAT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+      }
     }
     if(customer){
       query.equalTo('customer',
@@ -565,10 +1204,10 @@ export function querySales(company, {offset, limit, type, from, to, sortKey = 'd
       q.limit(limit);
       return q.find();
     }()
-  ]).then(([ { count, sumOfTotals, }, results ]) => ({ count, sumOfTotals, results, }));
+  ]).then(([ { count, sumOfTotals, }, results ]) => ({ count, salesSumOfTotals : sumOfTotals, salesSumOfBalances : 0.0, results, }));
 }
-export function queryPaymentsOfInvoices(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, customer,}, last365Days = true) {
-  const Type = PaymentOfInvoices({id: company.id});
+function queryPaymentsOfInvoices(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, customer,}, last365Days = true) {
+  const Type = Sale({id: company.id});
 
   if(type !== 'payments' && type !== 'money' && type !== 'ALL'){
     return Promise.resolve({count: 0, results: []});
@@ -577,24 +1216,38 @@ export function queryPaymentsOfInvoices(company, {offset, limit, type, from, to,
   function getQuery(doSort = true) {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'PaymentOfInvoices');
+    query.equalTo('kind', 'PaymentOfInvoices');
 
-    switch (sortKey && doSort) {
-      case 'date':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-        break;
-      case 'balanceDue':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'total':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
+    if (doSort) {
+      switch (sortKey) {
+        case 'date':
+          query[sortDir === -1 ? 'descending' : 'ascending']('date');
+          break;
+        case 'balanceDue':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'total':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'totalHT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'VAT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+      }
     }
     // TODO: query customers on items using matchesKeyInQuery
     if(customer){
@@ -640,11 +1293,11 @@ export function queryPaymentsOfInvoices(company, {offset, limit, type, from, to,
       q.limit(limit);
       return q.find();
     }()
-  ]).then(([ { count, sumOfTotals, sumOfCredits, }, results ]) => ({ count, sumOfTotals, sumOfCredits, results, }));
+  ]).then(([ { count, sumOfTotals, sumOfCredits, }, results ]) => ({ count, paymentsSumOfTotals : sumOfTotals, paymentsSumOfCredits : sumOfCredits, results, }));
 }
 
-export function customersQueryInvoices(company, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
-  const Type = Invoice({id: company.id});
+function customersQueryInvoices(company, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
+  const Type = Sale({id: company.id});
 
   if(type !== 'invoices' && type !== 'recent' && type !== 'ALL'){
     return Promise.resolve({count: 0, results: []});
@@ -670,7 +1323,9 @@ export function customersQueryInvoices(company, {offset, limit, type, status, fr
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Invoice');
+    query.equalTo('kind', 'Invoice');
+
+    query.include([ 'customer' ]);
 
     switch (status) {
       case 'closed':
@@ -683,7 +1338,7 @@ export function customersQueryInvoices(company, {offset, limit, type, status, fr
 
       case 'overdue':
         query.greaterThan('balanceDue', 0.0);
-        query.lessThan('dueDate', moment().toDate());
+        query.lessThan('dueDate', moment().startOf('day').toDate());
         break;
     }
 
@@ -706,7 +1361,7 @@ export function customersQueryInvoices(company, {offset, limit, type, status, fr
     }()
   ]).then(([ results ]) => ({ ...aggregateResult(results), }));
 }
-export function customersQuerySales(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
+function customersQuerySales(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
   const Type = Sale({id: company.id});
 
   if(type !== 'sales' && type !== 'recent' && type !== 'money' && type !== 'ALL'){
@@ -733,7 +1388,9 @@ export function customersQuerySales(company, {offset, limit, type, from, to, sor
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Sale');
+    query.equalTo('kind', 'Sale');
+
+    query.include([ 'customer' ]);
 
     if(!from && !to){
       last365Days && query.greaterThanOrEqualTo('date', moment().subtract(365, 'days').startOf('day').toDate())
@@ -753,8 +1410,8 @@ export function customersQuerySales(company, {offset, limit, type, from, to, sor
     }()
   ]).then(([ results ]) => ({ ...aggregateResult(results), }));
 }
-export function customersQueryPaymentsOfInvoices(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
-  const Type = PaymentOfInvoices({id: company.id});
+function customersQueryPaymentsOfInvoices(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
+  const Type = Sale({id: company.id});
 
   if(type !== 'payments' && type !== 'money' && type !== 'ALL'){
     return Promise.resolve({count: 0, results: []});
@@ -780,7 +1437,9 @@ export function customersQueryPaymentsOfInvoices(company, {offset, limit, type, 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'PaymentOfInvoices');
+    query.equalTo('kind', 'PaymentOfInvoices');
+
+    query.include([ 'customer' ]);
 
     if(!from && !to){
       last365Days && query.greaterThanOrEqualTo('date', moment().subtract(365, 'days').startOf('day').toDate())
@@ -801,13 +1460,13 @@ export function customersQueryPaymentsOfInvoices(company, {offset, limit, type, 
   ]).then(([ results ]) => ({ ...aggregateResult(results), }));
 }
 
-export function queryOpenBills(company, {from,}) {
-  const Type = Bill({id: company.id});
+function queryOpenBills(company, {from,}) {
+  const Type = Expense({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Bill');
+    query.equalTo('kind', 'Bill');
 
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(365, 'days').toDate());
@@ -817,16 +1476,16 @@ export function queryOpenBills(company, {from,}) {
 
   return getQuery().find();
 }
-export function queryVendorOpenBills(company, {from, id,}) {
-  const Type = Bill({id: company.id});
+function queryVendorOpenBills(company, {from, id,}) {
+  const Type = Expense({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Bill');
+    query.equalTo('kind', 'Bill');
 
     query.equalTo('payee',
-      Parse.Object.extend(`Peope_${company.id}`).createWithoutData(id));
+      Parse.Object.extend(`People_${company.id}`).createWithoutData(id));
 
     if(from){
       query.greaterThanOrEqualTo('date',
@@ -840,25 +1499,25 @@ export function queryVendorOpenBills(company, {from, id,}) {
   return getQuery().find();
 }
 
-export function queryExpensesRecentlyPaid(company, {from,}) {
+module.exports.queryExpensesRecentlyPaid = function queryExpensesRecentlyPaid(company, {from,}) {
 
   function getExpensesQuery() {
     const Type = Expense({id: company.id});
 
-    query.equalTo('type', 'Expense');
-
     const query = new Parse.Query(Type);
+    query.equalTo('kind', 'Expense');
+
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(DEFAULT_RECENT_DAYS, 'days').toDate());
     return query;
   }
 
   function getPaymentsOfBillsQuery() {
-    const Type = PaymentOfBills({id: company.id});
-
-    query.equalTo('type', 'PaymentOfBills');
+    const Type = Expense({id: company.id});
 
     const query = new Parse.Query(Type);
+    query.equalTo('kind', 'PaymentOfBills');
+
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(DEFAULT_RECENT_DAYS, 'days').toDate());
     return query;
@@ -867,28 +1526,30 @@ export function queryExpensesRecentlyPaid(company, {from,}) {
   const mainQuery = Parse.Query.or(
     getExpensesQuery(), getPaymentsOfBillsQuery());
 
-  return mainQuery.find();
-}
+  mainQuery.ascending('date');
 
-export function queryOverdueBills(company, {from,}) {
-  const Type = Bill({id: company.id});
+  return mainQuery.find();
+};
+
+module.exports.queryOverdueBills = function queryOverdueBills(company, {from,}) {
+  const Type = Expense({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Bill');
+    query.equalTo('kind', 'Bill');
 
     query.greaterThanOrEqualTo('date',
       from ? new Date(from) : moment().subtract(365, 'days').toDate());
     query.greaterThan('balanceDue', 0.0);
-    query.lessThan('dueDate', moment().toDate());
+    query.lessThan('dueDate', moment().startOf('day').toDate());
     return query;
   }
 
   return getQuery().find();
-}
-export function queryVendorOverdueBills(company, {from, id,}) {
-  const Type = Bill({id: company.id});
+};
+module.exports.queryVendorOverdueBills = function queryVendorOverdueBills(company, {from, id,}) {
+  const Type = Expense({id: company.id});
 
   function getQuery() {
     const query = new Parse.Query(Type);
@@ -902,14 +1563,14 @@ export function queryVendorOverdueBills(company, {from, id,}) {
     }
 
     query.greaterThan('balanceDue', 0.0);
-    query.lessThan('dueDate', moment().toDate());
+    query.lessThan('dueDate', moment().startOf('day').toDate());
     return query;
   }
 
   return getQuery().find();
-}
+};
 
-export function queryExpenses(company, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, payee, customer, }, last365Days = true) {
+function queryExpenses(company, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, payee, customer, }, last365Days = true) {
   const Type = Expense({id: company.id});
 
   if(type !== 'expenses' && type !== 'recent' && type !== 'money' && type !== 'ALL'){
@@ -919,30 +1580,44 @@ export function queryExpenses(company, { offset, limit, type, from, to, sortKey 
   function getQuery(doSort = true) {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Expense');
+    query.equalTo('kind', 'Expense');
 
-    switch (sortKey && doSort) {
-      case 'date':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-        break;
-      case 'dueDate':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'balanceDue':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'total':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
+    if (doSort) {
+      switch (sortKey) {
+        case 'date':
+          query[sortDir === -1 ? 'descending' : 'ascending']('date');
+          break;
+        case 'dueDate':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'balanceDue':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'total':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'totalHT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'VAT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+      }
     }
     if(payee){
       query.equalTo('vendor',
@@ -988,11 +1663,11 @@ export function queryExpenses(company, { offset, limit, type, from, to, sortKey 
       q.limit(limit);
       return q.find();
     }()
-  ]).then(([ { count, sumOfTotals, }, results ]) => ({ count, sumOfTotals, results, }));
+  ]).then(([ { count, sumOfTotals, }, results ]) => ({ count, expensesSumOfTotals : sumOfTotals, expensesSumOfBalances : 0.0, results, }));
 }
 
-export function queryBills(company, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, payee, customer,}, last365Days = true) {
-  const Type = Bill({id: company.id});
+function queryBills(company, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, payee, customer,}, last365Days = true) {
+  const Type = Expense({id: company.id});
 
   if(customer){
     return Promise.resolve({count: 0, results: []});
@@ -1005,30 +1680,44 @@ export function queryBills(company, {offset, limit, type, status, from, to, sort
   function getQuery(doSort = true) {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Bill');
+    query.equalTo('kind', 'Bill');
 
-    switch (sortKey && doSort) {
-      case 'date':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-        break;
-      case 'dueDate':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'balanceDue':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'total':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
+    if (doSort) {
+      switch (sortKey) {
+        case 'date':
+          query[sortDir === -1 ? 'descending' : 'ascending']('date');
+          break;
+        case 'dueDate':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'balanceDue':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'total':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'totalHT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'VAT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+      }
     }
     switch (status) {
       case 'closed':
@@ -1041,7 +1730,7 @@ export function queryBills(company, {offset, limit, type, status, from, to, sort
 
       case 'overdue':
         query.greaterThan('balanceDue', 0.0);
-        query.lessThan('dueDate', moment().toDate());
+        query.lessThan('dueDate', moment().startOf('day').toDate());
         break;
     }
     if(payee){
@@ -1086,11 +1775,11 @@ export function queryBills(company, {offset, limit, type, status, from, to, sort
       q.limit(limit);
       return q.find();
     }()
-  ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+  ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, billsSumOfTotals : sumOfTotals, billsSumOfBalances : sumOfBalances, results, }));
 }
 
-export function queryPaymentsOfBills(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, payee, customer, }, last365Days = true) {
-  const Type = PaymentOfBills({id: company.id});
+function queryPaymentsOfBills(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, payee, customer, }, last365Days = true) {
+  const Type = Expense({id: company.id});
 
   if(customer){
     return Promise.resolve({count: 0, results: []});
@@ -1103,24 +1792,38 @@ export function queryPaymentsOfBills(company, {offset, limit, type, from, to, so
   function getQuery(doSort = true) {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'PaymentOfBills');
+    query.equalTo('kind', 'PaymentOfBills');
 
-    switch (sortKey && doSort) {
-      case 'date':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-        break;
-      case 'balanceDue':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
-      case 'total':
-        query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-        if(sortKey === 1){
-          query.addDescending('date');
-        }
-        break;
+    if (doSort) {
+      switch (sortKey) {
+        case 'date':
+          query[sortDir === -1 ? 'descending' : 'ascending']('date');
+          break;
+        case 'balanceDue':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'total':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'totalHT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+        case 'VAT':
+          query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+          if (sortKey === 1) {
+            query.addDescending('date');
+          }
+          break;
+      }
     }
     // TODO: query customers on items using matchesKeyInQuery
     if(payee){
@@ -1166,23 +1869,23 @@ export function queryPaymentsOfBills(company, {offset, limit, type, from, to, so
       q.limit(limit);
       return q.find();
     }()
-  ]).then(([ { count, sumOfTotals, sumOfCredits, }, results ]) => ({ count, sumOfTotals, sumOfCredits, results, }));
+  ]).then(([ { count, sumOfTotals, sumOfCredits, }, results ]) => ({ count, paymentsSumOfTotals : sumOfTotals, paymentsSumOfCredits : sumOfCredits, results, }));
 }
 
-export function getVendorOpenBills(company, {id}){
-  const Type = Bill({id: company.id});
+module.exports.getVendorOpenBills = function getVendorOpenBills(company, {id}){
+  const Type = Expense({id: company.id});
   const query = new Parse.Query(Type);
 
-  query.equalTo('type', 'Bill');
+  query.equalTo('kind', 'Bill');
 
   query.equalTo('payee',
     Parse.Object.extend(`People_${company.id}`).createWithoutData(id));
   query.greaterThan('balanceDue', 0.0);
   query.limit(100000);
   return query.find();
-}
+};
 
-export function getPaymentOfBillsFromPaymentOfBillsItem(company, id){
+module.exports.getPaymentOfBillsFromPaymentOfBillsItem = function getPaymentOfBillsFromPaymentOfBillsItem(company, id){
   const Type = PaymentOfBillsItem({id: company.id});
   const query = new Parse.Query(Type);
   query.include([ 'payment' ]);
@@ -1192,22 +1895,22 @@ export function getPaymentOfBillsFromPaymentOfBillsItem(company, id){
       p.__type = 'PaymentOfBills';
       return p;
     });
-}
+};
 
-export function getCustomerOpenInvoices(company, {id}){
-  const Type = Invoice({id: company.id});
+module.exports.getCustomerOpenInvoices = function getCustomerOpenInvoices(company, {id}){
+  const Type = Sale({id: company.id});
   const query = new Parse.Query(Type);
 
-  query.equalTo('type', 'Invoice');
+  query.equalTo('kind', 'Invoice');
 
   query.equalTo('customer',
     Parse.Object.extend(`People_${company.id}`).createWithoutData(id));
   query.greaterThan('balanceDue', 0.0);
   query.limit(100000);
   return query.find();
-}
+};
 
-export function getPaymentOfInvoicesFromPaymentOfInvoicesItem(company, id){
+module.exports.getPaymentOfInvoicesFromPaymentOfInvoicesItem = function getPaymentOfInvoicesFromPaymentOfInvoicesItem(company, id){
   const Type = PaymentOfInvoicesItem({id: company.id});
   const query = new Parse.Query(Type);
   query.include([ 'payment' ]);
@@ -1217,9 +1920,9 @@ export function getPaymentOfInvoicesFromPaymentOfInvoicesItem(company, id){
       p.__type = 'PaymentOfInvoices';
       return p;
     });
-}
+};
 
-export function vendorsQueryExpenses(company, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false) {
+function vendorsQueryExpenses(company, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false) {
   const Type = Expense({id: company.id});
 
   if(type !== 'expenses' && type !== 'recent' && type !== 'money' && type !== 'ALL'){
@@ -1227,15 +1930,21 @@ export function vendorsQueryExpenses(company, { offset, limit, type, from, to, s
   }
 
   function getPayee(obj){
-    if(obj.has('vendor')){
-      return obj.get('vendor');
-    }
+    return obj.get('vendor');
 
-    if(obj.has('customer')){
-      return obj.get('customer');
-    }
+    // if(obj.has('vendor')){
+    //   return obj.get('vendor');
+    // }
 
-    return undefined;
+    // if(obj.has('customer')){
+    //   return obj.get('customer');
+    // }
+
+    // if(obj.has('employee')){
+    //   return obj.get('employee');
+    // }
+
+    // return undefined;
   }
 
   function aggregateResult(results){
@@ -1246,6 +1955,7 @@ export function vendorsQueryExpenses(company, { offset, limit, type, from, to, s
 
       objs => {
         const expense = objs[0];
+
         const payee = getPayee(expense);
         if(expense.get('payeeType') === 'Vendor' || expense.get('payeeType') === 2){
           count++;
@@ -1254,7 +1964,7 @@ export function vendorsQueryExpenses(company, { offset, limit, type, from, to, s
 
         return null;
       }
-    )
+    );
     return {
       results: Parse.Object.fetchAllIfNeeded(compact(xs)),
       count,
@@ -1264,9 +1974,11 @@ export function vendorsQueryExpenses(company, { offset, limit, type, from, to, s
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Expense');
+    query.equalTo('kind', 'Expense');
 
-    query.include([ 'vendor', 'customer' ]);
+    query.exists('vendor');
+
+    query.include([ 'vendor' ]);
 
     if(!from && !to){
       last365Days && query.greaterThanOrEqualTo('date', moment().subtract(365, 'days').startOf('day').toDate())
@@ -1287,7 +1999,7 @@ export function vendorsQueryExpenses(company, { offset, limit, type, from, to, s
   ]).then(([ results ]) => ({ ...aggregateResult(results), }));
 }
 
-export function cusomersQueryExpenses(company, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false) {
+module.exports.customersQueryExpenses = function customersQueryExpenses(company, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false) {
   const Type = Expense({id: company.id});
 
   if(type !== 'expenses' && type !== 'recent' && type !== 'money' && type !== 'ALL'){
@@ -1298,11 +2010,11 @@ export function cusomersQueryExpenses(company, { offset, limit, type, from, to, 
     let count = 0;
     const xs = map(
 
-      group(results, obj => obj.get('payee').id),
+      group(results, obj => obj.get('customer').id),
 
       objs => {
         const expense = objs[0];
-        const payee = expense.get('payee');
+        const payee = expense.get('customer');
         if(expense.get('payeeType') === 'Customer' || expense.get('payeeType') === 1){
           count++;
           return payee;
@@ -1320,11 +2032,11 @@ export function cusomersQueryExpenses(company, { offset, limit, type, from, to, 
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Expense');
+    query.equalTo('kind', 'Expense');
 
-    // query.equalTo('payeeType', 1);
+    query.exists('customer');
 
-    query.include([ 'payee' ]);
+    query.include([ 'customer' ]);
 
     if(!from && !to){
       last365Days && query.greaterThanOrEqualTo('date', moment().subtract(365, 'days').startOf('day').toDate())
@@ -1343,10 +2055,10 @@ export function cusomersQueryExpenses(company, { offset, limit, type, from, to, 
       return q.find();
     }()
   ]).then(([ results ]) => ({ ...aggregateResult(results), }));
-}
+};
 
-export function vendorsQueryBills(company, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
-  const Type = Bill({id: company.id});
+function vendorsQueryBills(company, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
+  const Type = Expense({id: company.id});
 
   if(type !== 'bills' && type !== 'recent' && type !== 'ALL'){
     return Promise.resolve({count: 0, results: []});
@@ -1372,7 +2084,9 @@ export function vendorsQueryBills(company, {offset, limit, type, status, from, t
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'Bill');
+    query.equalTo('kind', 'Bill');
+
+    query.include([ 'payee' ]);
 
     switch (status) {
       case 'closed':
@@ -1385,7 +2099,7 @@ export function vendorsQueryBills(company, {offset, limit, type, status, from, t
 
       case 'overdue':
         query.greaterThan('balanceDue', 0.0);
-        query.lessThan('dueDate', moment().toDate());
+        query.lessThan('dueDate', moment().startOf('day').toDate());
         break;
     }
     if(!from && !to){
@@ -1407,8 +2121,8 @@ export function vendorsQueryBills(company, {offset, limit, type, status, from, t
   ]).then(([ results ]) => ({ ...aggregateResult(results), }));
 }
 
-export function vendorsQueryPaymentsOfBills(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
-  const Type = PaymentOfBills({id: company.id});
+function vendorsQueryPaymentsOfBills(company, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1,}, last365Days = false) {
+  const Type = Expense({id: company.id});
 
   if(type !== 'payments' && type !== 'money' && type !== 'ALL'){
     return Promise.resolve({count: 0, results: []});
@@ -1435,7 +2149,9 @@ export function vendorsQueryPaymentsOfBills(company, {offset, limit, type, from,
   function getQuery() {
     const query = new Parse.Query(Type);
 
-    query.equalTo('type', 'PaymentOfBills');
+    query.equalTo('kind', 'PaymentOfBills');
+
+    query.include([ 'payee' ]);
 
     if(!from && !to){
       last365Days && query.greaterThanOrEqualTo('date', moment().subtract(365, 'days').startOf('day').toDate())
@@ -1456,15 +2172,15 @@ export function vendorsQueryPaymentsOfBills(company, {offset, limit, type, from,
   ]).then(([ results ]) => ({ ...aggregateResult(results), }));
 }
 
-export const User = Parse.User;
+const User = Parse.User;
 
-export function getObjectByType(Type, {companyId, id}) {
+module.exports.getObjectByType = function getObjectByType(Type, {companyId, id}) {
   return parseIDLoader.load([Type({id: companyId}), id]);
-}
+};
 
-export function getObjectsByType(Type, {companyId}) {
+module.exports.getObjectsByType = function getObjectsByType(Type, {companyId}) {
   return parseTableLoader.load(Type({id: companyId}));
-}
+};
 
 function getTypeById(Type, info) {
   const delimiterPos = info.indexOf(':');
@@ -1479,7 +2195,7 @@ function countByType(Type) {
 
 // V2
 
-function ops__querySales(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer, }, last365Days = true){
+module.exports.ops__querySales = function ops__querySales(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer, }, last365Days = true){
 
   if(type === 'invoices' || type === 'open' || type === 'overdue'){
     return queryInvoices(...arguments);
@@ -1495,33 +2211,47 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
 
   if(type === 'ALL'){
     return function(){
-      const Type = Parse.Object.extend('Sale_' + company.id);
+      const Type = Sale({ id: company.id, }); // Parse.Object.extend('Sale_' + company.id);
 
       function getQuery(doSort = true) {
         const query = new Parse.Query(Type);
 
-        switch (sortKey && doSort) {
-          case 'date':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-            break;
-          case 'dueDate':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'balanceDue':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'total':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
+        if (doSort) {
+          switch (sortKey) {
+            case 'date':
+              query[sortDir === -1 ? 'descending' : 'ascending']('date');
+              break;
+            case 'dueDate':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'balanceDue':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'total':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'totalHT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'VAT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+          }
         }
         switch (status) {
           case 'closed':
@@ -1534,7 +2264,7 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(customer){
@@ -1553,17 +2283,43 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
       return Promise.all([
         new Promise((resolve) => {
           let count = 0;
-          let sumOfTotals = 0.0;
-          let sumOfBalances = 0.0;
+
+          let invoicesSumOfTotals = 0.0;
+          let invoicesSumOfBalances = 0.0;
+
+          let salesSumOfTotals = 0.0;
+
+          let paymentsSumOfTotals = 0.0;
+          let paymentsSumOfCredits = 0.0;
 
           getQuery(false).each(
             function(obj){
               count += 1;
-              sumOfTotals += obj.get('total');
-              sumOfBalances += obj.get('balanceDue');
+
+              switch (obj.get('kind')){
+                case 'Invoice':
+                  invoicesSumOfTotals += obj.get('total');
+                  invoicesSumOfBalances += obj.get('balanceDue');
+
+
+                  break;
+                case 'Sale':
+
+                  salesSumOfTotals += obj.get('total');
+
+                  break;
+                case 'PaymentOfInvoices':
+
+                  paymentsSumOfTotals += obj.get('amountReceived');
+                  paymentsSumOfCredits += obj.get('amountToCredit');
+
+                  break;
+              }
+
+
             }, {
               success: function(){
-                resolve({ count, sumOfTotals, sumOfBalances, });
+                resolve({ count, invoicesSumOfTotals, invoicesSumOfBalances, salesSumOfTotals, salesSumOfBalances : 0.0, paymentsSumOfTotals, paymentsSumOfCredits, });
               },
 
               error: function(error){
@@ -1579,7 +2335,7 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
           q.limit(limit);
           return q.find();
         }()
-      ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+      ]).then(([ { count, ...props, }, results ]) => ({ count, ...props, results, }));
 
     }();
   }
@@ -1587,43 +2343,60 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
   if(type === 'recent'){ // Invoices + Sales
     return function(){
 
-      const Type = Parse.Object.extend('Sale_' + company.id);
+      const Type = Sale({ id: company.id, }); // Parse.Object.extend('Sale_' + company.id);
 
       function getQuery(doSort = true) {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'Invoice');
+      //   const query = function(){
+      //     const q0 = new Parse.Query(Type);
+      //     q0.equalTo('kind', 'Invoice');
+      //
+      //     const q1 = new Parse.Query(Type);
+      //     q1.equalTo('kind', 'Sale');
+      //
+      //     return Parse.Query.or(
+      //       q0,
+      //       q1);
+      //   }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'Sale');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'Invoice', 'Sale', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
-
-        switch (sortKey && doSort) {
-          case 'date':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-            break;
-          case 'dueDate':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'balanceDue':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'total':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
+        if (doSort) {
+          switch (sortKey) {
+            case 'date':
+              query[sortDir === -1 ? 'descending' : 'ascending']('date');
+              break;
+            case 'dueDate':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'balanceDue':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'total':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'totalHT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'VAT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+          }
         }
         switch (status) {
           case 'closed':
@@ -1636,7 +2409,7 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(customer){
@@ -1655,17 +2428,34 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
       return Promise.all([
         new Promise((resolve) => {
           let count = 0;
-          let sumOfTotals = 0.0;
-          let sumOfBalances = 0.0;
+
+          let invoicesSumOfTotals = 0.0;
+          let invoicesSumOfBalances = 0.0;
+
+          let salesSumOfTotals = 0.0;
 
           getQuery(false).each(
             function(obj){
               count += 1;
-              sumOfTotals += obj.get('total');
-              sumOfBalances += obj.get('balanceDue');
+
+              switch (obj.get('kind')){
+                case 'Invoice':
+                  invoicesSumOfTotals += obj.get('total');
+                  invoicesSumOfBalances += obj.get('balanceDue');
+
+
+                  break;
+                case 'Sale':
+
+                  salesSumOfTotals += obj.get('total');
+
+                  break;
+
+              }
+
             }, {
               success: function(){
-                resolve({ count, sumOfTotals, sumOfBalances, });
+                resolve({ count, invoicesSumOfTotals, invoicesSumOfBalances, salesSumOfTotals, salesSumOfBalances : 0.0, paymentsSumOfTotals : 0.0, paymentsSumOfCredits : 0.0, });
               },
 
               error: function(error){
@@ -1682,7 +2472,7 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
           q.limit(limit);
           return q.find();
         }()
-      ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+      ]).then(([ { count, ...props, }, results ]) => ({ count, ...props, results, }));
 
     }();
   }
@@ -1690,43 +2480,60 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
   if(type === 'money'){ // Sales + PaymentsOfInvoices
     return function(){
 
-      const Type = Parse.Object.extend('Sale_' + company.id);
+      const Type = Sale({ id: company.id, }); // Parse.Object.extend('Sale_' + company.id);
 
       function getQuery(doSort = true) {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'PaymentOfInvoices');
+        // const query = function(){
+        //   const q0 = new Parse.Query(Type);
+        //   q0.equalTo('kind', 'PaymentOfInvoices');
+        //
+        //   const q1 = new Parse.Query(Type);
+        //   q1.equalTo('kind', 'Sale');
+        //
+        //   return Parse.Query.or(
+        //     q0,
+        //     q1);
+        // }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'Sale');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'PaymentOfInvoices', 'Sale', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
-
-        switch (sortKey && doSort) {
-          case 'date':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-            break;
-          case 'dueDate':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'balanceDue':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'total':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
+        if (doSort) {
+          switch (sortKey) {
+            case 'date':
+              query[sortDir === -1 ? 'descending' : 'ascending']('date');
+              break;
+            case 'dueDate':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'balanceDue':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'total':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'totalHT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'VAT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+          }
         }
         switch (status) {
           case 'closed':
@@ -1739,7 +2546,7 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(customer){
@@ -1758,17 +2565,33 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
       return Promise.all([
         new Promise((resolve) => {
           let count = 0;
-          let sumOfTotals = 0.0;
-          let sumOfBalances = 0.0;
+
+          let salesSumOfTotals = 0.0;
+
+          let paymentsSumOfTotals = 0.0;
+          let paymentsSumOfCredits = 0.0;
 
           getQuery(false).each(
             function(obj){
               count += 1;
-              sumOfTotals += obj.get('total');
-              sumOfBalances += obj.get('balanceDue');
+
+              switch (obj.get('kind')){
+                case 'Sale':
+
+                  salesSumOfTotals += obj.get('total');
+
+                  break;
+                case 'PaymentOfInvoices':
+
+                  paymentsSumOfTotals += obj.get('amountReceived');
+                  paymentsSumOfCredits += obj.get('amountToCredit');
+
+                  break;
+              }
+
             }, {
               success: function(){
-                resolve({ count, sumOfTotals, sumOfBalances, });
+                resolve({ count, invoicesSumOfTotals : 0.0, invoicesSumOfBalances : 0.0, salesSumOfTotals, salesSumOfBalances : 0.0, paymentsSumOfTotals, paymentsSumOfCredits, });
               },
 
               error: function(error){
@@ -1785,13 +2608,13 @@ function ops__querySales(company, { offset, limit, type, status, from, to, sortK
           q.limit(limit);
           return q.find();
         }()
-      ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+      ]).then(([ { count, ...props, }, results ]) => ({ count, ...props, results, }));
 
     }();
   }
-}
+};
 
-function ops__customersQuerySales(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false){
+module.exports.ops__customersQuerySales = function ops__customersQuerySales(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false){
 
   if(type === 'invoices' || type === 'open' || type === 'overdue'){
     return customersQueryInvoices(...arguments);
@@ -1808,7 +2631,7 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
   if(type === 'ALL'){
     return function(){
 
-      const Type = Parse.Object.extend('Sale_' + company.id);
+      const Type = Sale({ id: company.id, }); // Parse.Object.extend('Sale_' + company.id);
 
       function aggregateResult(results){
         let count = 0;
@@ -1830,6 +2653,8 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
       function getQuery() {
         const query = new Parse.Query(Type);
 
+        query.include([ 'customer' ]);
+
         switch (status) {
           case 'closed':
             query.equalTo('balanceDue', 0.0);
@@ -1841,7 +2666,7 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
 
@@ -1869,7 +2694,7 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
   if(type === 'recent'){ // Invoices + Sales
     return function(){
 
-      const Type = Parse.Object.extend('Sale_' + company.id);
+      const Type = Sale({ id: company.id, }); // Parse.Object.extend('Sale_' + company.id);
 
       function aggregateResult(results){
         let count = 0;
@@ -1889,19 +2714,22 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
       }
 
       function getQuery() {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'Invoices');
+        // const query = function(){
+        //   const q0 = new Parse.Query(Type);
+        //   q0.equalTo('kind', 'Invoice');
+        //
+        //   const q1 = new Parse.Query(Type);
+        //   q1.equalTo('kind', 'Sale');
+        //
+        //   return Parse.Query.or(
+        //     q0,
+        //     q1);
+        // }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'Sale');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'Invoice', 'Sale', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
-
-        query.equalTo('type', 'Invoice');
+        query.include([ 'customer' ]);
 
         switch (status) {
           case 'closed':
@@ -1914,7 +2742,7 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
 
@@ -1942,7 +2770,7 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
   if(type === 'money'){ // Sales + PaymentsOfInvoices
     return function(){
 
-      const Type = Parse.Object.extend('Sale_' + company.id);
+      const Type = Sale({ id: company.id, }); // Parse.Object.extend('Sale_' + company.id);
 
       function aggregateResult(results){
         let count = 0;
@@ -1962,19 +2790,22 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
       }
 
       function getQuery() {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'PaymentOfInvoices');
+        // const query = function(){
+        //   const q0 = new Parse.Query(Type);
+        //   q0.equalTo('kind', 'PaymentOfInvoices');
+        //
+        //   const q1 = new Parse.Query(Type);
+        //   q1.equalTo('kind', 'Sale');
+        //
+        //   return Parse.Query.or(
+        //     q0,
+        //     q1);
+        // }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'Sale');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'PaymentOfInvoices', 'Sale', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
-
-        query.equalTo('type', 'Invoice');
+        query.include([ 'customer' ]);
 
         switch (status) {
           case 'closed':
@@ -1987,7 +2818,7 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
 
@@ -2011,11 +2842,9 @@ function ops__customersQuerySales(company, { offset, limit, type, status, from, 
 
     }();
   }
-}
+};
 
-
-
-function ops__queryExpenses(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer, payee, }, last365Days = true){
+module.exports.ops__queryExpenses = function ops__queryExpenses(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer, payee, }, last365Days = true){
 
   if(type === 'bills' || type === 'open' || type === 'overdue'){
     return queryBills(...arguments);
@@ -2032,33 +2861,47 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
   if(type === 'ALL'){
     return function(){
 
-      const Type = Parse.Object.extend('Expense_' + company.id);
+      const Type = Expense({ id: company.id, }); // Parse.Object.extend('Expense_' + company.id);
 
       function getQuery(doSort = true) {
         const query = new Parse.Query(Type);
 
-        switch (sortKey && doSort) {
-          case 'date':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-            break;
-          case 'dueDate':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'balanceDue':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'total':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
+        if (doSort) {
+          switch (sortKey) {
+            case 'date':
+              query[sortDir === -1 ? 'descending' : 'ascending']('date');
+              break;
+            case 'dueDate':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'balanceDue':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'total':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'totalHT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'VAT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+          }
         }
         switch (status) {
           case 'closed':
@@ -2071,7 +2914,7 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(payee){
@@ -2090,17 +2933,43 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
       return Promise.all([
         new Promise((resolve) => {
           let count = 0;
-          let sumOfTotals = 0.0;
-          let sumOfBalances = 0.0;
+
+
+          let billsSumOfTotals = 0.0;
+          let billsSumOfBalances = 0.0;
+
+          let expensesSumOfTotals = 0.0;
+
+          let paymentsSumOfTotals = 0.0;
+          let paymentsSumOfCredits = 0.0;
 
           getQuery(false).each(
             function(obj){
               count += 1;
-              sumOfTotals += obj.get('total');
-              sumOfBalances += obj.get('balanceDue');
+
+              switch (obj.get('kind')){
+                case 'Bill':
+                  billsSumOfTotals += obj.get('total');
+                  billsSumOfBalances += obj.get('balanceDue');
+
+
+                  break;
+                case 'Expense':
+
+                  expensesSumOfTotals += obj.get('total');
+
+                  break;
+                case 'PaymentOfBills':
+
+                  paymentsSumOfTotals += obj.get('amountReceived');
+                  paymentsSumOfCredits += obj.get('amountToCredit');
+
+                  break;
+              }
+
             }, {
               success: function(){
-                resolve({ count, sumOfTotals, sumOfBalances, });
+                resolve({ count, billsSumOfTotals, billsSumOfBalances, expensesSumOfTotals, expensesSumOfBalances : 0.0, paymentsSumOfTotals, paymentsSumOfCredits, });
               },
 
               error: function(error){
@@ -2116,7 +2985,7 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
           q.limit(limit);
           return q.find();
         }()
-      ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+      ]).then(([ { count, ...props, }, results ]) => ({ count, ...props, results, }));
 
     }();
   }
@@ -2124,43 +2993,60 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
   if(type === 'recent'){ // Bills + Expenses
     return function(){
 
-      const Type = Parse.Object.extend('Expense_' + company.id);
+      const Type = Expense({ id: company.id, }); // Parse.Object.extend('Expense_' + company.id);
 
       function getQuery(doSort = true) {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'Bill');
+        // const query = function(){
+        //   const q0 = new Parse.Query(Type);
+        //   q0.equalTo('kind', 'Bill');
+        //
+        //   const q1 = new Parse.Query(Type);
+        //   q1.equalTo('kind', 'Expense');
+        //
+        //   return Parse.Query.or(
+        //     q0,
+        //     q1);
+        // }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'Expense');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'Bill', 'Expense', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
-
-        switch (sortKey && doSort) {
-          case 'date':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-            break;
-          case 'dueDate':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'balanceDue':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'total':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
+        if (doSort) {
+          switch (sortKey) {
+            case 'date':
+              query[sortDir === -1 ? 'descending' : 'ascending']('date');
+              break;
+            case 'dueDate':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'balanceDue':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'total':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'totalHT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'VAT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+          }
         }
         switch (status) {
           case 'closed':
@@ -2173,7 +3059,7 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(payee){
@@ -2192,17 +3078,35 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
       return Promise.all([
         new Promise((resolve) => {
           let count = 0;
-          let sumOfTotals = 0.0;
-          let sumOfBalances = 0.0;
+
+
+          let billsSumOfTotals = 0.0;
+          let billsSumOfBalances = 0.0;
+
+          let expensesSumOfTotals = 0.0;
 
           getQuery(false).each(
             function(obj){
               count += 1;
-              sumOfTotals += obj.get('total');
-              sumOfBalances += obj.get('balanceDue');
+
+              switch (obj.get('kind')){
+                case 'Bill':
+                  billsSumOfTotals += obj.get('total');
+                  billsSumOfBalances += obj.get('balanceDue');
+
+
+                  break;
+                case 'Expense':
+
+                  expensesSumOfTotals += obj.get('total');
+
+                  break;
+
+              }
+
             }, {
               success: function(){
-                resolve({ count, sumOfTotals, sumOfBalances, });
+                resolve({ count, billsSumOfTotals, billsSumOfBalances, expensesSumOfTotals, expensesSumOfBalances : 0.0, paymentsSumOfTotals : 0.0, paymentsSumOfCredits : 0.0, });
               },
 
               error: function(error){
@@ -2218,7 +3122,7 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
           q.limit(limit);
           return q.find();
         }()
-      ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+      ]).then(([ { count, ...props, }, results ]) => ({ count, ...props, results, }));
 
     }();
   }
@@ -2226,43 +3130,60 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
   if(type === 'money'){ // Expenses + PaymentsOfBills
     return function(){
 
-      const Type = Parse.Object.extend('Expense_' + company.id);
+      const Type = Expense({ id: company.id, }); // Parse.Object.extend('Expense_' + company.id);
 
       function getQuery(doSort = true) {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'Expense');
+        // const query = function(){
+        //   const q0 = new Parse.Query(Type);
+        //   q0.equalTo('kind', 'Expense');
+        //
+        //   const q1 = new Parse.Query(Type);
+        //   q1.equalTo('kind', 'PaymentsOfBills');
+        //
+        //   return Parse.Query.or(
+        //     q0,
+        //     q1);
+        // }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'PaymentsOfBills');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'PaymentsOfBills', 'Expense', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
-
-        switch (sortKey && doSort) {
-          case 'date':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ]('date');
-            break;
-          case 'dueDate':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'dueDate,date' : 'dueDate');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'balanceDue':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
-          case 'total':
-            query[ sortDir === -1 ? 'descending' : 'ascending' ](sortDir === -1 ? 'total,date' : 'total');
-            if(sortKey === 1){
-              query.addDescending('date');
-            }
-            break;
+        if (doSort) {
+          switch (sortKey) {
+            case 'date':
+              query[sortDir === -1 ? 'descending' : 'ascending']('date');
+              break;
+            case 'dueDate':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'dueDate,date' : 'dueDate');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'balanceDue':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'balanceDue,date' : 'balanceDue');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'total':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'total,date' : 'total');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'totalHT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'totalHT,date' : 'totalHT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+            case 'VAT':
+              query[sortDir === -1 ? 'descending' : 'ascending'](sortDir === -1 ? 'VAT,date' : 'VAT');
+              if (sortKey === 1) {
+                query.addDescending('date');
+              }
+              break;
+          }
         }
         switch (status) {
           case 'closed':
@@ -2275,7 +3196,7 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(payee){
@@ -2294,17 +3215,34 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
       return Promise.all([
         new Promise((resolve) => {
           let count = 0;
-          let sumOfTotals = 0.0;
-          let sumOfBalances = 0.0;
+
+          let expensesSumOfTotals = 0.0;
+
+          let paymentsSumOfTotals = 0.0;
+          let paymentsSumOfCredits = 0.0;
 
           getQuery(false).each(
             function(obj){
               count += 1;
-              sumOfTotals += obj.get('total');
-              sumOfBalances += obj.get('balanceDue');
+
+              switch (obj.get('kind')){
+
+                case 'Expense':
+
+                  expensesSumOfTotals += obj.get('total');
+
+                  break;
+                case 'PaymentOfBills':
+
+                  paymentsSumOfTotals += obj.get('amountReceived');
+                  paymentsSumOfCredits += obj.get('amountToCredit');
+
+                  break;
+              }
+
             }, {
               success: function(){
-                resolve({ count, sumOfTotals, sumOfBalances, });
+                resolve({ count, billsSumOfTotals : 0.0, billsSumOfBalances : 0.0, expensesSumOfTotals, expensesSumOfBalances : 0.0, paymentsSumOfTotals, paymentsSumOfCredits, });
               },
 
               error: function(error){
@@ -2320,14 +3258,14 @@ function ops__queryExpenses(company, { offset, limit, type, status, from, to, so
           q.limit(limit);
           return q.find();
         }()
-      ]).then(([ { count, sumOfTotals, sumOfBalances, }, results ]) => ({ count, sumOfTotals, sumOfBalances, results, }));
+      ]).then(([ { count, ...props, }, results ]) => ({ count, ...props, results, }));
 
     }();
   }
-}
+};
 
 
-function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false){
+module.exports.ops__vendorsQueryExpenses = function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }, last365Days = false){
 
   if(type === 'bills' || type === 'open' || type === 'overdue'){
     return vendorsQueryBills(...arguments);
@@ -2341,30 +3279,48 @@ function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from,
     return vendorsQueryPaymentsOfBills(...arguments);
   }
 
+  function getPayee(obj){
+    if(!obj){
+      return undefined;
+    }
+
+    if(obj.has('payee')){
+      return obj.get('payee');
+    }
+
+    if(obj.has('vendor')){
+      return obj.get('vendor');
+    }
+
+    return undefined;
+  }
+
   if(type === 'ALL'){
     return function(){
 
-      const Type = Parse.Object.extend('Expense_' + company.id);
+      const Type = Expense({ id: company.id, }); // Parse.Object.extend('Expense_' + company.id);
 
       function aggregateResult(results){
         let count = 0;
         const xs = map(
 
-          group(results, obj => obj.get('payee').id),
+          group(results, obj => getPayee(obj).id),
 
           objs => {
             count++;
-            return objs[0].get('payee');
+            return getPayee(objs[0]);
           }
         );
         return {
-          results: Parse.Object.fetchAllIfNeeded(xs),
+          results: Parse.Object.fetchAllIfNeeded(compact(xs)),
           count,
         };
       }
 
       function getQuery() {
         const query = new Parse.Query(Type);
+
+        query.include([ 'vendor', 'payee' ]);
 
         switch (status) {
           case 'closed':
@@ -2377,7 +3333,7 @@ function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from,
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(!from && !to){
@@ -2403,37 +3359,42 @@ function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from,
   if(type === 'recent'){ // Bills + Expenses
     return function(){
 
-      const Type = Parse.Object.extend('Expense_' + company.id);
+      const Type = Expense({ id: company.id, }); // Parse.Object.extend('Expense_' + company.id);
 
       function aggregateResult(results){
         let count = 0;
         const xs = map(
 
-          group(results, obj => obj.get('payee').id),
+          group(results, obj => getPayee(obj).id),
 
           objs => {
             count++;
-            return objs[0].get('payee');
+            return getPayee(objs[0]);
           }
         );
         return {
-          results: Parse.Object.fetchAllIfNeeded(xs),
+          results: Parse.Object.fetchAllIfNeeded(compact(xs)),
           count,
         };
       }
 
       function getQuery() {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'Bill');
+        // const query = function(){
+        //   const q0 = new Parse.Query(Type);
+        //   q0.equalTo('kind', 'Bill');
+        //
+        //   const q1 = new Parse.Query(Type);
+        //   q1.equalTo('kind', 'Expense');
+        //
+        //   return Parse.Query.or(
+        //     q0,
+        //     q1);
+        // }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'Expense');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'Bill', 'Expense', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
+        query.include([ 'vendor', 'payee' ]);
 
         switch (status) {
           case 'closed':
@@ -2446,7 +3407,7 @@ function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from,
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(!from && !to){
@@ -2472,37 +3433,42 @@ function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from,
   if(type === 'money'){ // Expenses + PaymentsOfBills
     return function(){
 
-      const Type = Parse.Object.extend('Expense_' + company.id);
+      const Type = Expense({ id: company.id, }); // Parse.Object.extend('Expense_' + company.id);
 
       function aggregateResult(results){
         let count = 0;
         const xs = map(
 
-          group(results, obj => obj.get('payee').id),
+          group(results, obj => getPayee(obj).id),
 
           objs => {
             count++;
-            return objs[0].get('payee');
+            return getPayee(objs[0]);
           }
         );
         return {
-          results: Parse.Object.fetchAllIfNeeded(xs),
+          results: Parse.Object.fetchAllIfNeeded(compact(xs)),
           count,
         };
       }
 
       function getQuery() {
-        const query = function(){
-          const q0 = new Parse.Query(Type);
-          q0.equalTo('type', 'PaymentsOfBills');
+        // const query = function(){
+        //   const q0 = new Parse.Query(Type);
+        //   q0.equalTo('kind', 'PaymentsOfBills');
+        //
+        //   const q1 = new Parse.Query(Type);
+        //   q1.equalTo('kind', 'Expense');
+        //
+        //   return Parse.Query.or(
+        //     q0,
+        //     q1);
+        // }();
 
-          const q1 = new Parse.Query(Type);
-          q1.equalTo('type', 'Expense');
+        const query = new Parse.Query(Type);
+        query.containedIn('kind', [ 'PaymentsOfBills', 'Expense', ]);
 
-          return Parse.Query.or(
-            q0,
-            q1);
-        }();
+        query.include([ 'vendor', 'payee' ]);
 
         switch (status) {
           case 'closed':
@@ -2515,7 +3481,7 @@ function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from,
 
           case 'overdue':
             query.greaterThan('balanceDue', 0.0);
-            query.lessThan('dueDate', moment().toDate());
+            query.lessThan('dueDate', moment().startOf('day').toDate());
             break;
         }
         if(!from && !to){
@@ -2537,4 +3503,20 @@ function ops__vendorsQueryExpenses(company, { offset, limit, type, status, from,
 
     }();
   }
-}
+};
+
+module.exports.queryInvoices = queryInvoices;
+module.exports.querySales = querySales;
+module.exports.queryPaymentsOfInvoices = queryPaymentsOfInvoices;
+module.exports.customersQueryInvoices = customersQueryInvoices;
+module.exports.customersQuerySales = customersQuerySales;
+module.exports.customersQueryPaymentsOfInvoices = customersQueryPaymentsOfInvoices;
+module.exports.queryOpenBills = queryOpenBills;
+module.exports.queryVendorOpenBills = queryVendorOpenBills;
+module.exports.queryExpenses = queryExpenses;
+module.exports.queryBills = queryBills;
+module.exports.queryPaymentsOfBills = queryPaymentsOfBills;
+module.exports.vendorsQueryExpenses = vendorsQueryExpenses;
+module.exports.vendorsQueryBills = vendorsQueryBills;
+module.exports.vendorsQueryPaymentsOfBills = vendorsQueryPaymentsOfBills;
+module.exports.User = User;

@@ -1,19 +1,19 @@
-import Parse from 'parse';
+const Parse = require('parse');
 
-export function logIn(email, password, cb) {
-  return Parse.User.logIn(email, 'default').then(function(user){
+module.exports.logIn = function logIn(email, password, cb) {
+  return Parse.User.logIn(email, password).then(function(user){
     return user.toJSON();
   });
-}
+};
 
-export function logOut() {
+module.exports.logOut = function logOut() {
   return Parse.User.logOut();
-}
+};
 
-export function handleParseError(err) {
+module.exports.handleParseError = function handleParseError(err) {
   switch (err.code) {
     case Parse.Error.INVALID_SESSION_TOKEN:
       Parse.User.logOut();
       break;
   }
-}
+};

@@ -3,6 +3,16 @@ import {
 } from 'react-intl';
 
 export default defineMessages({
+  Table_Title_VAT: {
+    id: 'vendor-expenses-page.message.table-title-vat',
+    defaultMessage: 'TVA',
+  },
+
+  Table_Title_Total_HT: {
+    id: 'vendor-expenses-page.message.table-title-total-ht',
+    defaultMessage: 'Total HT',
+  },
+
   Action_makepayment: {
     id: 'vendor-expenses-page.action-makepayment',
     defaultMessage: 'Effectuer un paiement',

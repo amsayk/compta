@@ -16,22 +16,22 @@ export default defineMessages({
 
   Legend: {
     id: 'account-page.login-info-legend',
-    defaultMessage: 'Informations de compte',
+    defaultMessage: 'Gestion de compte',
   },
 
   Desc1: {
     id: 'account-page.login-info-message',
-    defaultMessage: 'Mettre à jour vos informations personnels.',
+    defaultMessage: 'Mettre à jour vos informations personnelles.',
   },
 
   LeftLabel: {
     id: 'account-page.login-info-label',
-    defaultMessage: 'Modifier vos paramètres de connexion',
+    defaultMessage: 'Modifier vos informations personelles',
   },
 
   LeftDesc: {
     id: 'account-page.login-info-description',
-    defaultMessage: 'Voici où vous pouvez changer votre adresse e-mail ou mot de passe.',
+    defaultMessage: 'Voici où vous pouvez changer votre nom et/ou adresse email.',
   },
 
 

@@ -5,12 +5,12 @@ import {
 export default defineMessages({
   ALL_APPS: {
     id: 'sidebar.all-apps',
-    defaultMessage: 'Vos sociétés',
+    defaultMessage: 'Mes sociétés',
   },
 
   NewApp: {
     id: 'sidebar.new-app',
-    defaultMessage: 'Create a new app société',
+    defaultMessage: 'Crée une nouvelle société',
   },
 
   '/dashboard': {
@@ -58,12 +58,12 @@ export default defineMessages({
     defaultMessage: 'Fournisseurs',
   },
 
-  '/reports': {
+  '/rapports': {
     id: 'reports-menu-item-title',
     defaultMessage: 'Rapports',
   },
 
-  '/tax': {
+  '/vat': {
     id: 'tax-menu-item-title',
     defaultMessage: 'TVA',
   },

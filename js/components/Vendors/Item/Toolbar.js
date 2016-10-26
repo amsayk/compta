@@ -22,7 +22,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'ExpensesToolbar';
   static propTypes = {
 
@@ -77,9 +77,9 @@ export default class extends Component{
 
         <div styleName='ugrid'>
 
-          <div styleName='actions-bar'>
+          <div styleName='actions-bar' style={{ marginRight: 12, }}>
 
-            <span styleName='actions-batch'>
+            {/*<span styleName='actions-batch'>
 
               <i styleName='tertiary-sprite icon-arrow-left-down'></i>
 
@@ -91,9 +91,9 @@ export default class extends Component{
                 </Dropdown.Menu>
               </Dropdown>
 
-            </span>
+            </span>*/}
 
-            <span styleName='filterBarContainer' style={{ marginLeft: 12, }}>
+            <span styleName='filterBarContainer'>
 
               <Dropdown.Toggle
                 title={'Filtrer'}

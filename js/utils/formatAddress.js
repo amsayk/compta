@@ -10,5 +10,8 @@ export default function formatAddress(a) {
     if (a.postalCode) line.push(a.postalCode);
     lines.push(line.join(' '));
   }
+  if(a.country){
+    lines.push(a.country);
+  }
   return lines;
 };

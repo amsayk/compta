@@ -2,17 +2,6 @@ import Relay from 'react-relay';
 
 export default class  extends Relay.Mutation {
   static fragments = {
-    //viewer: () => Relay.QL`
-    //  fragment on User {
-    //      id,
-    //      displayName,
-    //      username,
-    //      email,
-    //      createdAt,
-    //      updatedAt,
-    //      sessionToken,
-    //  }
-    //`,
   };
   getMutation() {
     return Relay.QL`mutation{logIn}`;

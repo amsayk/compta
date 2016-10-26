@@ -19,11 +19,11 @@ import styles from './styles.scss';
 import CSSModules from 'react-css-modules';
 
 @CSSModules(styles, {allowMultiple: true,})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'uploads';
   static contextTypes = {
     intl: intlShape.isRequired,
-  }
+  };
   static propTypes = {
     value: PropTypes.any,
     onChange: PropTypes.func.isRequired,

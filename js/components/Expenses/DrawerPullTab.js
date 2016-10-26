@@ -7,7 +7,7 @@ import classnames from 'classnames';
 import styles from './DrawerPullTab.scss';
 
 @CSSModules(styles, { allowMultiple: true, })
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'DrawerPullTab';
   static propTypes = {
     opened: PropTypes.bool.isRequired,

@@ -7,6 +7,9 @@ import classnames from 'classnames';
 
 import moment from 'moment';
 
+import group from 'lodash.groupby';
+import map from 'lodash.map';
+
 import RelayRoute from '../../routes/JournalEntriesRoute';
 
 import Loading from '../Loading/Loading';
@@ -37,7 +40,7 @@ function getAccountName(accounts, accountCode){
 }
 
 @CSSModules(styles, {allowMultiple: true})
-class JournalEntries extends Component {
+class JournalEntries extends React.Component {
 
   static displayName = 'JournalEntries';
 
@@ -72,6 +75,10 @@ class JournalEntries extends Component {
   };
 
   state = {};
+
+  componentDidMount() {
+    ga('send', 'pageview', '/modal/app/transaction/journal-entries');
+  }
 
   _handleClose = (e) => {
     if(e){
@@ -152,6 +159,7 @@ class JournalEntries extends Component {
     const { transaction, person, type : transactionType, accounts, } = this.props;
     let totalCredits = 0;
     let totalDebits = 0;
+    let rowIndex = 0;
     return (
       <div>
 
@@ -172,20 +180,26 @@ class JournalEntries extends Component {
             </tr>
           </thead>
           <tbody>
-          {transaction.operations.edges.map(({node: { accountCode, type, amount,  }}, rowIndex) => {
-            totalCredits += (type === 'CREDIT' ? amount : 0);
-            totalDebits += (type === 'DEBIT' ? amount : 0);
+          {map(group(transaction.operations.edges, ({ node : { accountCode, type, } }) => `${accountCode}.${type}`), operations => {
+            rowIndex = rowIndex + 1;
+            const { node: { accountCode, type, }, } = operations[0];
+
+            const totalAmount = operations.reduce((sum, { node: { amount, }}) => sum + amount, 0.0);
+
+            totalCredits += (type === 'CREDIT' ? totalAmount : 0);
+            totalDebits += (type === 'DEBIT' ? totalAmount : 0);
+
             return (
               <tr>
-                <td>{rowIndex === 0 ? moment(transaction.date).format('ll') : null}</td>
-                <td>{rowIndex === 0 ? Types[transactionType] : null}</td>
-                <td>{rowIndex === 0 ? transaction.refNo : null}</td>
-                <td>{rowIndex === 0 ? person.displayName : null}</td>
-                <td>{rowIndex === 0 ? transaction.memo : null}</td>
-                <td>{accountCode.replace(/\./g, '')}</td>
-                <td>{getAccountName(accounts, accountCode)}</td>
-                <td>{type === 'DEBIT' ? intl.formatNumber(amount, { format: 'MAD', }) : null}</td>
-                <td>{type === 'CREDIT' ? intl.formatNumber(amount, { format: 'MAD', }) : null}</td>
+              <td>{rowIndex === 0 ? moment(transaction.date).format('ll') : null}</td>
+              <td>{rowIndex === 0 ? Types[transactionType] : null}</td>
+              <td>{rowIndex === 0 ? transaction.refNo : null}</td>
+              <td>{rowIndex === 0 ? person.displayName : null}</td>
+              <td>{rowIndex === 0 ? transaction.memo : null}</td>
+              <td>{accountCode.replace(/\./g, '')}</td>
+              <td>{getAccountName(accounts, accountCode)}</td>
+              <td>{type === 'DEBIT' ? intl.formatNumber(totalAmount, { format: 'MAD', }) : null}</td>
+              <td>{type === 'CREDIT' ? intl.formatNumber(totalAmount, { format: 'MAD', }) : null}</td>
               </tr>
             );
           })}
@@ -238,7 +252,7 @@ class JournalEntries extends Component {
 
 function wrapWithC(MyComponent, props) {
 
-  class CWrapper extends Component {
+  class CWrapper extends React.Component {
 
     static propTypes = {
       loading: PropTypes.bool.isRequired,
@@ -333,7 +347,7 @@ function createContainer({ viewer, params, company, type, id, companies, ...prop
   const MyComponent = wrapWithC(JournalEntries, { params, company, type, id, ...props, });
   const Route = new RelayRoute({ companyId: company.id, type, id, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -371,7 +385,7 @@ function createContainer({ viewer, params, company, type, id, companies, ...prop
   return () => Container;
 }
 
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'JournalEntries';
   constructor(props) {
     super(props);

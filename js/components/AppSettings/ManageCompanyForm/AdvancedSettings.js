@@ -8,6 +8,8 @@ import moment from 'moment';
 
 import pick from 'lodash.pick';
 
+import LoadingActions from '../../Loading/actions';
+
 import { setBeforeUnloadMessage, unsetBeforeUnloadMessage, } from '../../../utils/unbeforeunload';
 
 import Actions from '../../confirm/actions';
@@ -39,7 +41,7 @@ import {Table, Column, Cell,} from '../../../../fixed-data-table';
 const periodTypes = [ 'MONTHLY', 'TRIMESTERLY', ];
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static propTypes = {
     bodyWidth: PropTypes.number.isRequired,
@@ -154,7 +156,7 @@ export default class extends Component {
 const ClosureForm = function () {
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
     static propTypes = {
       company: PropTypes.object.isRequired,
@@ -180,7 +182,7 @@ const ClosureForm = function () {
 
                 <div>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}}>
 
                     <div className='form-group row'>
 
@@ -204,7 +206,7 @@ const ClosureForm = function () {
 
                     </div>}
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -244,7 +246,7 @@ const ClosureForm = function () {
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -381,8 +383,11 @@ const ClosureForm = function () {
           return Promise.reject({});
         }
 
+        LoadingActions.show();
+
         return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => ({fieldName: key, value: normalizeServerData(key, data), })), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -411,7 +416,7 @@ const ClosureForm = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate}>
 
                     <div className='form-group row'>
 
@@ -458,7 +463,7 @@ const ClosureForm = function () {
 
                     </div>}
 
-                  </form>
+                  </div>
 
                   {saveError && <div styleName='error'>{intl.formatMessage({ ...saveError, id: saveError._id, })}</div>}
 
@@ -513,7 +518,7 @@ const ClosureForm = function () {
 const PeriodForm = function () {
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
     static propTypes = {
       company: PropTypes.object.isRequired,
@@ -537,7 +542,7 @@ const PeriodForm = function () {
 
                 <div>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}}>
 
                     <div className='form-group row'>
 
@@ -555,7 +560,7 @@ const PeriodForm = function () {
 
                     </div>
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -590,7 +595,7 @@ const PeriodForm = function () {
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -696,8 +701,10 @@ const PeriodForm = function () {
       } = this.props;
 
       const doUpdate = handleSubmit((data) => {
+        LoadingActions.show();
         return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => ({fieldName: key, value: data[key]})), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -723,7 +730,7 @@ const PeriodForm = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate}>
 
                     <div className='form-group row'>
 
@@ -747,7 +754,7 @@ const PeriodForm = function () {
 
                     </div>
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -808,6 +815,12 @@ function wrap(Component) {
 
           fragment on Company{
 
+            company_streetAddress,
+            company_cityTown,
+            company_stateProvince,
+            company_postalCode,
+            company_country,
+
             ${UpdateCompanySettingsMutation.getFragment('company')},
 
             id,
@@ -816,6 +829,7 @@ function wrap(Component) {
             lastTransactionIndex, lastPaymentsTransactionIndex,
             legalForm,
             address,
+            capital,
             activity,
             webSite,
             tel,

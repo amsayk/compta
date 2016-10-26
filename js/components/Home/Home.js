@@ -5,18 +5,21 @@ import Loading from '../Loading/Loading';
 
 import HomeRoute from '../../routes/HomeRoute';
 
-import AddInvoiceMutation from '../../mutations/AddInvoiceMutation';
-import AddSaleMutation from '../../mutations/AddSaleMutation';
-import AddExpenseMutation from '../../mutations/AddExpenseMutation';
-import AddBillMutation from '../../mutations/AddBillMutation';
-import ReceivePaymentOfInvoicesMutation from '../../mutations/ReceivePaymentOfInvoicesMutation';
-import ReceivePaymentOfBillsMutation from '../../mutations/ReceivePaymentOfBillsMutation';
+import AddInvoiceMutation from '../../mutations/v2/AddInvoiceMutation';
+import AddSaleMutation from '../../mutations/v2/AddSaleMutation';
+import AddExpenseMutation from '../../mutations/v2/AddExpenseMutation';
+import AddBillMutation from '../../mutations/v2/AddBillMutation';
+import ReceivePaymentOfInvoicesMutation from '../../mutations/v2/ReceivePaymentOfInvoicesMutation';
+import MakePaymentOfBillsMutation from '../../mutations/v2/MakePaymentOfBillsMutation';
 
 import LogOutMutation from '../../mutations/LogOutMutation';
 import RemoveCompanyMutation from '../../mutations/RemoveCompanyMutation';
 import AddCompanyMutation from '../../mutations/AddCompanyMutation';
 
-class Home extends Component {
+
+class Home extends React.Component {
+  componentDidMount(){
+  }
   render() {
     return (
       <div>
@@ -50,7 +53,7 @@ Home = Relay.createContainer(Home, {
           ${AddSaleMutation.getFragment('viewer')},
           ${AddBillMutation.getFragment('viewer')},
           ${ReceivePaymentOfInvoicesMutation.getFragment('viewer')},
-          ${ReceivePaymentOfBillsMutation.getFragment('viewer')},
+          ${MakePaymentOfBillsMutation.getFragment('viewer')},
       }
     `,
   },

@@ -44,7 +44,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'PaymentDetails';
 
   static contextTypes = {
@@ -121,7 +121,7 @@ export default class extends Component {
 
         <div styleName='payment-details'>
 
-          <form>
+          <div>
 
             <div className='row'>
 
@@ -168,7 +168,7 @@ export default class extends Component {
                   <label style={{display: 'block'}} styleName='subsection12TitleText' htmlFor='paymentRef'>Nº de référence</label>
 
                   <input
-                    value={getFieldValue(paymentRef)}
+                    value={getFieldValue(paymentRef, '')}
                     onChange={paymentRef.onChange}
                     style={{}}
                     className='form-control'
@@ -244,7 +244,7 @@ export default class extends Component {
                       // marginLeft: 5,
                       width: 150,
                     }}
-                    value={value}
+                    value={value ? value : ''}
                     pattern={MONEY_VALUE_REGEX}
                     className={classnames('form-control', {'has-error': !pristine && amountReceived.invalid})}
                     onChange={e => {
@@ -258,7 +258,7 @@ export default class extends Component {
                       this.setState({
                         value: typeof value !== 'number' || !isFinite(value) || value === 0.0 ? undefined : intl.formatNumber(value, {format: 'MONEY', }),
                       }, () => {
-                        const res = typeof value !== 'number' || !isFinite(value) || value === 0.0 ? undefined : value;
+                        const res = typeof value !== 'number' || !isFinite(value) || value === 0.0 ? undefined : validateAmountReceived(store, value);
                         store.onAmountReceivedChanged(res ? res : 0.0);
                         amountReceived.onChange(res);
                       });
@@ -279,11 +279,19 @@ export default class extends Component {
 
             </div>
 
-          </form>
+          </div>
 
         </div>
 
       </div>
     );
   }
+}
+
+function validateAmountReceived(store, amountReceived){
+  if(amountReceived > store.max){
+    return undefined;
+  }
+
+  return amountReceived;
 }

@@ -1,41 +1,43 @@
-import webpack from 'webpack';
-import path from 'path';
-import AssetsPlugin from 'assets-webpack-plugin';
-import VendorChunkPlugin from 'webpack-vendor-chunk-plugin';
+const webpack = require('webpack');
+const path = require('path');
+const AssetsPlugin = require('assets-webpack-plugin');
+const VendorChunkPlugin = require('webpack-vendor-chunk-plugin');
 
-import assign from 'object-assign';
+const OfflinePlugin = require('offline-plugin');
 
-import pkg from './package.json';
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-const excl = Object.keys(pkg.devDependencies).map(function(i){
-    return new RegExp('node_modules/' + i);
-});
-
-import ExtractTextPlugin from 'extract-text-webpack-plugin';
-
-const __DEVELOPMENT__ = process.env.NODE_ENV !== 'production';
+const __DEV__ = process.env.NODE_ENV !== 'production';
 
 const APP_PORT = process.env.PORT || 5000;
 
+const mountPath = process.env.PARSE_MOUNT || '/parse';
+
+const SERVER_URL = process.env.SERVER_URL || `http://localhost:${APP_PORT}${mountPath}`;
+
 const vendors = [
+  // 'redux-worker',
+
+  'react-tooltip',
+  'react-addons-shallow-compare',
+
   'alt',
   'alt-container',
   // 'alt-utils',
-  'babel-polyfill',
-  'base64-arraybuffer',
+  // 'babel-polyfill',
+  // 'base64-arraybuffer',
   'classnames',
   // 'cldr',
   // 'cldr-data',
   'dataloader',
-  'debug',
-  'dom-helpers',
+  // 'debug',
+  'dom-helpers/events',
   // 'faker',
   'fbjs',
-  'globalize',
+  // 'globalize',
   // 'graphiql',
   'graphql',
   'graphql-custom-datetype',
-  'graphql-custom-types',
   'graphql-relay',
   'highcharts',
   'intl',
@@ -63,7 +65,6 @@ const vendors = [
   'lodash.uniq',
   'lodash.uniqby',
   'moment',
-  'moment-range',
   'parse',
   'react',
   'react-addons-create-fragment',
@@ -92,6 +93,43 @@ const vendors = [
   'validator',
 ];
 
+const externals = [
+  '/material-icons/material-icons.css',
+  '/material-icons/fonts/MaterialIcons.woff2',
+
+  '/css/bootstrap/4.0.0-alpha.2/bootstrap.min.css',
+  '/css/common.css',
+
+  '/css/fonts/HelveticaNeueLTW1G-Roman.woff',
+  '/css/fonts/HelveticaNeueLTW1G-Roman.ttf',
+  '/css/fonts/HelveticaNeueLTW1G-Lt.woff',
+  '/css/fonts/HelveticaNeueLTW1G-Lt.ttf',
+  '/css/fonts/HelveticaNeueLTW1G-Bd.woff',
+  '/css/fonts/HelveticaNeueLTW1G-Bd.ttf',
+  '/css/fonts/harmonyicons-regular-webfont.woff',
+  '/css/fonts/DINNextLTPro-Regular.woff',
+  '/css/fonts/DINNextLTPro-Regular.ttf',
+  '/css/fonts/DINNextLTPro-Light.woff',
+  '/css/fonts/DINNextLTPro-Light.ttf',
+
+  '/css/popover.css',
+  '/css/caret.css',
+  '/css/spinner.css',
+  '/css/progress.css',
+  '/css/fixed-data-table.css',
+  '/css/table-overrides.css',
+  '/css/form.css',
+  '/css/modal.css',
+  '/css/notifications.css',
+  '/css/mdl-checkbox.css',
+  '/css/react-vis-overrides.css',
+  '/css/table.css',
+  '/css/fab.css',
+  '/css/sidebar.css',
+  '/css/wizard.css',
+  '/css/alert.css',
+];
+
 const plugins = [
   new ExtractTextPlugin('[hash:8].app.css', {
     disable: false,
@@ -103,6 +141,9 @@ const plugins = [
       APPLICATION_ID: JSON.stringify(process.env.APPLICATION_ID),
       JAVASCRIPT_KEY: JSON.stringify(process.env.JAVASCRIPT_KEY),
       MASTER_KEY: JSON.stringify(process.env.MASTER_KEY),
+      PRODUCT_ENABLE_PURCHASE: JSON.stringify(true),
+      GA_TRACKING_CODE: JSON.stringify('UA-77364031-1'),
+      SERVER_URL: JSON.stringify(SERVER_URL),
     }
   }),
   new webpack.optimize.OccurenceOrderPlugin(),
@@ -126,39 +167,17 @@ const plugins = [
 
 ];
 
+const presets = [
+  'react-native',
+];
+
 const query = {
-  cacheDirectory: __DEVELOPMENT__,
-  presets: [
-    'react',
-    'es2015',
-    'stage-0',
-    require('babel-preset-fbjs/configure')({
-      autoImport: true,
-      inlineRequires: true,
-      rewriteModules: {
-        map: assign({},
-          require('fbjs-scripts/third-party-module-map'),
-          require('fbjs/module-map'),
-          {
-            React: 'react',
-            ReactDOM: 'react-dom',
-          },
-        ),
-      },
-      stripDEV: !__DEVELOPMENT__,
-    }),
-  ],
+  cacheDirectory: false, // __DEV__,
+  presets,
   plugins: [
     'transform-runtime',
-    path.resolve(__dirname, 'build', 'babelRelayPlugin'),
     'transform-decorators-legacy',
-    // [path.resolve(__dirname, 'build', 'rewrite-modules'), {
-    //   map: { ...require('fbjs/module-map'),
-    //     React: 'react',
-    //     ReactDOM: 'react-dom',
-    //   },
-    //   prefix: '',
-    // }],
+    path.resolve(__dirname, 'build', 'babelRelayPlugin'),
     // ['react-intl', {
     //   messagesDir: path.resolve(process.cwd(), 'build', 'messages'),
     //   enforceDescriptions: false
@@ -168,25 +187,26 @@ const query = {
 
 let entry = {
   main: [
+    'babel-polyfill',
     path.resolve(process.cwd(), 'js', 'app.js'),
   ],
 
-  vendors
+  vendors,
 };
 
 let output = {
-  filename: '[hash:8].app.js',
-  path: path.resolve(process.cwd(), 'public', 'js'),
-  publicPath: '/js/',
-  chunkFilename: '[id].[chunkhash:8].app.js',
+  filename: '[hash:8].[name].js',
+  path: path.resolve(process.cwd(), 'public'),
+  publicPath: '/assets/',
+  chunkFilename: '[id].[chunkhash:8].[name].js',
 };
 
-if(!__DEVELOPMENT__){
+if(!__DEV__){
 
   query.plugins = query.plugins.concat(
     [
-      'babel-plugin-remove-proptypes',
-      'transform-react-constant-elements',
+      'transform-react-remove-prop-types',
+      // 'transform-react-constant-elements',
       // 'transform-react-inline-elements',
     ]
   );
@@ -214,6 +234,22 @@ if(!__DEVELOPMENT__){
   //   })
   // );
 
+  plugins.push(new OfflinePlugin({
+    relativePaths: false,
+    publicPath: '/assets/',
+    ServiceWorker:{
+      events: true,
+    },
+    caches: {
+      main: [
+        ...externals,
+        ':rest:',
+      ],
+    },
+    excludes: [ '**/.*', '**/*.map', '[hash:8].main.js', '[hash].vendors.js', '[hash:8].app.css', '/assets/index.html', ],
+    externals,
+  }));
+
 }else {
 
   entry = {
@@ -227,14 +263,14 @@ if(!__DEVELOPMENT__){
       path.resolve(process.cwd(), 'js', 'app.js'),
     ],
 
-    vendors
+    vendors,
   };
 
   output = {
-    filename: '[hash:8].app.js',
+    filename: '[hash:8].[name].js',
     path: '/',
-    publicPath: '/js/',
-    chunkFilename: '[id].[chunkhash:8].app.js',
+    publicPath: '/assets/',
+    chunkFilename: '[id].[chunkhash:8].[name].js',
   };
 
   plugins.push(
@@ -245,9 +281,8 @@ if(!__DEVELOPMENT__){
 
 // Serve the Relay app
 module.exports = {
-  noParse: excl,
-  debug: __DEVELOPMENT__,
-  devtool: __DEVELOPMENT__ ? 'cheap-module-eval-source-map' : undefined,
+  debug: __DEV__,
+  devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
   entry,
   module: {
     loaders: [
@@ -263,14 +298,14 @@ module.exports = {
 
       { test: /\.gif$/, loader: 'url-loader', query: {mimetype: 'image/png'}, },
       { test: /\.woff(2)?(\?v=[0-9].[0-9].[0-9])?$/, loader: 'url-loader', query: {mimetype: 'application/font-woff'}, },
+
+      { test: /\.svg$/, loader: 'url-loader', query: {} },
+
       { test: /\.(ttf|eot|svg)(\?v=[0-9].[0-9].[0-9])?$/, loader: 'file-loader', query: {name: '[name].[ext]'}, },
 
       { test: /\.(png)$/, loader: 'url-loader', query: {limit: 100000}, },
 
       { test: /\.jpg$/, loader: 'file-loader' },
-
-      { test: /globalize/, loader: 'imports?define=>false' },
-
       {
         // exclude: /node_modules/,
         test: /\.json/,
@@ -280,11 +315,13 @@ module.exports = {
       {
         exclude: /node_modules/,
         test: /\.scss$/,
-        loader: ExtractTextPlugin.extract('style', 'css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!sass'),
+        loader: __DEV__
+          ? ExtractTextPlugin.extract('style', 'css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!sass')
+          : ExtractTextPlugin.extract('style', 'css?minimize&modules&importLoaders=1&localIdentName=[hash:base64:5]!sass'),
       },
 
     ]
   },
   output,
-  plugins
+  plugins,
 };

@@ -14,15 +14,18 @@ import {
 
 import messages from './messages';
 
+import VAT from './VAT';
+
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired
   };
   render(){
     const {intl,} = this.context;
-    const {store, bill, fields: {},} = this.props;
-    const total = store.subtotal;
+    const { formKey, store, bill, fields: { ...otherFields, },} = this.props;
+    const total = store.getTotal();
+    const VATEnabled = this.props.company.VATSettings.enabled;
     return (
       <div styleName='total-wrapper'>
 
@@ -30,9 +33,27 @@ export default class extends Component{
 
           <div styleName=''>
 
+            {VATEnabled && <div styleName={'width_x'} className='row'>
+
+              <div styleName='subsection12TitleText' className='col-sm-8' style={{ paddingRight: 3, textAlign: 'right'}}>
+                {intl.formatMessage(messages['Subtotal'])}
+              </div>
+
+              <div className='col-sm-4 last-col' style={{textAlign: 'right',display: 'inline-block'}}>
+                <div styleName='amount'>{intl.formatNumber(store.subtotal, {format: 'MAD'})}</div>
+              </div>
+
+            </div>}
+
+            {VATEnabled && <VAT
+                formKey={formKey}
+                store={store}
+                fields={{...otherFields,}}
+              />}
+
             <div styleName={'width_x'} className='row' style={{ paddingTop: 0, paddingBottom: 15, }}>
 
-              <div styleName='subsection12TitleText' className='col-sm-8' style={{textAlign: 'right'}}>
+              <div styleName='subsection12TitleText' className='col-sm-8' style={{paddingRight: 3, textAlign: 'right'}}>
                 {intl.formatMessage(messages['Total'])}
               </div>
 

@@ -29,7 +29,7 @@ const messages = defineMessages({
   },
 })
 
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'PayeeListItem';
   static contextTypes = {
     intl: intlShape.isRequired,

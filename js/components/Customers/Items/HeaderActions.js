@@ -33,7 +33,7 @@ import styles from './Items.scss';
 import requiredPropType from 'react-prop-types/lib/all';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'CustomersSalesHeaderActions';
 
@@ -53,6 +53,7 @@ export default class extends Component{
   static contextTypes = {
     intl: intlShape.isRequired,
     store: PropTypes.object.isRequired,
+    router: PropTypes.object.isRequired,
   };
 
   constructor(props, context){
@@ -97,7 +98,7 @@ export default class extends Component{
     this.setState({
       modalOpen: true,
       modalType: btn,
-    })
+    });
   };
 
   _close = (btn, e) => {
@@ -123,9 +124,17 @@ export default class extends Component{
             company={this.props.company}
             viewer={this.props.viewer}
             formKey={'NEW'} onCancel={this._close}
+            onDone={this._onSaveCustomer}
           />
         );
     }
+  };
+
+  _onSaveCustomer = ({ customer: { id, }, }) => {
+    this.context.router.push({
+      pathname: `/apps/${this.props.company.id}/customer/${id}`,
+      state: {},
+    })
   };
 
   render() {

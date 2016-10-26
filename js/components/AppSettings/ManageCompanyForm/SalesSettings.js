@@ -8,6 +8,8 @@ import pick from 'lodash.pick';
 
 import messages from './messages';
 
+import LoadingActions from '../../Loading/actions';
+
 import findIndex from 'lodash.findindex';
 
 import { setBeforeUnloadMessage, unsetBeforeUnloadMessage, } from '../../../utils/unbeforeunload';
@@ -41,7 +43,7 @@ const preferredSalesTermsByIndex = { 1: 'OnReception', 2:'Net_15', 3:'Net_30', 4
 const preferredSalesTermsById = { OnReception: 1, Net_15: 2, Net_30: 3, Net_60: 4/*, Custom: 5*/, };
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static propTypes = {
     bodyWidth: PropTypes.number.isRequired,
@@ -166,7 +168,7 @@ export default class extends Component {
 const SalesForm = function () {
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
     static propTypes = {
       company: PropTypes.object.isRequired,
@@ -190,7 +192,7 @@ const SalesForm = function () {
 
                 <div>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}}>
 
                     <div className='form-group row'>
 
@@ -234,7 +236,7 @@ const SalesForm = function () {
 
                     </div>
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -278,7 +280,7 @@ const SalesForm = function () {
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -396,8 +398,10 @@ const SalesForm = function () {
       }
 
       const doUpdate = handleSubmit((data) => {
+        LoadingActions.show();
         return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => normalizeServerData(key, data)), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -426,7 +430,7 @@ const SalesForm = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate}>
 
                     <div className='form-group row'>
 
@@ -517,7 +521,7 @@ const SalesForm = function () {
 
                     </div>
 
-                  </form>
+                  </div>
 
                   {saveError && <div styleName='error'>{intl.formatMessage({ ...saveError, id: saveError._id, })}</div>}
 
@@ -575,6 +579,12 @@ function wrap(Component) {
 
           fragment on Company{
 
+            company_streetAddress,
+            company_cityTown,
+            company_stateProvince,
+            company_postalCode,
+            company_country,            
+
             ${UpdateCompanySalesSettingsMutation.getFragment('company')},
 
             id,
@@ -622,7 +632,7 @@ const ProductsSettings = function () {
   }
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
     static propTypes = {
       company: PropTypes.object.isRequired,
@@ -655,7 +665,7 @@ const ProductsSettings = function () {
 
                 <div>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}}>
 
                     <div className='form-group row'>
 
@@ -699,7 +709,7 @@ const ProductsSettings = function () {
 
                     </div>*/}
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -744,7 +754,7 @@ const ProductsSettings = function () {
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -868,8 +878,10 @@ const ProductsSettings = function () {
       }
 
       const doUpdate = handleSubmit((data) => {
+        LoadingActions.show();
         return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => ({fieldName: key, value: normalizeServerData(key, data), })), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -898,7 +910,7 @@ const ProductsSettings = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate}>
 
                     <div className='form-group row'>
 
@@ -988,7 +1000,7 @@ const ProductsSettings = function () {
 
                     </div>*/}
 
-                  </form>
+                  </div>
 
                   {saveError && <div styleName='error'>{intl.formatMessage({ ...saveError, id: saveError._id, })}</div>}
 

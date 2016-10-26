@@ -17,7 +17,7 @@ import messages from './messages';
 function alwaysTrue(){ return true; }
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'PendingBills';
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -79,7 +79,7 @@ export default class extends Component{
 }
 
 @CSSModules(styles, {allowMultiple: true})
-class Row extends Component{
+class Row extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };

@@ -8,6 +8,8 @@ import styles from './Login.scss';
 
 import Title from '../Title/Title';
 
+import isEmpty from 'lodash.isempty';
+
 import {
   defineMessages,
   intlShape,
@@ -22,7 +24,7 @@ const messages = defineMessages({
 
   defaultLogin: {
     id: 'login-page.default-login',
-    defaultMessage: 'amadou.cisse',
+    defaultMessage: 'amadou.cisse@epsilon.ma',
   },
 
   title: {
@@ -42,7 +44,7 @@ const messages = defineMessages({
 
   error: {
     id: 'login-page.error.login',
-    defaultMessage: 'Vous devez entrer une adresse email valide.'
+    defaultMessage: 'Vous devez entrer une adresse email et mot de passe valide.'
   },
 
   forgot: {
@@ -57,7 +59,7 @@ const messages = defineMessages({
 
 });
 
-class Login extends Component {
+class Login extends React.Component {
 
   static contextTypes = {
     router: PropTypes.object.isRequired,
@@ -65,7 +67,8 @@ class Login extends Component {
   };
 
   state = {
-    error: false
+    error: false,
+    busy: false,
   };
 
   handleSubmit = (e) => {
@@ -73,31 +76,38 @@ class Login extends Component {
     e.stopPropagation();
 
     const email = this.refs.email.value;
-    const password = this.refs.email.password;
+    const password = this.refs.password.value;
 
     if (Boolean(email)) {
 
-      auth.login(email, password, (error, user) => {
-        if (error) {
-          return this.setState({error: true});
-        }
+      this.setState({
+        busy: true,
+      }, () => {
 
-        localStorage.setItem('app.login', email);
+        auth.login(email, /*password = */isEmpty(password) ? process.env.NODE_ENV !== 'production' && 'default' : password, (error, user) => {
+          if (error) {
+            this.refs.password.value = '';
+            return this.setState({ error: true, busy: false, });
+          }
 
-        const {location} = this.props;
+          localStorage.setItem('app.login', email);
 
-        if (location.state && location.state.nextPathname) {
-          this.context.router.replace(location.state.nextPathname);
-        } else {
-          this.context.router.replace('/');
-        }
+          const {location} = this.props;
+
+          if (location.state && location.state.nextPathname) {
+            this.context.router.replace(location.state.nextPathname);
+          } else {
+            this.context.router.replace('/');
+          }
+        });
+
       });
 
       return;
     }
 
 
-    this.setState({error: true});
+    this.setState({ error: true, });
   };
 
   _onForgot = (e) => {
@@ -108,9 +118,10 @@ class Login extends Component {
   };
 
   _renderForm = () => {
+    const { busy, } = this.state;
     const { formatMessage, } = this.context.intl;
     return (
-      <div styleName='login' style={{ marginTop: '-220px' }}>
+      <div styleName='login' style={{ height: 'auto', }}>
 
         <i className='material-icons md-dark md-inactive' style={{fontSize: 80}}>account_balance_wallet</i>
 
@@ -144,12 +155,15 @@ class Login extends Component {
           </div>}
 
           <div styleName='footer'>
-            <div styleName='verticalCenter' style={{ width:'100%' }}>
+            {/*<div styleName='verticalCenter' style={{ width:'100%' }}>
               <a onClick={this._onForgot}>{formatMessage(messages.forgot)}</a>
-            </div>
+            </div>*/}
           </div>
 
-          <input type='submit' styleName='submit' value={formatMessage(messages.logIn)}/>
+          {/*<input type='submit' styleName='submit' value={formatMessage(messages.logIn)}/>*/}
+          <button type='submit' styleName='submit'>
+            <span>{busy ? <i styleName={'busy'} className={`material-icons`}>loop</i> : null}{' '}{formatMessage(messages['logIn'])}</span>
+          </button>
 
         </form>
 

@@ -11,6 +11,8 @@ const validation = createValidator({
   customer: [required],
 
   discountValue: [discountValue],
+
+  inputType: [required],
 });
 export default validation;
 

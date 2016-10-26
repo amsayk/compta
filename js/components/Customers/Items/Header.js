@@ -20,7 +20,7 @@ import HeaderReports from './HeaderReports';
 const Title = (company) => company.displayName;
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'CustomersSalesHeader';
 
@@ -41,7 +41,7 @@ export default class extends Component{
     const {intl,} = this.context;
 
     return (
-      <div styleName='top' style={{width: Math.max(this.props.bodyWidth - 225, 956),}}>
+      <div styleName='top' style={{width: Math.max(this.props.bodyWidth - 165, 956),}}>
 
         <div styleName='toolbar'>
 
@@ -89,7 +89,6 @@ export default class extends Component{
             company={this.props.company}
             viewer={this.props.viewer}
             styles={this.props.styles}
-            filterArgs={filterArgs}
           />
 
         </div>

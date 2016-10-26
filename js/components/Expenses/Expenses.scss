@@ -14,7 +14,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  left: 225px;
+  left: 165px; // --sidebar-width
   height: 96px;
   transition: left .5s ease-in;
 
@@ -403,7 +403,7 @@ body .table {
 
 .empty {
   // position: absolute;;
-  // left: 225px;
+  // left: 165px; // --sidebar-width
   // top: 0;
   // bottom: 0;
   // right: 0;

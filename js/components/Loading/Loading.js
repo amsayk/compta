@@ -4,7 +4,7 @@ import CSSModules from 'react-css-modules';
 
 import styles from './Loading.scss';
 
-class Loading extends Component {
+class Loading extends React.Component {
   render() {
     return (
       <div styleName='loading-spinner' className='loading-spinner'>

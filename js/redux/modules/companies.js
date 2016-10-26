@@ -1,6 +1,7 @@
 import Relay from 'react-relay';
 
 import AddCompanyMutation from '../../mutations/AddCompanyMutation';
+import CreateOrUpdateCompanyMutation from '../../mutations/CreateOrUpdateCompanyMutation';
 import UpdateCompanyMutation from '../../mutations/UpdateCompanyMutation';
 import UpdateCompanySettingsMutation from '../../mutations/UpdateCompanySettingsMutation';
 import UpdateCompanySalesSettingsMutation from '../../mutations/UpdateCompanySalesSettingsMutation';
@@ -85,7 +86,7 @@ export default function reducer(state = initialState, action = {}) {
           [action.id]: {
             _id: 'error.unknown',
             description: '',
-            defaultMessage: 'There was an unknown error. Please try again.',
+            defaultMessage: 'Erreur inconnu. Veuillez essayer de nouveau.',
           }
         }
       };
@@ -105,8 +106,8 @@ export function save({id, displayName, periodType, viewer,}) {
         periodType,
         viewer,
       }), {
-        onSuccess: function ({addCompany: {companyEdge: {node: {id}}}}) {
-          resolve({id});
+        onSuccess: function ({addCompany: {companyEdge: {node: {id, ...props}}}}) {
+          resolve({id, ...props});
         },
         onFailure: function (transaction) {
           const error = transaction.getError();
@@ -119,7 +120,34 @@ export function save({id, displayName, periodType, viewer,}) {
   };
 }
 
-export function update({id, fieldInfos, viewer, company,}) {
+export function createOrUpdate({ id, fieldInfos, logo, viewer, company,}) {
+  return {
+    types: [SAVE, SAVE_SUCCESS, SAVE_FAIL],
+    id: id || 'NEW',
+    promise: () => new Promise((resolve, reject) => {
+
+      Relay.Store.commitUpdate(new CreateOrUpdateCompanyMutation({
+        id,
+        fieldInfos,
+        logo,
+        viewer,
+        company,
+      }), {
+        onSuccess: function ({createOrUpdateCompany: {companyEdge: {node: {id, ...props}}}}) {
+          resolve({id, ...props});
+        },
+        onFailure: function (transaction) {
+          const error = transaction.getError();
+          reject({error});
+        },
+      });
+
+
+    }),
+  };
+}
+
+export function update({id, fieldInfos, logo, viewer, company,}) {
   return {
     types: [SAVE, SAVE_SUCCESS, SAVE_FAIL],
     id: id,
@@ -128,11 +156,13 @@ export function update({id, fieldInfos, viewer, company,}) {
       Relay.Store.commitUpdate(new UpdateCompanyMutation({
         id,
         fieldInfos,
+        logo,
         sessionToken: viewer.sessionToken,
+        viewer,
         company,
       }), {
-        onSuccess: function ({updateCompany: {company: {id}}}) {
-          resolve({id});
+        onSuccess: function ({updateCompany: {company: {id, ...props}}}) {
+          resolve({id, ...props});
         },
         onFailure: function (transaction) {
           const error = transaction.getError();

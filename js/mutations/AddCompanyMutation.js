@@ -38,7 +38,15 @@ export default class AddCompanyMutation extends Relay.Mutation {
       // Forces these fragments to be included in the query
       children: [Relay.QL`
         fragment on AddCompanyPayload {
-          companyEdge,
+          companyEdge{
+            node{
+              company_streetAddress,
+              company_cityTown,
+              company_stateProvince,
+              company_postalCode,
+              company_country,
+            }
+          },
         }
       `],
     },];
@@ -48,6 +56,7 @@ export default class AddCompanyMutation extends Relay.Mutation {
       displayName: this.props.displayName,
       periodType: this.props.periodType,
       sessionToken: this.props.viewer.sessionToken,
+      logo: this.props.logo,
     };
   }
   getOptimisticResponse() {

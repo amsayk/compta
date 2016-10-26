@@ -30,7 +30,7 @@ import {
 
 import messages from './messages';
 
-function asyncValidate({email}) {
+function asyncValidate({ id, email}) {
   // TODO: figure out a way to move this to the server. need an instance of ApiClient
   if (!email) {
     return Promise.resolve({});
@@ -38,6 +38,7 @@ function asyncValidate({email}) {
   return new Promise((resolve, reject) => {
     const query = new Parse.Query(Parse.User);
     query.equalTo('email', email);
+    query.notEqualTo('objectId', id);
 
     query.first().then(
       function (object) {
@@ -72,12 +73,12 @@ function asyncValidate({email}) {
     asyncBlurFields: ['email'],
   }, (state, {viewer, formKey}) => ({
     saveError: state.account.saveError,
-    initialValues: { displayName: viewer.displayName, email: viewer.email, },
+    initialValues: { id: viewer.objectId, displayName: viewer.displayName, email: viewer.email, },
   }),
   dispatch => bindActionCreators(accountActions, dispatch)
 )
 @CSSModules(styles, {})
-export default class AccountForm extends Component {
+export default class AccountForm extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired
   };
@@ -96,6 +97,10 @@ export default class AccountForm extends Component {
     formKey: PropTypes.string.isRequired,
     values: PropTypes.object.isRequired,
   };
+
+  componentDidMount(){
+    ga('send', 'pageview', '/modal/account-form');
+  }
 
   render() {
     const {formatMessage,} = this.context.intl;
@@ -122,16 +127,11 @@ export default class AccountForm extends Component {
       onCancel,
     } = this.props;
 
-    const handleClose = () => {
-      editStop(formKey);
-      onCancel();
-    };
-
     return (
 
       <Modal styleName={'modal'}
              className={classnames({'valid': !pristine && valid, 'submitting': submitting, form: true, 'app-modal': true,})} show={true}
-             keyboard={false} backdropStyle={{opacity: 0.5,}} backdrop={'static'} onHide={() => handleClose()} autoFocus enforceFocus>
+             keyboard={false} backdropStyle={{opacity: 0.5,}} backdrop={'static'} onHide={() => this.handleClose()} autoFocus enforceFocus>
         <Modal.Header>
 
           <div styleName='title' style={{top: '27px'}}>{formatMessage(messages['formTitle'])}
@@ -153,10 +153,11 @@ export default class AccountForm extends Component {
           <Text
             name={formatMessage(messages['emailLabel'])}
             description={formatMessage(messages['emailDesc'])}
-            props={{...email, error: email.error && formatMessage(email.error)}}
+            props={{...email,}}
           />
 
           {saveError && <div styleName='error'>{formatMessage({ ...saveError, id: saveError._id, })}</div>}
+          {email.error && <div styleName='error'>{formatMessage(email.error)}</div>}
           {submitting && <Progress/>}
 
         </Modal.Body>
@@ -164,24 +165,15 @@ export default class AccountForm extends Component {
 
           <button
             styleName='button'
-            onClick={() => handleClose()}
+            onClick={() => this.handleClose()}
             disabled={submitting}
             className='btn btn-primary-outline unselectable'>{formatMessage(messages['cancel'])}
           </button>
 
           <button
             styleName='button'
-            onClick={handleSubmit((data) => {
-              return save({...data})
-                    .then(result => {
-                      if (result && typeof result.error === 'object') {
-                        return Promise.reject(); // { defaultMessage: messages['error'].defaultMessage, _id: messages['error'].id, }
-                      }
-
-                      handleClose();
-                    });
-            })}
-            disabled={pristine || invalid || submitting}
+            onClick={handleSubmit(this._onSave)}
+            disabled={pristine || submitting}
             className={'btn btn-primary unselectable' + (!pristine && valid ? ' green' : '')}>
             {' '}{formatMessage(submitting ? messages['saving'] : messages['save'])}
           </button>
@@ -190,4 +182,23 @@ export default class AccountForm extends Component {
       </Modal>
     );
   }
+
+  handleClose = () => {
+    const { editStop, formKey, onCancel, } = this.props;
+
+    editStop(formKey);
+    onCancel();
+  };
+
+  _onSave = (data) => {
+    const { save, viewer, } = this.props;
+    return save({...data, viewer,})
+      .then(result => {
+        if (result && typeof result.error === 'object') {
+          return Promise.reject(); // { defaultMessage: messages['error'].defaultMessage, _id: messages['error'].id, }
+        }
+
+        this.handleClose();
+      });
+  };
 }

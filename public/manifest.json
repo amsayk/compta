@@ -1,0 +1,22 @@
+{
+  "short_name": "Compta",
+  "name": "Compta • Gestionnaire comptable",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "images/ic_account_balance_wallet_black_18dp.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "images/ic_account_balance_wallet_black_48dp.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/assets/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "permissions": [
+  ]
+}

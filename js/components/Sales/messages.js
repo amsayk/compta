@@ -340,6 +340,16 @@ export default defineMessages({
   Table_Title_Date: {
     id: 'sales-page.message.table-title-date',
     defaultMessage: 'Date',
+  },  
+  
+  Table_Title_VAT: {
+    id: 'sales-page.message.table-title-vat',
+    defaultMessage: 'TVA',
+  },  
+  
+  Table_Title_Total_HT: {
+    id: 'sales-page.message.table-title-total-ht',
+    defaultMessage: 'Total HT',
   },
 
   Table_Title_Type: {

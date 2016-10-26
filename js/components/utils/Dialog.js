@@ -6,7 +6,7 @@ import styles from './Dialog.scss';
 import CSSModules from 'react-css-modules';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'ModalDialog';
   render() {
     return (
@@ -33,10 +33,10 @@ export default class extends Component {
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export class Header extends Component {
+export class Header extends React.Component {
   render() {
     return (
-      <header styleName='flex-fixed'>
+      <header className={'dialog-header'} styleName='flex-fixed'>
 
         <div styleName='header table stretch'>
 
@@ -54,7 +54,7 @@ export class Header extends Component {
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export class Body extends Component {
+export class Body extends React.Component {
   static propTypes = {
     scrollable: PropTypes.bool.isRequired,
   }
@@ -76,10 +76,10 @@ export class Body extends Component {
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export class Footer extends Component {
+export class Footer extends React.Component {
   render() {
     return (
-      <footer styleName='stickyFooter table width100Percent'>
+      <footer className={'dialog-footer'} styleName='stickyFooter table width100Percent'>
 
         <div styleName='tableRow'>
 

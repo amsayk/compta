@@ -3,6 +3,11 @@ import {
 } from 'react-intl';
 
 export default defineMessages({
+  Preview: {
+    id: 'sale-form.preview',
+    defaultMessage: 'Imprimer',
+  },
+
   ErrorTitle: {
     id: 'sale-form.error-title',
     defaultMessage: 'L\'erreur suivante',
@@ -25,7 +30,7 @@ export default defineMessages({
 
   PaymentMethod_Cash: {
     id: 'sale-form.paymment-method-cash',
-    defaultMessage: 'En espèces',
+    defaultMessage: 'Espèces',
   },
 
   PaymentMethod_Check: {
@@ -35,7 +40,7 @@ export default defineMessages({
 
   PaymentMethod_Creditcard: {
     id: 'sale-form.paymment-method-credit-card',
-    defaultMessage: 'Carte de crédit',
+    defaultMessage: 'Carte bancaire',
   },
 
   SaleDate: {
@@ -198,15 +203,38 @@ export default defineMessages({
     id: 'sale-form.amount',
     defaultMessage: 'Montant'
   },
+  AmountHT: {
+    id: 'sale-form.amount-ht',
+    defaultMessage: 'Montant HT'
+  },
+  AmountTTC: {
+    id: 'sale-form.amount-ttc',
+    defaultMessage: 'Montant TTC'
+  },
 
   Taxable: {
     id: 'sale-form.taxable',
     defaultMessage: 'Tax'
   },
 
+  close: {
+    id: 'sale-form.close',
+    defaultMessage: 'Fermer'
+  },
+
   itemPlaceholder: {
     id: 'sale-form.action.item-placeholder',
     defaultMessage: 'Choisir le produit ou service…'
+  },
+
+  VATPart: {
+    id: 'sale-form.vat-part',
+    defaultMessage: 'TVA'
+  },
+
+  VATPartPlaceholder: {
+    id: 'sale-form.action.vat-part-placeholder',
+    defaultMessage: 'TVA…'
   },
 
   saveAndNew: {
@@ -257,7 +285,7 @@ export default defineMessages({
 
   Subtotal: {
     id: 'sale-form.label-subtotal',
-    defaultMessage: 'Total HT',
+    defaultMessage: 'Sous-Total',
   },
 
   TaxableSubtotal: {

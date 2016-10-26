@@ -1,3 +1,9 @@
+.modal :global .modal-footer{
+  bottom: 15px;
+  position: absolute;
+  width: 100%;
+}
+
 .submitting{
   vertical-align: middle;
   display: inline-block;
@@ -73,7 +79,7 @@
 .modal.full{
   z-index: 2230;
 
-  height: 700px;
+  height: 715px;
   width: 915px;
 
   top: 4%;
@@ -222,9 +228,14 @@
 }
 .modal-footer{
   border: none!important;
+
 }
 .modal.full .modal-footer{
   padding: 0 15px!important;
+
+  bottom: 15px;
+  position: absolute;
+  width: 100%;
 }
 .stretch {
   display: block;

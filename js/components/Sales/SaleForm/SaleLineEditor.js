@@ -4,7 +4,9 @@ import messages from './messages';
 
 import {intlShape,} from 'react-intl';
 
-// import isEqual from 'lodash.isequal';
+import map from 'lodash.map';
+
+import isEqual from 'lodash.isequal';
 
 import moment from 'moment';
 
@@ -21,7 +23,9 @@ import Combobox from 'react-widgets/lib/Combobox';
 
 import {Table, Column, Cell,} from '../../../../fixed-data-table';
 
-export default class extends Component{
+import filter from 'lodash.filter';
+
+export default class extends React.Component{
 
   static displayName = 'SaleLineEditor';
 
@@ -54,7 +58,7 @@ export default class extends Component{
   };
 
   _onRefresh = (current) => {
-    ['description', 'rate', 'amount'].forEach(item => {
+    ['description', 'rate', 'amount', 'VATPart'].forEach(item => {
       if(item === current){
         return;
       }
@@ -65,7 +69,7 @@ export default class extends Component{
         });
       }
     })
-  }
+  };
 
   render(){
     const {intl,} = this.context;
@@ -83,11 +87,33 @@ export default class extends Component{
 
       cell,
 
+      VTEnabled,
+      hasVAT,
+      inputTypeValue,
+
     } = this.props;
 
     const showDate = salesSettings.enableServiceDate;
     const showProducts = salesSettings.showProducts;
     const showRates = salesSettings.showRates;
+
+    function getAmountLabel() {
+      switch (inputTypeValue) {
+        case 1:
+        case 'HT':
+
+          return intl.formatMessage(messages.AmountHT);
+
+        case 2:
+        case 'TTC':
+
+          return intl.formatMessage(messages.AmountTTC);
+
+        default:
+
+          return intl.formatMessage(messages.Amount);
+      }
+    }
 
     return (
       <div style={{position: 'absolute', top: (row * 50) - 1, }}>
@@ -147,7 +173,7 @@ export default class extends Component{
             columnKey={'item'}
             align={'left'}
             header={<Cell>{intl.formatMessage(messages.Item)}</Cell>}
-            cell={(props) => <ItemCellEditor refresh={this._onRefresh} onAddNewProduct={this.props.onAddNewProduct} company={this.props.company} items={items} {...props} styles={styles} store={store} rowIndex={row} active={this.props.isAddingProduct ? false : cell === 'item' || !cell}/>}
+            cell={(props) => <ItemCellEditor refresh={this._onRefresh} onAddNewProduct={this.props.onAddNewProduct} company={this.props.company} items={items} {...props} inputType={inputTypeValue} styles={styles} store={store} rowIndex={row} active={this.props.isAddingProduct ? false : cell === 'item' || !cell}/>}
             width={0.145 * tableWidth}
           />}
 
@@ -158,7 +184,7 @@ export default class extends Component{
             header={<Cell>{intl.formatMessage(messages.Description)}</Cell>}
             cell={(props) => <DescriptionCellEditor {...props} ref={this._setElmRef.bind(this, 'description')} styles={styles} store={store} rowIndex={row} active={cell === 'description'}/>}
 
-            width={(0.28 * tableWidth) + (showDate ? 0 : 0.08 * tableWidth) + (showProducts ? 0 : 0.145 * tableWidth) + (showRates ? 0 : (0.07 + 0.09)*tableWidth)}
+            width={(hasVAT ? 0.25 * tableWidth : 0.28 * tableWidth) + (showDate ? 0 : 0.08 * tableWidth) + (showProducts ? 0 : 0.145 * tableWidth) + (showRates ? 0 : (0.07 + 0.09)*tableWidth)}
             flexGrow={1}
           />
 
@@ -168,7 +194,7 @@ export default class extends Component{
             align={'right'}
             header={<Cell>{intl.formatMessage(messages.Qty)}</Cell>}
             cell={(props) => <QtyCellEditor refresh={this._onRefresh} {...props} styles={styles} store={store} rowIndex={row} active={cell === 'qty'}/>}
-            width={0.07 * tableWidth}
+            width={hasVAT ? 0.05 * tableWidth : 0.07 * tableWidth}
           />}
 
           {/* rate */}
@@ -177,18 +203,28 @@ export default class extends Component{
             align={'right'}
             header={<Cell>{intl.formatMessage(messages.Rate)}</Cell>}
             cell={(props) => <RateCellEditor refresh={this._onRefresh} ref={this._setElmRef.bind(this, 'rate')} company={this.props.company} {...props} styles={styles} store={store} rowIndex={row} active={cell === 'rate'}/>}
-            width={0.09 * tableWidth}
+            width={hasVAT ? 0.08 * tableWidth : 0.09 * tableWidth}
           />}
 
           {/* amount */}
           <Column
             columnKey={'amount'}
             align={'right'}
-            header={<Cell>{intl.formatMessage(messages.Amount)}</Cell>}
+            header={<Cell>{VTEnabled ? getAmountLabel() : intl.formatMessage(messages.Amount)}</Cell>}
             cell={(props) => <AmountCellEditor refresh={this._onRefresh} ref={this._setElmRef.bind(this, 'amount')} company={this.props.company} {...props} styles={styles} store={store} rowIndex={row} active={cell === 'amount'}/>}
-            width={0.10 * tableWidth}
+            width={hasVAT ? 0.08 * tableWidth : 0.10 * tableWidth}
             flexGrow={1}
           />
+
+          {/* VATPart */}
+          {hasVAT && <Column
+            columnKey={'VATPart'}
+            align={'right'}
+            header={<Cell>{intl.formatMessage(messages.VATPart)}</Cell>}
+            cell={(props) => <VATPartCellEditor refresh={this._onRefresh} ref={this._setElmRef.bind(this, 'VATPart')} company={this.props.company} {...props} inputType={inputTypeValue} styles={styles} store={store} rowIndex={row} active={this.props.isAddingProduct ? false : cell === 'VATPart'}/>}
+            width={0.09 * tableWidth}
+            flexGrow={1}
+          />}
 
           {/* discountPart */}
           <Column
@@ -212,7 +248,7 @@ const NEW_ITEM = {
   id: 'NEW',
 };
 
-class ItemCellEditor extends Component {
+class ItemCellEditor extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -271,7 +307,7 @@ class ItemCellEditor extends Component {
     });
   };
 
-  _renderEditor = ({rowIndex, items, store, props, }) => {
+  _renderEditor = ({rowIndex, items, inputType, store, props, }) => {
 
     const { intl, } = this.context;
 
@@ -298,7 +334,7 @@ class ItemCellEditor extends Component {
             onToggle={this._onToggle}
             autoFocus={props.active}
             placeholder={intl.formatMessage(messages['itemPlaceholder'])}
-            data={[NEW_ITEM].concat(items)}
+            data={[NEW_ITEM].concat(filter(items, item => (item.active && item.salesEnabled) || store.hasItem(item.objectId)))}
             className={classnames({
               'has-error': store.showErrors && !el.pristine && ! store.isKeyValid(rowIndex, 'item'),
             })}
@@ -325,10 +361,90 @@ class ItemCellEditor extends Component {
                   id: item['objectId'],
                   objectId: item['objectId'],
                   incomeAccountCode: item['incomeAccountCode'],
+                  salesVATPart: item['salesVATPart'],
+                  salesPrice: item['salesPrice'],
                 });
 
-                typeof item.salesPrice !== 'undefined' && !!item.salesPrice && store.setRate(rowIndex, item.salesPrice);
+                const itemInputType = item['salesVATPart']
+                  ? INPUT_TYPE_TO_ID[item['salesVATPart'].inputType]
+                  : 1 /* HT */;
+
+                function getItemPrice() {
+                  switch (inputType){
+                    case 1:
+                    case 'HT':
+                    case 3:
+                    case 'NO_VAT':
+
+                      return function () {
+                        switch (itemInputType){
+                          case 1:
+                          case 'HT':
+                          case 3:
+                          case 'NO_VAT':
+
+                            return item.salesPrice;
+
+                          case 2:
+                          case 'TTC':
+
+                            // `item.salesPrice` is TTC, convert `item.salesPrice` to HT
+                            return function() {
+                              const itemVATValuePercent = item.salesVATPart
+                                ? VAT_ID_TO_VALUE[item['salesVATPart'].value] || 0.0
+                                : 0.0;
+
+                              return item.salesPrice / (1 + itemVATValuePercent);
+                            }();
+
+                          default:
+
+                            throw new Error(`getItemPrice: Invalid item inputType`, itemInputType);
+                        }
+
+                      }();
+
+                    case 2:
+                    case 'TTC':
+
+                      return function () {
+                        switch (itemInputType){
+                          case 1:
+                          case 'HT':
+                          case 3:
+                          case 'NO_VAT':
+
+                            // `item.salesPrice` is HT, convert `item.salesPrice` to TTC
+                            return function() {
+                              const itemVATValuePercent = item.salesVATPart
+                                ? VAT_ID_TO_VALUE[item['salesVATPart'].value] || 0.0
+                                : 0.0;
+
+                              return item.salesPrice * (1 + itemVATValuePercent);
+                            }();
+
+                          case 2:
+                          case 'TTC':
+
+                            return item.salesPrice;
+
+                          default:
+
+                            throw new Error(`getItemPrice: Invalid item inputType`, itemInputType);
+                        }
+
+                      }();
+
+                    default:
+
+                      throw new Error(`getItemPrice: Invalid inputType`, inputType);
+                  }
+                }
+
+                typeof item.salesPrice !== 'undefined' && !!item.salesPrice && store.setRate(rowIndex, getItemPrice());
                 typeof item.salesDesc !== 'undefined' && !!item.salesDesc && store.setDescription(rowIndex, item.salesDesc);
+
+                store.setVATPart(rowIndex, item.salesVATPart ? { inputType, ...(item.salesVATPart.value !== undefined && item.salesVATPart.value !== null ? {value: item.salesVATPart.value,} : {}), } : undefined);
 
                 this.props.refresh('item');
               }
@@ -348,13 +464,13 @@ class ItemCellEditor extends Component {
   };
 
   render() {
-    const {rowIndex, store, styles, items, ...props} = this.props;
+    const {rowIndex, store, styles, inputType, items, ...props} = this.props;
 
-    return this._renderEditor({rowIndex, store, items, props, styles});
+    return this._renderEditor({rowIndex, store, items, inputType, props, styles});
   }
 }
 
-class DescriptionCellEditor extends Component {
+class DescriptionCellEditor extends React.Component {
 
   static propTypes = {
     active: PropTypes.bool.isRequired,
@@ -416,7 +532,7 @@ class DescriptionCellEditor extends Component {
             className={classnames('form-control', { 'has-error': store.showErrors && !el.pristine && ! store.isKeyValid(rowIndex, 'description'), })}
             style={{}}
             type='text'
-            value={this.state.value}
+            value={this.state.value || ''}
             onBlur={(e) => {
             }}
             onFocus={(e) => {
@@ -446,7 +562,7 @@ class DescriptionCellEditor extends Component {
   }
 }
 
-class QtyCellEditor extends Component {
+class QtyCellEditor extends React.Component {
 
   static propTypes = {
     active: PropTypes.bool.isRequired,
@@ -500,7 +616,7 @@ class QtyCellEditor extends Component {
             }}
             type='number'
             pattern={/^\d+$/}
-            value={this.state.value}
+            value={this.state.value || ''}
             onBlur={(e) => {
               const value = parseInt(this.state.value) || 1;
               this.setState({
@@ -536,7 +652,7 @@ class QtyCellEditor extends Component {
   }
 }
 
-// class RateCellEditor extends Component {
+// class RateCellEditor extends React.Component {
 //   static contextTypes = {
 //     intl: intlShape.isRequired,
 //   };
@@ -683,7 +799,7 @@ class QtyCellEditor extends Component {
 //   }
 // }
 //
-// class DiscountPartCellEditor extends Component {
+// class DiscountPartCellEditor extends React.Component {
 //
 //   static contextTypes = {
 //     intl: intlShape.isRequired,
@@ -821,7 +937,7 @@ class QtyCellEditor extends Component {
 // }
 //
 //
-// class AmountCellEditor extends Component {
+// class AmountCellEditor extends React.Component {
 //
 //   static contextTypes = {
 //     intl: intlShape.isRequired,
@@ -944,7 +1060,7 @@ class QtyCellEditor extends Component {
 //   }
 // }
 
-class RateCellEditor extends Component {
+class RateCellEditor extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -1094,7 +1210,7 @@ function isValidDiscount({type, value}){
   }
 }
 
-class DiscountPartCellEditor extends Component {
+class DiscountPartCellEditor extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -1231,7 +1347,7 @@ class DiscountPartCellEditor extends Component {
   }
 }
 
-class AmountCellEditor extends Component {
+class AmountCellEditor extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -1364,11 +1480,189 @@ class AmountCellEditor extends Component {
   }
 }
 
+const VAT_ID_TO_VALUE = {
+  Value_20: 0.20,
+  Value_14: 0.14,
+  Value_10: 0.1,
+  Value_Exempt: 0.0,
+  Value_7: 0.07,
+
+  1: 0.20,
+  2: 0.14,
+  3: 0.1,
+  4: 0.0,
+  5: 0.07,
+};
+
+const INPUT_TYPE_TO_ID = {
+  HT: 1,
+  TTC: 2,
+  NO_VAT: 3,
+
+  1: 1,
+  2: 2,
+  3: 3,
+};
+
+const VAT_ID_TO_TEXT = {
+  1: `20%`,
+  2: `14%`,
+  3: `10%`,
+  4: `Exonéré`,
+  5: `7%`,
+};
+
+const VAT_NAME_TO_ID = {
+  Value_20: 1,
+  Value_14: 2,
+  Value_10: 3,
+  Value_Exempt: 4,
+  Value_7: 5,
+
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+};
+
+class VATPartCellEditor extends React.Component {
+
+  static contextTypes = {
+    intl: intlShape.isRequired,
+  };
+
+  static propTypes = {
+    active: PropTypes.bool.isRequired,
+    styles: PropTypes.object.isRequired,
+    store: PropTypes.object.isRequired,
+    rowIndex: PropTypes.number.isRequired,
+  };
+
+  constructor(props, context) {
+    super(props, context);
+
+    const {rowIndex, store,} = this.props;
+
+    const {VATPart: value,} = store.getObjectAt(rowIndex);
+
+    const {intl,} = this.context;
+
+    this.state = {
+      value,
+      open: this.props.active,
+    };
+  }
+
+  _onToggle = open => {
+    this.setState({
+      open,
+    });
+  };
+
+  refresh = () => {
+    const {intl,} = this.context;
+    const {rowIndex, store,} = this.props;
+    const {VATPart: value,} = store.getObjectAt(rowIndex);
+
+    if (!isEqual(this.state.value, value)) {
+      this.setState({
+        value,
+      });
+    }
+  };
+
+  componentWillReceiveProps(nextProps) {
+    const {intl,} = this.context;
+    const {rowIndex, store,} = nextProps;
+
+    const {VATPart : value,} = store.getObjectAt(rowIndex);
+
+    if (!isEqual(this.state.value, value)) {
+      this.setState({
+        value,
+      });
+    }
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    const {intl,} = this.context;
+    const {rowIndex, store,} = nextProps;
+
+    const {VATPart: value,} = store.getObjectAt(rowIndex);
+
+    return !isEqual(this.state.value, nextState.value) || this.state.open !== nextState.open || !isEqual(this.state.value, value);
+  }
+
+  _renderEditor = ({rowIndex, store, inputType, company, props, styles}) => {
+    const {intl,} = this.context;
+    const {VATPart : value,} = store.getObjectAt(rowIndex);
+
+    const items = map(company.VATSettings.percentages, function ({value}) {
+      return {
+        value,
+        name: VAT_ID_TO_TEXT[VAT_NAME_TO_ID[value]],
+      };
+    });
+
+    return (
+      <Cell {...props}>
+
+        <div>
+
+          <Combobox
+            caseSensitive={false}
+            filter={(a, b) => {
+              return a.name.indexOf(b) !== -1;
+            }}
+            open={this.state.open}
+            onToggle={this._onToggle}
+            autoFocus={props.active}
+            placeholder={intl.formatMessage(messages['VATPartPlaceholder'])}
+            data={items}
+            className={'no-new'}
+            // busy={this.state.showItems}
+            value={value && value.value}
+            onChange={item => {
+              if(!item || typeof item === 'string'){
+                store.setVATPart(rowIndex, undefined);
+                return;
+              }
+
+              if(typeof item !== 'string'){
+                const value = item['value'];
+
+                store.setVATPart(rowIndex, {
+                  inputType: VAT_NAME_TO_ID[value] === 4 ? 3 /* NO_VAT */ : inputType,
+                  // value: item['value'],
+                  ...(item['value'] ? { value: item['value'], } : {}),
+                });
+
+                this.props.refresh('VATPart');
+              }
+            }}
+            textField={'name'}
+            valueField='value'
+          />
+
+        </div>
+
+      </Cell>
+    );
+  };
+
+  render() {
+    const {rowIndex, styles, store, inputType, company, ...props} = this.props;
+
+    return this._renderEditor({rowIndex, store, inputType, company, props, styles});
+  }
+}
+
 function normalizeMoment(d){
   return moment(d).seconds(0).minutes(0).hour(0);
 }
 
-class DateCellEditor extends Component {
+class DateCellEditor extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -1451,7 +1745,7 @@ class DateCellEditor extends Component {
   }
 }
 
-// class TaxableCellEditor extends Component {
+// class TaxableCellEditor extends React.Component {
 //
 //   static propTypes = {
 //     active: PropTypes.bool.isRequired,
@@ -1533,7 +1827,7 @@ class DateCellEditor extends Component {
 //   }
 // }
 
-class AddIcon extends Component {
+class AddIcon extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,

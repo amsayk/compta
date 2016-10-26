@@ -45,8 +45,10 @@ function asyncValidate({displayName, id, companyId}) {
     return Promise.resolve({});
   }
   return new Promise((resolve, reject) => {
-    const query = new Parse.Query(`Customer_${companyId}`);
+    const query = new Parse.Query(`People_${companyId}`);
     query.equalTo('displayNameLowerCase', makeAlias(displayName));
+
+    query.equalTo('kind', 'Customer');
 
     if(id){
       const {id: localId} = fromGlobalId(id);
@@ -100,7 +102,7 @@ function asyncValidate({displayName, id, companyId}) {
   },
 }), dispatch => bindActionCreators(customerActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'CustomerMiniForm';
 
@@ -147,6 +149,8 @@ export default class extends Component {
 
   componentDidMount() {
     events.on(document, 'click', this._handleClickoutside, true);
+
+    ga('send', 'pageview', '/modal/app/customer-mini-form');
   }
 
   componentWillUnmount() {
@@ -238,7 +242,7 @@ export default class extends Component {
 
                   <div style={{}}>
 
-                  <form onSubmit={doSave}>
+                  <div onSubmit={doSave}>
 
                     <fieldset className={classnames('form-group', {'has-danger': !pristine && displayName.invalid,})}>
 
@@ -250,16 +254,16 @@ export default class extends Component {
                         value={displayNameValue}
                         disabled={submitting}
                         type='text'
-                        className={classnames('form-control', { 'form-control-danger': !pristine && displayName.invalid, })}
+                        className={classnames('form-control', { 'form-control-danger': displayName.touched && displayName.invalid, })}
                       />
 
                       <small className="text-muted" style={{ marginTop: 3, display: 'block', height: 15, }}>
-                        {displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
+                        {displayName.touched && displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
                       </small>
 
                     </fieldset>
 
-                  </form>
+                  </div>
 
                   </div>
 

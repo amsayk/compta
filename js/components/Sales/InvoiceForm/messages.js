@@ -4,6 +4,11 @@ import {
 
 export default defineMessages({
 
+  Preview: {
+    id: 'invoice-form.preview',
+    defaultMessage: 'Imprimer',
+  },
+
   Popover_Date: {
     id: 'invoice-form.th-popover-date',
     defaultMessage: 'Date',
@@ -33,12 +38,12 @@ export default defineMessages({
 
   x_payments_made_since: {
     id: 'invoice-form.message-x-payments-made-since',
-    defaultMessage: 'effectué(s) depuis {lastPaymentDate, date, medium}.',
+    defaultMessage: 'effectué(s) depuis {lastPaymentDate}.',
   },
 
   x_payments_made_on: {
     id: 'invoice-form.message-x-payments-made-on',
-    defaultMessage: 'effectué(s) le {lastPaymentDate, date, medium}.',
+    defaultMessage: 'effectué(s) le {lastPaymentDate}.',
   },
 
   ErrorTitle: {
@@ -201,6 +206,11 @@ export default defineMessages({
     defaultMessage: 'Annuler'
   },
 
+  close: {
+    id: 'invoice-form.close',
+    defaultMessage: 'Fermer'
+  },
+
   save: {
     id: 'invoice-form.action.save',
     defaultMessage: 'Enregistrer'
@@ -244,7 +254,7 @@ export default defineMessages({
 
   ServiceDatePlaceholder: {
     id: 'invoice-form.message.Service-Date-Placeholder',
-    defaultMessage: 'Sélectionner la date',
+    defaultMessage: 'Date',
   },
 
   searchingText: {
@@ -259,7 +269,7 @@ export default defineMessages({
 
   clearButton: {
     id: 'invoice-form.date.clearButton',
-    defaultMessage: 'Sélectionner la date',
+    defaultMessage: 'Date',
   },
 
   add_more_lines: {
@@ -301,6 +311,14 @@ export default defineMessages({
     id: 'invoice-form.amount',
     defaultMessage: 'Montant'
   },
+  AmountHT: {
+    id: 'invoice-form.amount-ht',
+    defaultMessage: 'Montant HT'
+  },
+  AmountTTC: {
+    id: 'invoice-form.amount-ttc',
+    defaultMessage: 'Montant TTC'
+  },
 
   Taxable: {
     id: 'invoice-form.taxable',
@@ -317,9 +335,18 @@ export default defineMessages({
     defaultMessage: 'Remise'
   },
 
+  VATPart: {
+    id: 'invoice-form.vat-part',
+    defaultMessage: 'TVA'
+  },
+
   itemPlaceholder: {
     id: 'invoice-form.action.item-placeholder',
     defaultMessage: 'Choisir le produit ou service…'
+  },
+  VATPartPlaceholder: {
+    id: 'invoice-form.action.vat-part-placeholder',
+    defaultMessage: 'TVA…'
   },
 
   saveAndNew: {
@@ -370,7 +397,7 @@ export default defineMessages({
 
   Subtotal: {
     id: 'invoice-form.label-subtotal',
-    defaultMessage: 'Total HT',
+    defaultMessage: 'Sous-Total',
   },
 
   TaxableSubtotal: {

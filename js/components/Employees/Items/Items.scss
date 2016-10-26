@@ -84,13 +84,15 @@
   position: absolute;
   top: 0;
   right: 0;
-  left: 225px;
+  left: 165px; // --sidebar-width
 
   padding: 0;
 
   background-image: -webkit-linear-gradient(bottom, #f6f8fb 0%, #f9fafb 100%);
   background-image: linear-gradient(to top, #f6f8fb 0%, #f9fafb 100%);
   background-color: #f3f5f8;
+
+  border-bottom: 1px solid #e3eaf3;
 }
 
 .title {
@@ -437,7 +439,7 @@ body .table {
 
 .empty {
   // position: absolute;;
-  // left: 225px;
+  // left: 165px; // --sidebar-width
   // top: 0;
   // bottom: 0;
   // right: 0;

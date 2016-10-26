@@ -10,6 +10,11 @@ import { PAYMENTS_OF_INVOICES_ACCOUNTS_CATEGORIES, PAYMENTS_OF_BILLS_ACCOUNTS_CA
 
 import styles from './AppSettings.scss';
 
+import LoadingActions from '../Loading/actions';
+
+import Actions from '../confirm/actions';
+import NotifyActions from '../notification/NotifyActions';
+
 import AppSettingsRoute from '../../routes/AppSettingsRoute';
 
 import RemoveCompanyMutation from '../../mutations/RemoveCompanyMutation';
@@ -21,9 +26,37 @@ import UpdateCompanyPaymentsSettingsMutation from '../../mutations/UpdateCompany
 
 import {getBodyHeight, getBodyWidth} from '../../utils/dimensions';
 
-import ManageProducts from '../Products/Items/Items';
+// import ManageProducts from '../Products/Items/Items';
+let ManageProducts = null;
 
-import ManageCompanyForm, {COMPANY_COMPONENTS,} from './ManageCompanyForm/ManageCompanyForm';
+// import ManageCompanyForm, {COMPANY_COMPONENTS,} from './ManageCompanyForm/ManageCompanyForm';
+let ManageCompanyForm = null;
+import {COMPANY_COMPONENTS,} from './ManageCompanyForm/ManageCompanyForm'
+
+function loadComponent(type, cb) {
+  switch (type){
+    case 'products':
+
+      LoadingActions.show();
+
+      require.ensure([], function (require) {
+        ManageProducts = require('../Products/Items/Items');
+        LoadingActions.hide();
+        cb();
+      }, 'ManageProducts');
+
+      break;
+
+    case 'settings':
+
+      require.ensure([], function (require) {
+        ManageCompanyForm = require('./ManageCompanyForm/ManageCompanyForm').default;
+        cb();
+      }, 'ManageCompanyForm');
+
+      break;
+  }
+}
 
 import {SALES_SETTINGS_COMPANY_COMPONENTS,} from './ManageCompanyForm/SalesSettings';
 import {EXPENSES_SETTINGS_COMPANY_COMPONENTS,} from './ManageCompanyForm/ExpensesSettings';
@@ -39,11 +72,12 @@ import {
 const Title = (company) => company.displayName;
 
 @CSSModules(styles, {allowMultiple: true})
-class AppSettings extends Component {
+class AppSettings extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
     store: PropTypes.object.isRequired,
+    router: PropTypes.object.isRequired,
   };
 
   state = {
@@ -52,22 +86,79 @@ class AppSettings extends Component {
 
   _onManageSettingsClicked = (e) => {
     e.preventDefault();
-    this.setState({
-      modalOpen: true,
-      modalType: 'settings'
+
+    loadComponent('settings', () => {
+      this.setState({
+        modalOpen: true,
+        modalType: 'settings'
+      });
     });
   };
 
   _onManageProductsClicked = (e) => {
     e&&e.preventDefault();
-    this.setState({
-      modalOpen: true,
-      modalType: 'products'
+    e&&e.stopPropagation();
+    loadComponent('products', () => {
+      setTimeout(() => {
+        this.setState({
+          modalOpen: true,
+          modalType: 'products'
+        });
+      }, 0);
     });
   };
 
   _onDelClicked = (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    const { router, intl } = this.context;
+
+    const self = this;
+
+    Actions.show(intl.formatMessage(messages['Confirm']))
+      .then(() => {
+
+        return new Promise((resolve, reject) => {
+
+          LoadingActions.show();
+
+          Relay.Store.commitUpdate(new RemoveCompanyMutation({
+            company: self.props.company,
+            viewer: self.props.viewer,
+
+          }), {
+            onSuccess () {
+              LoadingActions.hide();
+
+              resolve(router.push({
+                pathname: '/',
+                state: {},
+              }));
+            },
+            onFailure () {
+              LoadingActions.hide();
+
+              const Component = () => {
+                return (
+                  <div className='card card-block card-inverse card-danger' style={{}}>
+                    <p className='card-text'>Il y a une erreur. Veuillez essayer de nouveau.
+                    </p>
+                  </div>
+                )
+              };
+
+              reject(NotifyActions.add({
+                type: 'danger',
+                data: Component,
+              }));
+            },
+          });
+
+        });
+      })
+      .catch(() => {});
+
   };
 
   _onManageCollaborators = (e) => {
@@ -104,6 +195,8 @@ class AppSettings extends Component {
           company={this.props.company}
           viewer={this.props.viewer}
           root={this.props.viewer}
+          expensesAccounts={this.props._expensesAccounts}
+          salesAccounts={this.props.salesAccounts}
         />
       );
     }
@@ -193,29 +286,29 @@ class AppSettings extends Component {
 
                 <div styleName='fields'>
 
-                  <div styleName='field'>
+                  {/*<div styleName='field'>
 
-                    <div styleName='left' style={{width:'56%'}}>
-                      <div styleName='label centered' style={{padding:'0 20px'}}>
-                        <div styleName='text'>{formatMessage(messages.CollaboratorsLabel)}</div>
-                        <div styleName='description-2'>{formatMessage(messages.CollaboratorsDesc)}</div>
-                      </div>
-                    </div>
+                   <div styleName='left' style={{width:'56%'}}>
+                   <div styleName='label centered' style={{padding:'0 20px'}}>
+                   <div styleName='text'>{formatMessage(messages.CollaboratorsLabel)}</div>
+                   <div styleName='description-2'>{formatMessage(messages.CollaboratorsDesc)}</div>
+                   </div>
+                   </div>
 
-                    <div styleName='right' style={{marginLeft:'56%'}}>
+                   <div styleName='right' style={{marginLeft:'56%'}}>
 
-                      <div styleName='input'>
+                   <div styleName='input'>
 
-                        <a href='javascript:;' onClick={this._onManageCollaborators} role='button' style={{width:'80%',minWidth:'80%'}}
-                           styleName='button unselectable primary'>
-                          <span>{formatMessage(messages.CollaboratorsAction)}</span>
-                        </a>
+                   <a href='javascript:;' onClick={this._onManageCollaborators} role='button' style={{width:'80%',minWidth:'80%'}}
+                   styleName='button unselectable primary'>
+                   <span>{formatMessage(messages.CollaboratorsAction)}</span>
+                   </a>
 
-                      </div>
+                   </div>
 
-                    </div>
+                   </div>
 
-                  </div>
+                   </div>*/}
 
                   <div styleName='field'>
 
@@ -291,6 +384,7 @@ function wrapWithC(Component, props) {
           companies: this.props.viewer.companies,
           company: this.props.viewer.company,
           expensesAccounts: this.props.viewer.expensesAccounts,
+          _expensesAccounts: this.props.viewer._expensesAccounts,
           paymentsAccounts: this.props.viewer.paymentsAccounts,
           salesAccounts: this.props.viewer.salesAccounts,
           viewer: this.props.viewer,
@@ -306,7 +400,9 @@ function wrapWithC(Component, props) {
       companyId: props.params.app,
       paymentsAccountCategories: PAYMENTS_OF_INVOICES_ACCOUNTS_CATEGORIES,
       expensesAccountCategories: PAYMENTS_OF_BILLS_ACCOUNTS_CATEGORIES,
+
       salesAccountCategories: SALES_ACCOUNTS_CATEGORIES,
+      expensesAccountsCategories: EXPENSES_ACCOUNTS_CATEGORIES,
     },
 
     fragments: {
@@ -323,6 +419,14 @@ function wrapWithC(Component, props) {
           sessionToken,
 
           expensesAccounts: accountsByCategories(categories: $expensesAccountCategories){
+            code,
+            name,
+            _groupCode,
+            _categoryCode,
+            _classCode,
+          },
+
+          _expensesAccounts: accountsByCategories(categories: $expensesAccountsCategories){
             code,
             name,
             _groupCode,
@@ -349,6 +453,22 @@ function wrapWithC(Component, props) {
           },
 
           company(id: $companyId){
+
+            company_streetAddress,
+            company_cityTown,
+            company_stateProvince,
+            company_postalCode,
+            company_country,
+
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
 
             ${RemoveCompanyMutation.getFragment('company')},
             ${UpdateCompanyMutation.getFragment('company')},
@@ -384,17 +504,24 @@ function wrapWithC(Component, props) {
             lastTransactionIndex, lastPaymentsTransactionIndex,
             legalForm,
             address,
+            capital,
             activity,
             webSite,
             tel,
             fax,
             email,
+            ice,
             if,
             rc,
             patente,
             cnss,
             banque,
             rib,
+
+            logo {
+              objectId,
+              url,
+            },
 
             createdAt,
             updatedAt,
@@ -471,6 +598,7 @@ function wrapWithC(Component, props) {
                 tel,
                 fax,
                 email,
+                ice,
                 if,
                 rc,
                 patente,

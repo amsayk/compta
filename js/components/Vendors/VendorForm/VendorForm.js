@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import ReactDOM from 'react-dom';
 import {bindActionCreators} from 'redux';
 import {reduxForm} from 'redux-form';
 
@@ -36,14 +35,57 @@ import Parse from 'parse';
 
 import makeAlias from  '../../../utils/makeAlias';
 
+// require.ensure([], (require) => {
+
+// const React = require('react');
+// const {Component, PropTypes} = React;
+// const {bindActionCreators} = require('redux');
+// const {reduxForm} = require('redux-form');
+//
+// const stopEvent = require('../../../utils/stopEvent').default;
+//
+// const vendorValidation = require('./vendorValidation').default;
+// const vendorActions = require('../../../redux/modules/vendors');
+//
+// const classnames = require('classnames');
+//
+// const styles = require('./VendorForm.scss');
+//
+// const CSSModules = require('react-css-modules');
+//
+// const Modal = require('react-bootstrap/lib/Modal');
+//
+// const getFieldValue = require('../../utils/getFieldValue').default;
+//
+// const Dialog = require('../../utils/Dialog').default;
+// const {Header, Body, Footer} = require('../../utils/Dialog');
+//
+// const IGNORED_PROPS = [ 'id', 'companyId', ];
+//
+// const {
+//     intlShape,
+//   } = require('react-intl');
+//
+// const messages = require('./messages').default;
+//
+// const {
+//     fromGlobalId,
+//   } = require('graphql-relay');
+//
+// const Parse = require('parse');
+//
+// const makeAlias = require('../../../utils/makeAlias').default;
+
 function asyncValidate({displayName, id, companyId}) {
   // TODO: figure out a way to move this to the server. need an instance of ApiClient
   if (!displayName || !companyId) {
     return Promise.resolve({});
   }
   return new Promise((resolve, reject) => {
-    const query = new Parse.Query(`Vendor_${companyId}`);
+    const query = new Parse.Query(`People_${companyId}`);
     query.equalTo('displayNameLowerCase', makeAlias(displayName));
+
+    query.equalTo('kind', 'Vendor');
 
     if(id){
       const {id: localId} = fromGlobalId(id);
@@ -89,6 +131,7 @@ function asyncValidate({displayName, id, companyId}) {
     'mobile',
     'fax',
     'website',
+    'if',
 
     'mailing_streetAddress',
     'mailing_cityTown',
@@ -116,7 +159,7 @@ function asyncValidate({displayName, id, companyId}) {
   },
 }), dispatch => bindActionCreators(vendorActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+class VendorForm extends React.Component {
 
   static displayName = 'VendorForm';
 
@@ -146,6 +189,10 @@ export default class extends Component {
     super(props, context);
 
     this.props.editStart(this.props.formKey);
+  }
+
+  componentDidMount() {
+    ga('send', 'pageview', '/modal/app/vendor-form');
   }
 
   _handleClose = (e) => {
@@ -188,11 +235,15 @@ export default class extends Component {
         mobile,
         fax,
         website,
+        if : _if,
+
+
         mailing_streetAddress,
         mailing_cityTown,
         mailing_stateProvince,
         mailing_postalCode,
         mailing_country,
+
         notes,
       },
       valid,
@@ -225,7 +276,7 @@ export default class extends Component {
 
             this._handleClose();
             return Promise.resolve().then(() => {
-              this.props.onDone({ vendor: result.result, });
+              this.props.onDone && this.props.onDone({ vendor: result.result, });
             });
           };
 
@@ -256,7 +307,7 @@ export default class extends Component {
 
                   <div style={{}}>
 
-                  <form onSubmit={doSave}>
+                  <div onSubmit={doSave}>
 
                     <div className='row'>
 
@@ -269,7 +320,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_prefix'])}</label>
                               <input
                                 onChange={title.onChange}
-                                value={getFieldValue(title)}
+                                value={getFieldValue(title, '')}
                                 type='text'
                                 className='form-control'/>
                             </fieldset>
@@ -280,7 +331,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_first_name'])}</label>
                               <input
                                 onChange={givenName.onChange}
-                                value={getFieldValue(givenName)}
+                                value={getFieldValue(givenName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -290,7 +341,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_middle_name'])}</label>
                               <input
                                 onChange={middleName.onChange}
-                                value={getFieldValue(middleName)}
+                                value={getFieldValue(middleName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>*/}
@@ -300,7 +351,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_last_name'])}</label>
                               <input
                                 onChange={familyName.onChange}
-                                value={getFieldValue(familyName)}
+                                value={getFieldValue(familyName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -313,7 +364,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_company'])}</label>
                               <input
                                 onChange={affiliation.onChange}
-                                value={getFieldValue(affiliation)}
+                                value={getFieldValue(affiliation, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -321,19 +372,109 @@ export default class extends Component {
 
                         <div className='row'>
                           <div className='col-sm-12'>
-                            <fieldset className={classnames('form-group', {'has-danger': !pristine && displayName.invalid,})}>
+                            <fieldset className={classnames('form-group', {'has-danger': displayName.touched && displayName.invalid,})}>
                               <label><span className='required'>*</span>{intl.formatMessage(messages['label_display_name'])}</label>
                               <input
                                 onChange={displayName.onChange}
-                                value={getFieldValue(displayName)}
+                                value={getFieldValue(displayName, '')}
                                 ref='displayName' autoFocus type='text'
                                 className={classnames('form-control', {'form-control-danger': !pristine && displayName.invalid,})}
                                 />
                               <small className="text-muted" style={{ marginTop: 3, display: 'block', height: 15, }}>
-                                {displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
+                                {displayName.touched && displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
                               </small>
                             </fieldset>
                           </div>
+                        </div>
+
+                        <div className={'row'} role='tabpanel'>
+
+                          <div className='form-group row' style={{ paddingTop: 0, marginBottom: 0}}>
+
+                            <label style={{textAlign: 'left'}} className='col-sm-12'>{intl.formatMessage(messages['label_mailingAddress'])}</label>
+
+                          </div>
+
+                          <div className='form-group row' style={{}}>
+
+                            <div className='col-sm-12'>
+                                    <textarea
+                                      style={{resize: 'none'}}
+                                      disabled={submitting}
+                                      onChange={mailing_streetAddress.onChange}
+                                      value={getFieldValue(mailing_streetAddress, '')}
+                                      placeholder={intl.formatMessage(messages['placeholder_Street'])}
+                                      className='form-control'/>
+                            </div>
+
+                          </div>
+
+                          <div className='form-group row'>
+
+                            <div className='col-sm-6'>
+                              <input
+                                onChange={mailing_cityTown.onChange}
+                                value={getFieldValue(mailing_cityTown, '')}
+                                disabled={submitting} type='text' className='form-control'
+                                placeholder={intl.formatMessage(messages['placeholder_cityTown'])}/>
+                            </div>
+
+                            <div className='col-sm-6'>
+                              <input
+                                onChange={mailing_stateProvince.onChange}
+                                value={getFieldValue(mailing_stateProvince, '')}
+                                disabled={submitting} type='text' className='form-control'
+                                placeholder={intl.formatMessage(messages['placeholder_stateProvince'])}/>
+                            </div>
+
+                          </div>
+
+                          <div className='form-group row'>
+
+                            <div className='col-sm-6'>
+                              <input
+                                onChange={mailing_postalCode.onChange}
+                                value={getFieldValue(mailing_postalCode, '')}
+                                disabled={submitting} type='text' className='form-control'
+                                placeholder={intl.formatMessage(messages['placeholder_postalCode'])}/>
+                            </div>
+
+                            <div className='col-sm-6'>
+                              <input
+                                onChange={mailing_country.onChange}
+                                value={getFieldValue(mailing_country, '')}
+                                disabled={submitting} type='text' className='form-control'
+                                placeholder={intl.formatMessage(messages['placeholder_country'])}/>
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                        {/* Notes */}
+
+                        <div className={'row'} role='tabpanel'>
+
+                          <div className='form-group row' style={{ paddingTop: 0, marginBottom: 0, }}>
+
+                            <label style={{textAlign: 'left'}} className='col-sm-12'>{intl.formatMessage(messages['label_notes'])}</label>
+
+                          </div>
+
+                          <div className='form-group row'>
+
+                            <div className='col-sm-12'>
+                                    <textarea
+                                      style={{ height: 115, maxHeight: 115, resize: 'none', }}
+                                      disabled={submitting}
+                                      onChange={notes.onChange}
+                                      value={getFieldValue(notes, '')}
+                                      rows={4}
+                                      className='form-control'/>
+                            </div>
+
+                          </div>
+
                         </div>
 
                       </div>
@@ -346,7 +487,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_emails'])}</label>
                               <input
                                 onChange={emails.onChange}
-                                value={getFieldValue(emails)}
+                                value={getFieldValue(emails, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -359,7 +500,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_phone'])}</label>
                               <input
                               onChange={phone.onChange}
-                              value={getFieldValue(phone)}
+                              value={getFieldValue(phone, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -369,7 +510,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_mobile'])}</label>
                               <input
                               onChange={mobile.onChange}
-                              value={getFieldValue(mobile)}
+                              value={getFieldValue(mobile, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -379,7 +520,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_fax'])}</label>
                               <input
                               onChange={fax.onChange}
-                              value={getFieldValue(fax)}
+                              value={getFieldValue(fax, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -392,17 +533,59 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_website'])}</label>
                               <input
                               onChange={website.onChange}
-                              value={getFieldValue(website)}
+                              value={getFieldValue(website, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
                         </div>
 
+                        {/*<div className={'row'} role='tabpanel'>
+
+                          <div className='form-group row' style={{ paddingTop: 0, marginBottom: 0, }}>
+
+                            <label style={{textAlign: 'left'}} className='col-sm-12'>{intl.formatMessage(messages['label_if'])}</label>
+
+                          </div>
+
+                          <div className='form-group row'>
+
+                            <div className='col-sm-12'>
+                                    <input
+                                      style={{}}
+                                      disabled={submitting}
+                                      onChange={_if.onChange}
+                                      value={getFieldValue(_if, '')}
+                                      className='form-control'/>
+                            </div>
+
+                          </div>
+
+                        </div>*/}
+
+                        <div className="row">
+
+                          <div className='col-sm-12'>
+
+                          <fieldset className={classnames('form-group', {'has-danger': _if.touched && _if.invalid,})}>
+                            <label><span className='required' style={{ color: '#000', }}>*</span>{intl.formatMessage(messages['label_if'])}</label>
+                            <input
+                              onChange={_if.onChange}
+                              value={getFieldValue(_if, '')}
+                              type='text'
+                              className={classnames('form-control', {'form-control-danger': !pristine && _if.invalid,})}
+                            />
+                          </fieldset>
+
+                            </div>
+
+                        </div>
+
+
                       </div>
 
                     </div>
 
-                    <div className='row' style={{}}>
+                    {/*<div className='row' style={{}}>
 
                       <div className='col-sm-12'>
 
@@ -440,7 +623,7 @@ export default class extends Component {
                                       style={{resize: 'none'}}
                                       disabled={submitting}
                                       onChange={mailing_streetAddress.onChange}
-                                      value={getFieldValue(mailing_streetAddress)}
+                                      value={getFieldValue(mailing_streetAddress, '')}
                                       placeholder={intl.formatMessage(messages['placeholder_Street'])}
                                       className='form-control'/>
                                   </div>
@@ -452,7 +635,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={mailing_cityTown.onChange}
-                                    value={getFieldValue(mailing_cityTown)}
+                                    value={getFieldValue(mailing_cityTown, '')}
                                     disabled={submitting} type='text' className='form-control'
                                     placeholder={intl.formatMessage(messages['placeholder_cityTown'])}/>
                                   </div>
@@ -460,7 +643,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={mailing_stateProvince.onChange}
-                                    value={getFieldValue(mailing_stateProvince)}
+                                    value={getFieldValue(mailing_stateProvince, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_stateProvince'])}/>
                                   </div>
@@ -472,7 +655,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={mailing_postalCode.onChange}
-                                    value={getFieldValue(mailing_postalCode)}
+                                    value={getFieldValue(mailing_postalCode, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_postalCode'])}/>
                                   </div>
@@ -480,7 +663,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={mailing_country.onChange}
-                                    value={getFieldValue(mailing_country)}
+                                    value={getFieldValue(mailing_country, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_country'])}/>
                                   </div>
@@ -504,7 +687,7 @@ export default class extends Component {
                                       style={{resize: 'none'}}
                                       disabled={submitting}
                                       onChange={notes.onChange}
-                                      value={getFieldValue(notes)}
+                                      value={getFieldValue(notes, '')}
                                       rows={6}
                                       className='form-control'/>
                                   </div>
@@ -521,9 +704,9 @@ export default class extends Component {
 
                       </div>
 
-                    </div>
+                    </div>*/}
 
-                  </form>
+                  </div>
 
                   </div>
 
@@ -578,3 +761,7 @@ export default class extends Component {
   }
 
 }
+
+module.exports = VendorForm;
+
+// }, 'vendorForm');

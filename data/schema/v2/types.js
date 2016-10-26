@@ -1,4 +1,4 @@
-import {
+const {
   GraphQLInterfaceType,
   GraphQLList,
   GraphQLFloat,
@@ -12,9 +12,9 @@ import {
   GraphQLEnumType,
   GraphQLBoolean,
   GraphQLUnionType,
-} from 'graphql';
+} = require('graphql');
 
-import {
+const {
   offsetToCursor,
   fromGlobalId,
   globalIdField,
@@ -25,60 +25,65 @@ import {
   connectionFromArray,
   connectionFromArraySlice,
   toGlobalId,
-} from 'graphql-relay';
+} = require('graphql-relay');
 
-import {
-  // GraphQLEmail,
-  // GraphQLURL,
-  // GraphQLDateTime,
-  // GraphQLLimitedString,
-  // GraphQLPassword
-} from 'graphql-custom-types';
+// const {
+//   // GraphQLEmail,
+//   // GraphQLURL,
+//   // GraphQLDateTime,
+//   // GraphQLLimitedString,
+//   // GraphQLPassword
+// } = require('graphql-custom-types');
 
 // const GraphQLDateTime = GraphQLString;
-import GraphQLDateTime from 'graphql-custom-datetype';
+const GraphQLDateTime = require('graphql-custom-datetype');
 const GraphQLEmail = GraphQLString;
 const GraphQLURL = GraphQLString;
 const GraphQLLimitedString = GraphQLString;
 const GraphQLPassword = GraphQLString;
 
-import isType from './isType';
+const isType = require('./isType');
 
-import {
+const {
   connectionDefinition,
-} from '../connections';
+} = require('../connections');
 
-import {
+const {
   parseTableCountLoader,
   parseTableLoader,
   parseIDLoader,
   parseSeqLoader,
-} from '../../database/loaders';
+} = require('../../database/loaders');
 
-import concat from 'lodash.concat';
-import orderBy from 'lodash.orderby';
-import group from 'lodash.groupby';
-import compact from 'lodash.compact';
-import map from 'lodash.map';
+const formatAddress = require('./utils/formatAddress');
 
-import {
-  CASH_ACCOUNT_CODE as CASH,
+// const concat = require('lodash.concat');
+// const orderBy = require('lodash.orderby');
+// const group = require('lodash.groupby');
+// const compact = require('lodash.compact');
+// const map = require('lodash.map');
+
+const {
+  CASH_ACCOUNT_CODE : CASH,
   DEFAULT_PAYMENT_OF_INVOICES_METHOD,
   DEFAULT_PAYMENT_OF_BILLS_METHOD,
   DEFAULT_INVOICE_TERMS,
   DEFAULT_BILL_TERMS,
   DEFAULT_SALES_ACCOUNT_CODE,
-} from '../constants';
+} = require('../../constants');
 
-import Company from '../../database/Company';
+const Company = require('../../database/Company');
 
-import findIndex from 'lodash.findindex';
+const Transaction = require('../../database/Transaction');
+const Operation = require('../../database/Operation');
 
-import { logIn, logOut, } from '../../auth';
+const findIndex = require('lodash.findindex');
 
-import Parse from 'parse';
+const { logIn, logOut, } = require('../../auth');
 
-import {
+const Parse = require('parse');
+
+const {
   User,
 
   getChartAccountList,
@@ -179,6 +184,12 @@ import {
   queryPaymentsOfInvoices,
   queryPaymentsOfBills,
 
+  ops__querySales,
+  ops__queryExpenses,
+
+  ops__customersQuerySales,
+  ops__vendorsQueryExpenses,
+
   getCustomerOpenInvoices,
   getVendorOpenBills,
 
@@ -190,21 +201,29 @@ import {
 
   getOperationsByCategories,
 
-} from '../../database/v2/index';
+  getFile,
+  getObjectFiles,
+  getObjectFile,
 
-import Product from '../../database/Product';
+  declaration_sales_getTotalVAT,
+  declaration_expenses_getTotalVAT,
 
-import Expense from '../../database/v2/Expense';
-import Sale from '../../database/v2/Sale';
-import Invoice from '../../database/v2/Invoice';
-import Bill from '../../database/v2/Bill';
-import PaymentOfInvoices from '../../database/v2/PaymentOfInvoices';
-import PaymentOfBills from '../../database/v2/PaymentOfBills';
+  _getCompanyVATDeclarationSales,
+  _getCompanyVATDeclarationExpenses,
 
-import Customer from '../../database/v2/Customer';
-import Vendor from '../../database/v2/Vendor';
+  // getCompanyVATDeclarationSales,
+  // getCompanyVATDeclarationExpenses,
 
-import {
+} = require('../../database/v2');
+
+const Product = require('../../database/Product');
+
+const Expense = require('../../database/v2/Expense');
+const Sale = require('../../database/v2/Sale');
+
+const People = require('../../database/v2/People');
+
+const {
   classNameField,
   objectIdField,
   createdField,
@@ -250,9 +269,15 @@ import {
   paymentOfInvoicesItemInputType,
   paymentOfBillsItemInputType,
 
-} from '../common';
+  saleOpInterfaceType,
+  expenseOpInterfaceType,
 
-import * as moment from 'moment';
+  accountItemType,
+  productItemType,
+
+} = require('./common');
+
+const moment = require('moment');
 
 /**
  * We get the node interface and field from the Relay library.
@@ -260,16 +285,420 @@ import * as moment from 'moment';
  * The first method defines the way we resolve an ID to its object.
  * The second defines the way we resolve an object to its GraphQL type.
  */
-import { nodeInterface, nodeField, } from '../node'
+const { nodeInterface, } = require('./node');
+
+const {
+  companyVATSettingsType,
+  VATInputType,
+  VATPartType,
+  VATPartInputType,
+
+  activityField,
+} = require('./common');
+
+const {
+  getVATDeclarationAtDate,
+  getCompanyVATDeclarationHistory,
+  getCompanyCurrentVATDeclaration,
+  getVATDeclarationById,
+} = require('../../database/v2');
+
+const VATDeclarationType = new GraphQLObjectType({
+  name: 'VATDeclaration',
+  fields: () => ({
+    id: globalIdField('VATDeclaration', object => [object.id, object.get('company').id].join(':')),
+    settings: {
+      type: new GraphQLNonNull(companyVATSettingsType),
+      resolve: (obj) => {
+        const settings = obj.get('settings');
+        return {
+          ...settings,
+          startDate: new Date(settings.startDate),
+        };
+      },
+    },
+    periodStart: {
+      type: new GraphQLNonNull(GraphQLDateTime),
+      resolve: (obj) => obj.get('periodStart'),
+    },
+    periodEnd: {
+      type: new GraphQLNonNull(GraphQLDateTime),
+      resolve: (obj) => obj.get('periodEnd'),
+    },
+    report: {
+      type: new GraphQLObjectType({
+        name: 'CompanyVATDeclarationReport',
+        fields: () => ({
+
+          sales: {
+
+            type: new GraphQLObjectType({
+              name: 'CompanyVATDeclarationReport_Sales',
+              fields: () => ({
+                totalVAT: {
+                  type: new GraphQLNonNull(GraphQLFloat),
+                  resolve: (obj) => {
+                    const companyId = obj.get('company').id;
+
+                    const id = obj.id;
+                    const settings = obj.get('settings');
+                    const periodStart = obj.get('periodStart');
+                    const periodEnd = obj.get('periodEnd');
+
+                    return declaration_sales_getTotalVAT({id: companyId}, {id, periodStart, periodEnd, settings,});
+                  },
+                },
+              }),
+            }),
+
+            resolve: (obj) => obj,
+          },
+
+          expenses: {
+
+            type: new GraphQLObjectType({
+              name: 'CompanyVATDeclarationReport_Expenses',
+              fields: () => ({
+                totalVAT: {
+                  type: new GraphQLNonNull(GraphQLFloat),
+                  resolve: (obj) => {
+                    const companyId = obj.get('company').id;
+
+                    const id = obj.id;
+                    const settings = obj.get('settings');
+                    const periodStart = obj.get('periodStart');
+                    const periodEnd = obj.get('periodEnd');
+
+                    return declaration_expenses_getTotalVAT({id: companyId}, {id, periodStart, periodEnd, settings,});
+                  },
+                },
+              }),
+            }),
+
+            resolve: (obj) => obj,
+
+          },
+
+        }),
+      }),
+
+      resolve: (obj) => obj,
+    },
+
+    _sales: function(){
+      const {connectionType, edgeType} = connectionDefinitions({
+        name: '_CompanyVATDeclarationSales',
+        nodeType: operationType,
+        connectionFields: () => ({
+          totalCount: {
+            type: GraphQLInt,
+            resolve: (conn) => conn.totalCount,
+          },
+
+          totalHT: {
+            type: GraphQLFloat,
+            resolve: (conn) => conn.totalHT,
+          },
+          totalVAT: {
+            type: GraphQLFloat,
+            resolve: (conn) => conn.totalVAT,
+          },
+
+          total: {
+            type: GraphQLFloat,
+            resolve: (conn) => conn.total,
+          },
+
+        }),
+      });
+
+      const {connection,} = {
+        connection: {
+          type: connectionType,
+          args: connectionArgs,
+          async resolve(obj) {
+            const companyId = obj.get('company').id;
+
+            const id = obj.id;
+            const settings = obj.get('settings');
+            const periodStart = obj.get('periodStart');
+            const periodEnd = obj.get('periodEnd');
+
+            const { sales, totalHT, totalVAT, } = await _getCompanyVATDeclarationSales({id: companyId}, {id, periodStart, periodEnd, settings,});
+
+            const edges = sales.map((value, index) => ({
+              cursor: offsetToCursor(index),
+              node: value,
+            }));
+
+            return {
+              totalCount: sales.length,
+              pageInfo: {
+                hasPreviousPage: false,
+                hasNextPage: false,
+              },
+              edges,
+              totalHT, totalVAT, total: totalHT + totalVAT,
+            };
+          },
+        },
+        edgeType,
+      };
+
+      return connection;
+    }(),
+    _expenses: function(){
+      const {connectionType, edgeType} = connectionDefinitions({
+        name: '_CompanyVATDeclarationExpenses',
+        nodeType: operationType,
+        connectionFields: () => ({
+          totalCount: {
+            type: GraphQLInt,
+            resolve: (conn) => conn.totalCount,
+          },
+
+          totalHT: {
+            type: GraphQLFloat,
+            resolve: (conn) => conn.totalHT,
+          },
+          totalVAT: {
+            type: GraphQLFloat,
+            resolve: (conn) => conn.totalVAT,
+          },
+
+          total: {
+            type: GraphQLFloat,
+            resolve: (conn) => conn.total,
+          },
+
+        }),
+      });
+
+      const {connection,} = {
+        connection: {
+          type: connectionType,
+          args: connectionArgs,
+          async resolve(obj) {
+            const companyId = obj.get('company').id;
+
+            const id = obj.id;
+            const settings = obj.get('settings');
+            const periodStart = obj.get('periodStart');
+            const periodEnd = obj.get('periodEnd');
+
+            const { expenses, totalHT, totalVAT, } = await _getCompanyVATDeclarationExpenses({id: companyId}, {id, periodStart, periodEnd, settings,});
+
+            const edges = expenses.map((value, index) => ({
+              cursor: offsetToCursor(index),
+              node: value,
+            }));
+
+            return {
+              totalCount: expenses.length,
+              pageInfo: {
+                hasPreviousPage: false,
+                hasNextPage: false,
+              },
+              edges,
+              totalHT, totalVAT, total: totalHT + totalVAT,
+            };
+          },
+        },
+        edgeType,
+      };
+
+      return connection;
+    }(),
+
+    // sales: function(){
+    //   const {connectionType, edgeType} = connectionDefinitions({
+    //     name: 'CompanyVATDeclarationSales',
+    //     nodeType: saleOpInterfaceType,
+    //     connectionFields: () => ({
+    //       totalCount: {
+    //         type: GraphQLInt,
+    //         resolve: (conn) => conn.totalCount,
+    //       },
+    //
+    //       totalHT: {
+    //         type: GraphQLFloat,
+    //         resolve: (conn) => conn.totalHT,
+    //       },
+    //       totalVAT: {
+    //         type: GraphQLFloat,
+    //         resolve: (conn) => conn.totalVAT,
+    //       },
+    //
+    //       total: {
+    //         type: GraphQLFloat,
+    //         resolve: (conn) => conn.total,
+    //       },
+    //
+    //     }),
+    //   });
+    //
+    //   const {connection,} = {
+    //     connection: {
+    //       type: connectionType,
+    //       args: connectionArgs,
+    //       async resolve(obj) {
+    //         const companyId = obj.get('company').id;
+    //
+    //         const id = obj.id;
+    //         const settings = obj.get('settings');
+    //         const periodStart = obj.get('periodStart');
+    //         const periodEnd = obj.get('periodEnd');
+    //
+    //         const { sales, totalHT, totalVAT, } = await getCompanyVATDeclarationSales({id: companyId}, {id, periodStart, periodEnd, settings,});
+    //
+    //         const edges = sales.map((value, index) => ({
+    //           cursor: offsetToCursor(index),
+    //           node: value,
+    //         }));
+    //
+    //         return {
+    //           totalCount: sales.length,
+    //           pageInfo: {
+    //             hasPreviousPage: false,
+    //             hasNextPage: false,
+    //           },
+    //           edges,
+    //           totalHT, totalVAT, total: totalHT + totalVAT,
+    //         };
+    //       },
+    //     },
+    //     edgeType,
+    //   };
+    //
+    //   return connection;
+    // }(),
+    // expenses: function(){
+    //   const {connectionType, edgeType} = connectionDefinitions({
+    //     name: 'CompanyVATDeclarationExpenses',
+    //     nodeType: expenseOpInterfaceType,
+    //     connectionFields: () => ({
+    //       totalCount: {
+    //         type: GraphQLInt,
+    //         resolve: (conn) => conn.totalCount,
+    //       },
+    //
+    //       totalHT: {
+    //         type: GraphQLFloat,
+    //         resolve: (conn) => conn.totalHT,
+    //       },
+    //       totalVAT: {
+    //         type: GraphQLFloat,
+    //         resolve: (conn) => conn.totalVAT,
+    //       },
+    //
+    //       total: {
+    //         type: GraphQLFloat,
+    //         resolve: (conn) => conn.total,
+    //       },
+    //
+    //     }),
+    //   });
+    //
+    //   const {connection,} = {
+    //     connection: {
+    //       type: connectionType,
+    //       args: connectionArgs,
+    //       async resolve(obj) {
+    //         const companyId = obj.get('company').id;
+    //
+    //         const id = obj.id;
+    //         const settings = obj.get('settings');
+    //         const periodStart = obj.get('periodStart');
+    //         const periodEnd = obj.get('periodEnd');
+    //
+    //         const { expenses, totalHT, totalVAT, } = await getCompanyVATDeclarationExpenses({id: companyId}, {id, periodStart, periodEnd, settings,});
+    //
+    //         const edges = expenses.map((value, index) => ({
+    //           cursor: offsetToCursor(index),
+    //           node: value,
+    //         }));
+    //
+    //         return {
+    //           totalCount: expenses.length,
+    //           pageInfo: {
+    //             hasPreviousPage: false,
+    //             hasNextPage: false,
+    //           },
+    //           edges,
+    //           totalHT, totalVAT, total: totalHT + totalVAT,
+    //         };
+    //       },
+    //     },
+    //     edgeType,
+    //   };
+    //
+    //   return connection;
+    // }(),
+    createdAt: createdField(),
+    updatedAt: editedField(),
+    objectId: objectIdField(),
+    className: classNameField(),
+    user: {
+      type: userType,
+      description: 'The user who created this object.',
+      resolve: obj => obj.has('user') ? getUser(obj.get('user').id) : null,
+    },
+  }),
+});
+
+module.exports.VATDeclarationType = VATDeclarationType;
+
+const fileType = new GraphQLObjectType({
+  name: 'File',
+  fields: () => ({
+    id: globalIdField('File', object => [object.id, object.get('company').id].join(':')),
+    name: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve: (obj) => obj.get('name'),
+    },
+    contentType: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve: (obj) => obj.get('contentType'),
+    },
+    url: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve: (obj) => obj.get('file').url(),
+    },
+    createdAt: createdField(),
+    updatedAt: editedField(),
+    objectId: objectIdField(),
+    className: classNameField(),
+    user: {
+      type: userType,
+      description: 'The user who created this object.',
+      resolve: transaction => transaction.has('user') ? getUser(transaction.get('user').id) : null,
+    },
+  }),
+  interfaces: [ nodeInterface ],
+  isTypeOf: (obj) => isType(obj, 'File'),
+});
+
+module.exports.fileType = fileType;
+
+const imageField = (type) => ({
+  type: fileType,
+  resolve: obj => getObjectFile(obj, type),
+});
+
+const filesField = (type) => ({
+  type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(fileType))),
+  resolve: obj => getObjectFiles(obj, type),
+});
 
 /**
  * Define your own types here
  */
-export const userType = new GraphQLObjectType({
+const userType = new GraphQLObjectType({
   name: 'User',
   description: 'A person who uses our app',
   fields: () => ({
     id: globalIdField('User'),
+    avatar: imageField('Avatar'),
     displayName: {
       type: GraphQLString,
       resolve: (user) => user.get('displayName'),
@@ -296,6 +725,21 @@ export const userType = new GraphQLObjectType({
       resolve: (_, {id: globalId}) => {
         const {id} = fromGlobalId(globalId);
         return getCompany(id);
+      },
+    },
+    getVATDeclaration: {
+      type: VATDeclarationType,
+      args: {
+        companyId: {
+          type: new GraphQLNonNull(GraphQLID),
+        },
+        id: {
+          type: new GraphQLNonNull(GraphQLString),
+        },
+      },
+      resolve: (obj, { companyId, id, }) => {
+        const { id: localCompanyId, } = fromGlobalId(companyId);
+        return getVATDeclarationById({ id: localCompanyId, }, id);
       },
     },
     getTransaction: {
@@ -463,17 +907,14 @@ export const userType = new GraphQLObjectType({
       },
       resolve: (obj, { companyId, id, }) => {
         const { id : localCompanyId, } = fromGlobalId(companyId);
-        return getObjectByType(Customer, { companyId: localCompanyId, id, });
+        return getObjectByType(People, { companyId: localCompanyId, id, });
       },
     },
     getCustomers: {
       type: new GraphQLObjectType({
         name: 'CompanyCustomersQuery',
         fields: ({
-          // expenses: CompanyCustomersExpensesQueryConnection,
-          invoices: CompanyCustomersInvoicesQueryConnection,
           sales: CompanyCustomersSalesQueryConnection,
-          payments: CompanyCustomersPaymentsOfInvoicesQueryConnection,
         }),
       }),
       args: {
@@ -495,16 +936,14 @@ export const userType = new GraphQLObjectType({
       },
       resolve: (obj, { companyId, id, }) => {
         const { id : localCompanyId, } = fromGlobalId(companyId);
-        return getObjectByType(Vendor, { companyId: localCompanyId, id, });
+        return getObjectByType(People, { companyId: localCompanyId, id, });
       },
     },
     getVendors: {
       type: new GraphQLObjectType({
         name: 'CompanyVendorsQuery',
         fields: ({
-          bills: CompanyVendorsBillsQueryConnection,
           expenses: CompanyVendorsExpensesQueryConnection,
-          payments: CompanyVendorsPaymentsOfBillsQueryConnection,
         }),
       }),
       args: {
@@ -522,7 +961,9 @@ export const userType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const transactionType = new GraphQLObjectType({
+module.exports.userType = userType;
+
+const transactionType = new GraphQLObjectType({
   name: 'Transaction',
   description: 'A group of operations between a client and a vendor',
   fields: () => ({
@@ -545,11 +986,7 @@ export const transactionType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (transaction) => transaction.get('memo'),
     },
-    // files: {
-    //   type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
-    //   description: 'The files of transaction.',
-    //   resolve: (transaction) => transaction.get('files') || [],
-    // },
+    files: filesField('Transaction'),
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -563,7 +1000,9 @@ export const transactionType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const operationType = new GraphQLObjectType({
+module.exports.transactionType = transactionType;
+
+const operationType = new GraphQLObjectType({
   name: 'Operation',
   description: 'A debit or credit operation in a Transaction',
   fields: () => ({
@@ -584,10 +1023,74 @@ export const operationType = new GraphQLObjectType({
       type: new GraphQLNonNull(OperationKind),
       resolve: (operation) => operation.get('type'),
     },
+
+    operationType: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve: (operation) => operation.get('transactionType'),
+    },
+
+    saleItem: {
+      type: productItemType,
+      resolve: (operation) => {
+        const transactionType = operation.get('transactionType');
+        switch (transactionType){
+          case 'Invoice': return operation.get('invoiceItem');
+          case 'Sale': return operation.get('saleItem');
+        }
+
+        return null;
+      },
+    },
+    expenseItem: {
+      type: accountItemType,
+      resolve: (operation) => {
+        const transactionType = operation.get('transactionType');
+        switch (transactionType){
+          case 'Bill': return operation.get('billItem');
+          case 'Expense': return operation.get('expenseItem');
+        }
+
+        return null;
+      },
+    },
+
+    sale: {
+      type: saleOpInterfaceType,
+      resolve: (operation) => {
+        const transactionType = operation.get('transactionType');
+        switch (transactionType){
+          case 'Invoice': return operation.get('invoice');
+          case 'Sale': return operation.get('sale');
+          case 'PaymentOfInvoices': return operation.get('paymentOfInvoices');
+        }
+
+        return null;
+      },
+    },
+    expense: {
+      type: expenseOpInterfaceType,
+      resolve: (operation) => {
+        const transactionType = operation.get('transactionType');
+        switch (transactionType){
+          case 'Bill': return operation.get('bill');
+          case 'Expense': return operation.get('expense');
+          case 'PaymentOfBills': return operation.get('paymentOfBills');
+        }
+
+        return null;
+      },
+    },
+
     amount: {
       type: new GraphQLNonNull(GraphQLFloat),
       resolve: (operation) => operation.get('amount'),
     },
+
+    VAT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.has('VAT') ? operation.get('VAT') : 0.0,
+    },
+
     date: {
       type: new GraphQLNonNull(GraphQLDateTime),
       description: 'The date of this operation.',
@@ -598,6 +1101,7 @@ export const operationType = new GraphQLObjectType({
       description: 'The memo of this operation.',
       resolve: (operation) => operation.get('memo'),
     },
+    files: filesField('Operation'),
     _classCode: {
       type: new GraphQLNonNull(GraphQLString),
       resolve: (operation) => operation.get('classCode'),
@@ -623,7 +1127,9 @@ export const operationType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const accountType = new GraphQLObjectType({
+module.exports.operationType = operationType;
+
+const accountType = new GraphQLObjectType({
   name: 'Account',
   description: 'An Account',
   fields: () => ({
@@ -646,7 +1152,9 @@ export const accountType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const chartAccountType = new GraphQLObjectType({
+module.exports.accountType = accountType;
+
+const chartAccountType = new GraphQLObjectType({
   name: 'ChartAccount',
   description: 'A Chart Account',
   fields: () => ({
@@ -673,6 +1181,8 @@ export const chartAccountType = new GraphQLObjectType({
   // interfaces: [ nodeInterface ],
 });
 
+module.exports.chartAccountType = chartAccountType;
+
 const saleOrPaymentOfInvoicesBridgeType = new GraphQLObjectType({
   name: 'SaleOrPaymentOfInvoicesBridge',
   fields: () => ({
@@ -691,12 +1201,79 @@ const expenseOrPaymentOfBillsBridgeType = new GraphQLObjectType({
   }),
 });
 
-export const companyType = new GraphQLObjectType({
+const companyType = new GraphQLObjectType({
   name: 'Company',
   description: 'A company',
   fields: () => ({
     id: globalIdField('Company'),
-    ...[ 'address', 'activity', 'webSite', 'tel', 'fax', 'email', 'if', 'rc', 'patente', 'cnss', 'banque', 'rib', ].reduce(function (fields, prop) {
+    VATSettings: {
+      type: new GraphQLNonNull(companyVATSettingsType),
+      resolve: (company) => ({
+        enabled: company.has('VATEnabled') ? company.get('VATEnabled') : false,
+        startDate: company.get('VATSetting_startDate'),
+        agency: company.get('VATSetting_agency'),
+        IF: company.get('VATSetting_IF'),
+        frequency: company.has('VATSetting_frequency') ? company.get('VATSetting_frequency') : null,
+        regime: company.has('VATSetting_regime') ? parseInt(company.get('VATSetting_regime')) : null,
+        percentages: company.get('VATSetting_percentages') || [],
+      }),
+    },
+    VATDeclaration: {
+      type: VATDeclarationType,
+      resolve: (company) => getCompanyCurrentVATDeclaration(company),
+    },
+    VATDeclarationHistory: function () {
+      const {connectionType, edgeType} = connectionDefinitions({
+        name: 'VATDeclarationHistory',
+        nodeType: VATDeclarationType,
+        connectionFields: () => ({
+          totalCount: {
+            type: new GraphQLNonNull(GraphQLInt),
+            resolve: (conn) => conn.totalCount,
+          },
+        }),
+      });
+
+      const {connection,} = {
+        connection: {
+          type: connectionType,
+          args: {
+            ...connectionArgs,
+          },
+          async resolve(obj) {
+            const array = await getCompanyVATDeclarationHistory(obj);
+            return {
+              totalCount: array.length,
+              ...connectionFromArray(array, {first: array.length,}),
+            };
+          },
+        },
+        edgeType,
+      };
+
+      return connection;
+    }(),
+    logo: imageField('Logo'),
+    ...[
+        'capital',
+        'activity',
+        'webSite',
+        'tel',
+        'fax',
+        'email',
+        'ice',
+        'if',
+        'rc',
+        'patente',
+        'cnss',
+        'banque',
+        'rib',
+        'company_streetAddress',
+        'company_cityTown',
+        'company_stateProvince',
+        'company_postalCode',
+        'company_country',
+    ].reduce(function (fields, prop) {
       return {
         ...fields,
         [prop]: {
@@ -705,12 +1282,38 @@ export const companyType = new GraphQLObjectType({
         }
       };
     }, {}),
+    address: function(){
+
+      function getAddress({
+        company_streetAddress,
+        company_cityTown,
+        company_stateProvince,
+        company_postalCode,
+        company_country,
+      }){
+        const addr = formatAddress({
+          address: company_streetAddress,
+          city: company_cityTown,
+          subdivision: company_stateProvince,
+          postalCode: company_postalCode,
+          country: company_country,
+        });
+
+        return addr.length === 0 ? undefined : [...addr].join('\n');
+      }
+
+      return {
+        type: GraphQLString,
+        resolve: (company) => getAddress(company.toJSON()),
+      }
+    }(),
     legalForm: {
       type: legalFormType,
       resolve: (company) => company.has('legalForm') ? parseInt(company.get('legalForm')) : null,
     },
     periodType: {
-      type: new GraphQLNonNull(PeriodType),
+      // type: new GraphQLNonNull(PeriodType),
+      type: PeriodType,
       resolve: (company) => company.get('periodType'),
     },
     displayName: {
@@ -797,12 +1400,10 @@ export const companyType = new GraphQLObjectType({
         },
       };
     }(),
+
     sales: CompanySalesConnection,
     expenses: CompanyExpensesConnection,
-    paymentsOfInvoices: CompanyPaymentsOfInvoicesConnection,
-    paymentsOfBills: CompanyPaymentsOfBillsConnection,
-    invoices: CompanyInvoicesConnection,
-    bills: CompanyBillsConnection,
+
     transactions: CompanyTransactionsConnection,
     accounts: CompanyAccountsConnection,
     bankAccounts: CompanyBankAccountsConnection,
@@ -810,6 +1411,7 @@ export const companyType = new GraphQLObjectType({
       type: companySettingsType,
       resolve: (company) => ({
         periodType: company.get('periodType'),
+        defaultVATInputType: company.has('settings_key_defaultVATInputType') ? company.get('settings_key_defaultVATInputType') : null,
         closureEnabled: company.has('settings_key_closureEnabled') ? company.get('settings_key_closureEnabled') : false,
         closureDate: !!company.get('settings_key_closureEnabled') ? company.get('settings_key_closureDate') : null,
       }),
@@ -881,15 +1483,17 @@ export const companyType = new GraphQLObjectType({
 
                     if(typeof next.__type === 'undefined'){
 
-                      if(next.className.indexOf('Invoice') !== -1){
+                      const kind = next.get('kind');
+
+                      if(kind === 'Invoice'){
                         return next.get('total') || 0.0;
                       }
 
-                      if(next.className.indexOf('Sale') !== -1){
+                      if(kind === 'Sale'){
                         return next.get('total') || 0.0;
                       }
 
-                      if(next.className.indexOf('PaymentOfInvoices') !== -1){
+                      if(kind === 'PaymentOfInvoices'){
                         return next.get('amountReceived') || 0.0;
                       }
                     }
@@ -905,15 +1509,6 @@ export const companyType = new GraphQLObjectType({
             };
           }
 
-          // const saleOrPaymentOfInvoicesBridgeType = new GraphQLObjectType({
-          //   name: 'SaleOrPaymentOfInvoicesBridge',
-          //   fields: () => ({
-          //     value: {
-          //       type: new GraphQLNonNull(saleOrPaymentOfInvoicesType),
-          //     }
-          //   }),
-          // });
-
           return {
             open: resolveType('Open', invoiceType, function({id, }){
               return queryOpenInvoices({id}, {});
@@ -922,18 +1517,17 @@ export const companyType = new GraphQLObjectType({
               return queryOverdueInvoices({id}, {});
             }),
             closed: resolveType('Closed', saleOrPaymentOfInvoicesBridgeType, function({id, }){
-              return querySalesRecentlyPaid({id}, {}).then(({ sales, payments, }) => {
-                return orderBy(
+              return querySalesRecentlyPaid({id}, {}).then(results => {
+                // return orderBy(
+                //
+                //   results,
+                //
+                //   [ 'date' ],
+                //
+                //   [ 'asc' ]
+                // ).map((node) => ({ value: node, }));
 
-                  concat(
-                    sales,
-                    payments
-                  ),
-
-                  [ 'date' ],
-
-                  [ 'asc' ]
-                ).map((node) => ({ value: node, }));
+                return results.map((node) => ({ value: node, }));
               });
             }),
           };
@@ -973,15 +1567,17 @@ export const companyType = new GraphQLObjectType({
 
                   if(typeof next.__type === 'undefined'){
 
-                    if(next.className.indexOf('Bill') !== -1){
+                    const kind = next.get('kind');
+
+                    if(kind === 'Bill'){
                       return next.get('total') || 0.0;
                     }
 
-                    if(next.className.indexOf('Expense') !== -1){
+                    if(kind === 'Expense'){
                       return next.get('total') || 0.0;
                     }
 
-                    if(next.className.indexOf('PaymentOfBills') !== -1){
+                    if(kind === 'PaymentOfBills'){
                       return next.get('amountReceived') || 0.0;
                     }
                   }
@@ -1002,15 +1598,6 @@ export const companyType = new GraphQLObjectType({
             };
           }
 
-          // const expenseOrPaymentOfBillsBridgeType = new GraphQLObjectType({
-          //   name: 'SaleOrPaymentOfBillsBridge',
-          //   fields: () => ({
-          //     value: {
-          //       type: new GraphQLNonNull(expenseOrPaymentOfBillsType),
-          //     }
-          //   }),
-          // });
-
           return {
             open: resolveType('Open', billType, function({id, }){
               return queryOpenBills({id}, {});
@@ -1019,18 +1606,17 @@ export const companyType = new GraphQLObjectType({
               return queryOverdueBills({id}, {});
             }),
             closed: resolveType('Closed', expenseOrPaymentOfBillsBridgeType, function({id, }){
-              return queryExpensesRecentlyPaid({id}, {}).then(({ expenses, payments, }) => {
-                return orderBy(
+              return queryExpensesRecentlyPaid({id}, {}).then(results => {
+                // return orderBy(
+                //
+                //   results,
+                //
+                //   [ 'date' ],
+                //
+                //   [ 'asc' ]
+                // ).map((node) => ({ value: node, }));
 
-                  concat(
-                    expenses,
-                    payments
-                  ),
-
-                  [ 'date' ],
-
-                  [ 'asc' ]
-                ).map((node) => ({ value: node, }));
+                return results.map((node) => ({ value: node, }));
               });
             }),
           };
@@ -1051,7 +1637,9 @@ export const companyType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const bankType = new GraphQLObjectType({
+module.exports.companyType = companyType;
+
+const bankType = new GraphQLObjectType({
   name: 'Bank',
   description: 'A Bank Account',
   fields: () => ({
@@ -1072,7 +1660,9 @@ export const bankType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const vendorType = new GraphQLObjectType({
+module.exports.bankType = bankType;
+
+const vendorType = new GraphQLObjectType({
   name: 'Vendor',
   description: 'A Vendor',
   fields: () => ({
@@ -1081,14 +1671,14 @@ export const vendorType = new GraphQLObjectType({
     //   type: new GraphQLNonNull(parseObjectInputFieldType),
     //   resolve: (customer) => customer.get('company'),
     // },
+
+    active: activityField(),
+
     displayName: {
       type: new GraphQLNonNull(GraphQLString),
       resolve: (vendor) => vendor.get('displayName'),
     },
-    image: {
-      type: GraphQLString,
-      resolve: (vendor) => vendor.get('image'),
-    },
+    image: imageField('Vendor'),
     title: {
       type: GraphQLString,
       resolve: (vendor) => vendor.get('title'),
@@ -1108,6 +1698,10 @@ export const vendorType = new GraphQLObjectType({
     affiliation: {
       type: GraphQLString,
       resolve: (vendor) => vendor.get('affiliation'),
+    },
+    if: {
+      type: GraphQLString,
+      resolve: (vendor) => vendor.get('if'),
     },
     emails: {
       type: GraphQLString,
@@ -1153,13 +1747,11 @@ export const vendorType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (vendor) => vendor.get('notes'),
     },
-    openBalance: {
-      type: new GraphQLNonNull(GraphQLFloat),
-      resolve: (vendor) => vendor.has('openBalance') ? vendor.get('openBalance') : 0.0,
-    },
+    // openBalance: {
+    //   type: new GraphQLNonNull(GraphQLFloat),
+    //   resolve: (vendor) => vendor.has('openBalance') ? vendor.get('openBalance') : 0.0,
+    // },
     expenses: VendorExpensesConnection,
-    paymentsOfBills: VendorPaymentsOfBillsConnection,
-    bills: VendorBillsConnection,
     expensesStatus: {
       type: new GraphQLObjectType({
         name: 'VendorExpensesStatus',
@@ -1187,33 +1779,36 @@ export const vendorType = new GraphQLObjectType({
               },
               async resolve(obj) {
                 const array = await queryData({ id: obj.id, companyId: obj.get('company').id, });
+                const amount = array.reduce((sum, node) => sum + (function(){
+                  const next = node.value || node;
+
+                  if(typeof next.__type === 'undefined'){
+
+                    const kind = next.get('kind');
+
+                    if(kind === 'Bill'){
+                      return next.get('total') || 0.0;
+                    }
+
+                    if(kind === 'Expense'){
+                      return next.get('total') || 0.0;
+                    }
+
+                    if(kind === 'PaymentOfBills'){
+                      return next.get('amountReceived') || 0.0;
+                    }
+                  }
+
+                  switch (next.__type) {
+                    case 'Bill':           return next.get('total') || 0.0;
+                    case 'Expense':        return next.get('total') || 0.0;
+                    case 'PaymentOfBills': return next.get('amountReceived') || 0.0;
+                  }
+                }()), 0.0);
                 return {
                   ...connectionFromArray(array, {first: array.length}),
                   totalCount: array.length,
-                  amount: array.reduce((sum, node) => sum + (function(){
-                    const next = node.value || node;
-
-                    if(typeof next.__type === 'undefined'){
-
-                      if(next.className.indexOf('Bill') !== -1){
-                        return next.get('total') || 0.0;
-                      }
-
-                      if(next.className.indexOf('Expense') !== -1){
-                        return next.get('total') || 0.0;
-                      }
-
-                      if(next.className.indexOf('PaymentOfBills') !== -1){
-                        return next.get('amountReceived') || 0.0;
-                      }
-                    }
-
-                    switch (next.__type) {
-                      case 'Bill':           return next.get('total') || 0.0;
-                      case 'Expense':        return next.get('total') || 0.0;
-                      case 'PaymentOfBills': return next.get('amountReceived') || 0.0;;
-                    }
-                  }()), 0.0),
+                  amount,
                 };
               },
             };
@@ -1242,10 +1837,12 @@ export const vendorType = new GraphQLObjectType({
     // },
   }),
   interfaces: [ nodeInterface, personType ],
-  isTypeOf: ({ __type, className, }) => __type === 'Vendor' || className.indexOf('Vendor_') !== -1,
+  isTypeOf: (obj) => isType(obj, 'Vendor'),
 });
 
-export const employeeType = new GraphQLObjectType({
+module.exports.vendorType = vendorType;
+
+const employeeType = new GraphQLObjectType({
   name: 'Employee',
   description: 'A Employee',
   fields: () => ({
@@ -1258,10 +1855,7 @@ export const employeeType = new GraphQLObjectType({
       type: new GraphQLNonNull(GraphQLString),
       resolve: (employee) => employee.get('displayName'),
     },
-    image: {
-      type: GraphQLString,
-      resolve: (employee) => employee.get('image'),
-    },
+    image: imageField('Employee'),
     title: {
       type: GraphQLString,
       resolve: (employee) => employee.get('title'),
@@ -1337,10 +1931,12 @@ export const employeeType = new GraphQLObjectType({
     // },
   }),
   interfaces: [ nodeInterface, personType ],
-  isTypeOf: ({ __type, className, }) => __type === 'Employee' || className.indexOf('Employee_') !== -1,
+  isTypeOf: (obj) => isType(obj, 'Employee'),
 });
 
-export const customerType = new GraphQLObjectType({
+module.exports.employeeType = employeeType;
+
+const customerType = new GraphQLObjectType({
   name: 'Customer',
   description: 'A Customer',
   fields: () => ({
@@ -1349,14 +1945,14 @@ export const customerType = new GraphQLObjectType({
     //   type: new GraphQLNonNull(parseObjectInputFieldType),
     //   resolve: (customer) => customer.get('company'),
     // },
+
+    active: activityField(),
+
     displayName: {
       type: new GraphQLNonNull(GraphQLString),
       resolve: (customer) => customer.get('displayName'),
     },
-    image: {
-      type: GraphQLString,
-      resolve: (customer) => customer.get('image'),
-    },
+    image: imageField('Customer'),
     title: {
       type: GraphQLString,
       resolve: (customer) => customer.get('title'),
@@ -1376,6 +1972,10 @@ export const customerType = new GraphQLObjectType({
     affiliation: {
       type: GraphQLString,
       resolve: (customer) => customer.get('affiliation'),
+    },
+    if: {
+      type: GraphQLString,
+      resolve: (customer) => customer.get('if'),
     },
     emails: {
       type: GraphQLString,
@@ -1421,14 +2021,12 @@ export const customerType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (customer) => customer.get('notes'),
     },
-    openBalance: {
-      type: new GraphQLNonNull(GraphQLFloat),
-      resolve: (customer) => customer.has('openBalance') ? customer.get('openBalance') : 0.0,
-    },
+    // openBalance: {
+    //   type: new GraphQLNonNull(GraphQLFloat),
+    //   resolve: (customer) => customer.has('openBalance') ? customer.get('openBalance') : 0.0,
+    // },
     sales: CustomerSalesConnection,
-    // expenses: CustomerExpensesConnection,
-    paymentsOfInvoices: CustomerPaymentsOfInvoicesConnection,
-    invoices: CustomerInvoicesConnection,
+
     salesStatus: {
       type: new GraphQLObjectType({
         name: 'CustomerSalesStatus',
@@ -1462,15 +2060,17 @@ export const customerType = new GraphQLObjectType({
 
                   if(typeof next.__type === 'undefined'){
 
-                    if(next.className.indexOf('Invoice') !== -1){
+                    const kind = next.get('kind');
+
+                    if(kind === 'Invoice'){
                       return next.get('total') || 0.0;
                     }
 
-                    if(next.className.indexOf('Sale') !== -1){
+                    if(kind === 'Sale'){
                       return next.get('total') || 0.0;
                     }
 
-                    if(next.className.indexOf('PaymentOfInvoices') !== -1){
+                    if(kind === 'PaymentOfInvoices'){
                       return next.get('amountReceived') || 0.0;
                     }
                   }
@@ -1514,10 +2114,12 @@ export const customerType = new GraphQLObjectType({
     // },
   }),
   interfaces: [ nodeInterface, personType ],
-  isTypeOf: ({ __type, className, }) => __type === 'Customer' || className.indexOf('Customer_') !== -1,
+  isTypeOf: (obj) => isType(obj, 'Customer'),
 });
 
-export const saleOrPaymentOfInvoicesType = new GraphQLInterfaceType({
+module.exports.customerType = customerType;
+
+const saleOrPaymentOfInvoicesType = new GraphQLInterfaceType({
   name: 'SaleOrPaymentOfInvoices',
   fields: () => ({
     id: {
@@ -1533,7 +2135,7 @@ export const saleOrPaymentOfInvoicesType = new GraphQLInterfaceType({
       type: GraphQLString,
     },
     files: {
-      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(fileType))),
     },
     createdAt: {
       type: new GraphQLNonNull(GraphQLDateTime),
@@ -1547,14 +2149,16 @@ export const saleOrPaymentOfInvoicesType = new GraphQLInterfaceType({
   }),
 });
 
-export const saleType = new GraphQLObjectType({
+module.exports.saleOrPaymentOfInvoicesType = saleOrPaymentOfInvoicesType;
+
+const saleType = new GraphQLObjectType({
   name: 'Sale',
   description: 'A Sale',
   fields: () => ({
     id: globalIdField('Sale', object => [object.id, object.get('company').id].join(':')),
     customer: {
       type: customerType,
-      resolve: (sale) => sale.has('customer') ? sale.get('customer').fetch().then(obj => { obj.__type = 'Customer'; return obj; }) : null,
+      resolve: (sale) => sale.has('customer') ? sale.get('customer').fetch() : null,
     },
     billingAddress: {
       type: new GraphQLNonNull(GraphQLString),
@@ -1588,7 +2192,42 @@ export const saleType = new GraphQLObjectType({
       type: GraphQLFloat,
       resolve: (sale) => sale.get('discountValue'),
     },
-    itemsConnection: function () {
+
+    totalHT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('totalHT'),
+    },
+    VAT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('VAT'),
+    },
+
+    // VATSettings: {
+    //   type: new GraphQLNonNull(companyVATSettingsType),
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch().then(declaration => declaration.get('settings'))
+    //     : { enabled: false, },
+    // },
+    // VATDeclaration: {
+    //   type: VATDeclarationType,
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch()
+    //     : null,
+    // },
+
+    VATDeclaration: {
+      type: VATDeclarationType,
+      resolve: (operation) => getVATDeclarationAtDate(operation.get('company').id, operation.get('date')),
+    },
+
+    inputType: {
+      type: new GraphQLNonNull(VATInputType),
+      resolve: (operation) => operation.has('inputType')
+        ? parseInt(operation.get('inputType'))
+        : 3 /* NO_VAT */,
+    },
+
+    saleItemsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'SaleItems',
         nodeType: saleItemType,
@@ -1639,10 +2278,7 @@ export const saleType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (sale) => sale.get('memo'),
     },
-    files: {
-      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
-      resolve: (sale) => sale.get('files') || [],
-    },
+    files: filesField('Sale'),
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -1653,11 +2289,13 @@ export const saleType = new GraphQLObjectType({
       resolve: sale => sale.has('user') ? getUser(sale.get('user').id) : null,
     },
   }),
-  interfaces: [ nodeInterface, saleOrPaymentOfInvoicesType ],
-  isTypeOf: (obj) => obj.__type === 'Sale' || isType(obj, 'Sale'),
+  interfaces: [ nodeInterface, saleOrPaymentOfInvoicesType, saleOpInterfaceType, ],
+  isTypeOf: (obj) => isType(obj, 'Sale'),
 });
 
-export const expenseType = new GraphQLObjectType({
+module.exports.saleType = saleType;
+
+const expenseType = new GraphQLObjectType({
   name: 'Expense',
   description: 'An Expense',
   fields: () => ({
@@ -1668,13 +2306,13 @@ export const expenseType = new GraphQLObjectType({
         const type = expense.get('payeeType');
         switch (type) {
           case 1 /* 'Customer' */:
-          case 'Customer': return expense.has('customer') ? expense.get('customer').fetch().then(obj => { obj.__type = 'Customer'; return obj; }) : undefined;
+          case 'Customer': return expense.has('customer') ? expense.get('customer').fetch() : undefined;
 
           case 2 /* 'Vendor' */:
-          case 'Vendor':   return expense.has('vendor') ? expense.get('vendor').fetch().then(obj => { obj.__type = 'Vendor'; return obj; }) : undefined;
+          case 'Vendor':   return expense.has('vendor') ? expense.get('vendor').fetch() : undefined;
 
           case 3 /* 'Employee' */:
-          case 'Employee':   return expense.has('employee') ? expense.get('employee').fetch().then(obj => { obj.__type = 'Employee'; return obj; }) : undefined;
+          case 'Employee':   return expense.has('employee') ? expense.get('employee').fetch() : undefined;
         }
       }() : undefined,
     },
@@ -1698,7 +2336,42 @@ export const expenseType = new GraphQLObjectType({
     //   type: new GraphQLNonNull(GraphQLInt),
     //   resolve: (expense) => expense.get('refNo'),
     // },
-    itemsConnection: function () {
+
+    totalHT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('totalHT'),
+    },
+    VAT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('VAT'),
+    },
+
+    // VATSettings: {
+    //   type: new GraphQLNonNull(companyVATSettingsType),
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch().then(declaration => declaration.get('settings'))
+    //     : { enabled: false, },
+    // },
+    // VATDeclaration: {
+    //   type: VATDeclarationType,
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch()
+    //     : null,
+    // },
+
+    VATDeclaration: {
+      type: VATDeclarationType,
+      resolve: (operation) => getVATDeclarationAtDate(operation.get('company').id, operation.get('date')),
+    },
+
+    inputType: {
+      type: new GraphQLNonNull(VATInputType),
+      resolve: (operation) => operation.has('inputType')
+        ? parseInt(operation.get('inputType'))
+        : 3 /* None */,
+    },
+
+    expenseItemsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'expenseItemTypeItems',
         nodeType: expenseItemType,
@@ -1723,7 +2396,7 @@ export const expenseType = new GraphQLObjectType({
             return {
               ...connectionFromArray(array, {first: array.length}),
               totalCount: array.length,
-              amountPaid: array.reduce((sum, item) => sum + item.get('amount'), 0.0),
+              amountPaid: obj.get('total'), // array.reduce((sum, item) => sum + item.get('amount'), 0.0),
             };
           },
         },
@@ -1736,10 +2409,7 @@ export const expenseType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (expense) => expense.get('memo'),
     },
-    files: {
-      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
-      resolve: (expense) => expense.get('files') || [],
-    },
+    files: filesField('Expense'),
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -1750,11 +2420,13 @@ export const expenseType = new GraphQLObjectType({
       resolve: expense => expense.has('user') ? getUser(expense.get('user').id) : null,
     },
   }),
-  interfaces: [ nodeInterface, expenseOrPaymentOfBillsType ],
-  isTypeOf: (obj) => obj.__type === 'Expense' || isType(obj, 'Expense'),
+  interfaces: [ nodeInterface, expenseOrPaymentOfBillsType, expenseOpInterfaceType, ],
+  isTypeOf: (obj) => isType(obj, 'Expense'),
 });
 
-export const invoiceType = new GraphQLObjectType({
+module.exports.expenseType = expenseType;
+
+const invoiceType = new GraphQLObjectType({
   name: 'Invoice',
   description: 'An Invoice',
   fields: () => ({
@@ -1765,7 +2437,7 @@ export const invoiceType = new GraphQLObjectType({
     },
     customer: {
       type: customerType,
-      resolve: (invoice) => invoice.has('customer') ? invoice.get('customer').fetch().then(obj => { obj.__type = 'Customer'; return obj; }) : null,
+      resolve: (invoice) => invoice.has('customer') ? invoice.get('customer').fetch() : null,
     },
     billingAddress: {
       type: new GraphQLNonNull(GraphQLString),
@@ -1791,7 +2463,47 @@ export const invoiceType = new GraphQLObjectType({
       type: GraphQLFloat,
       resolve: (invoice) => invoice.get('discountValue'),
     },
-    itemsConnection: function () {
+
+    totalHT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('totalHT'),
+    },
+    VAT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('VAT'),
+    },
+
+    lastPaymentDate: {
+      type: GraphQLDateTime,
+      resolve: (operation) => operation.get('lastPaymentDate'),
+    },
+
+    // VATSettings: {
+    //   type: new GraphQLNonNull(companyVATSettingsType),
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch().then(declaration => declaration.get('settings'))
+    //     : { enabled: false, },
+    // },
+    // VATDeclaration: {
+    //   type: VATDeclarationType,
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch()
+    //     : null,
+    // },
+
+    VATDeclaration: {
+      type: VATDeclarationType,
+      resolve: (operation) => getVATDeclarationAtDate(operation.get('company').id, operation.get('date')),
+    },
+
+    inputType: {
+      type: new GraphQLNonNull(VATInputType),
+      resolve: (operation) => operation.has('inputType')
+        ? parseInt(operation.get('inputType'))
+        : 3 /* None */,
+    },
+
+    invoiceItemsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'InvoiceItems',
         nodeType: invoiceItemType,
@@ -1830,7 +2542,7 @@ export const invoiceType = new GraphQLObjectType({
 
       return connection;
     }(),
-    paymentsConnection: function () {
+    invoicePaymentsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'InvoicePayments',
         nodeType: paymentOfInvoicesItemType,
@@ -1888,7 +2600,7 @@ export const invoiceType = new GraphQLObjectType({
     _status: {
       type: new GraphQLNonNull(transactionStatusType),
       resolve: (invoice) => {
-        // const totalAmount = invoice.get('total');
+        const totalAmount = invoice.get('total');
         const balanceDue = invoice.get('balanceDue');
         const _dueDate = moment(invoice.get('dueDate'));
         const now = moment();
@@ -1902,11 +2614,11 @@ export const invoiceType = new GraphQLObjectType({
           return 3; // 'Overdue';
         }
 
-        // const hasPayment = amountPaid !== 0;
-        //
-        // if(hasPayment){
-        //   return 'Partial';
-        // }
+        const hasPayment = totalAmount !== balanceDue;
+
+        if(hasPayment){
+          return 4; // 'Partial';
+        }
 
         return 1; // 'Open';
       },
@@ -1915,10 +2627,7 @@ export const invoiceType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (invoice) => invoice.get('memo'),
     },
-    files: {
-      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
-      resolve: (invoice) => invoice.get('files') || [],
-    },
+    files: filesField('Invoice'),
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -1929,10 +2638,13 @@ export const invoiceType = new GraphQLObjectType({
       resolve: invoice => invoice.has('user') ? getUser(invoice.get('user').id) : null,
     },
   }),
-  interfaces: [ nodeInterface ],
+  interfaces: [ nodeInterface, saleOpInterfaceType, ],
+  isTypeOf: (obj) => isType(obj, 'Invoice'),
 });
 
-export const paymentOfInvoicesItemType = new GraphQLObjectType({
+module.exports.invoiceType = invoiceType;
+
+const paymentOfInvoicesItemType = new GraphQLObjectType({
   name: 'PaymentOfInvoicesItem',
   description: 'An Invoice Payment entry',
   fields: () => ({
@@ -1951,11 +2663,11 @@ export const paymentOfInvoicesItemType = new GraphQLObjectType({
     },
     payment: {
       type: new GraphQLNonNull(paymentOfInvoicesType),
-      resolve: (item) => item.get('payment'),
+      resolve: (item) => item.get('payment').fetch(),
     },
     invoice: {
       type: new GraphQLNonNull(invoiceType),
-      resolve: (item) => item.get('invoice'),
+      resolve: (item) => item.get('invoice').fetch(),
     },
     createdAt: createdField(),
     objectId: objectIdField(),
@@ -1964,14 +2676,16 @@ export const paymentOfInvoicesItemType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const paymentOfInvoicesType = new GraphQLObjectType({
+module.exports.paymentOfInvoicesItemType = paymentOfInvoicesItemType;
+
+const paymentOfInvoicesType = new GraphQLObjectType({
   name: 'PaymentOfInvoices',
   description: 'A Payment of invoices',
   fields: () => ({
     id: globalIdField('PaymentOfInvoices', object => [object.id, object.get('company').id].join(':')),
     customer: {
       type: customerType,
-      resolve: (payment) => payment.has('customer') ? payment.get('customer').fetch().then(obj => { obj.__type = 'Customer'; return obj; }) : null,
+      resolve: (payment) => payment.has('customer') ? payment.get('customer').fetch() : null,
     },
     date: {
       type: new GraphQLNonNull(GraphQLDateTime),
@@ -1989,7 +2703,7 @@ export const paymentOfInvoicesType = new GraphQLObjectType({
       type: new GraphQLNonNull(GraphQLString),
       resolve: (payment) => payment.get('depositToAccountCode'),
     },
-    itemsConnection: function () {
+    paymentItemsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'PaymentOfInvoicesItems',
         nodeType: paymentOfInvoicesItemType,
@@ -2040,10 +2754,7 @@ export const paymentOfInvoicesType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (payment) => payment.get('memo'),
     },
-    files: {
-      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
-      resolve: (payment) => payment.get('files') || [],
-    },
+    files: filesField('PaymentOfInvoices'),
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -2054,11 +2765,13 @@ export const paymentOfInvoicesType = new GraphQLObjectType({
       resolve: payment => payment.has('user') ? getUser(payment.get('user').id) : null,
     },
   }),
-  interfaces: [ nodeInterface, saleOrPaymentOfInvoicesType ],
-  isTypeOf: (obj) => obj.__type === 'PaymentOfInvoices' || isType(obj, 'PaymentOfInvoices'),
+  interfaces: [ nodeInterface, saleOrPaymentOfInvoicesType, saleOpInterfaceType, ],
+  isTypeOf: (obj) => isType(obj, 'PaymentOfInvoices'),
 });
 
-export const billType = new GraphQLObjectType({
+module.exports.paymentOfInvoicesType = paymentOfInvoicesType;
+
+const billType = new GraphQLObjectType({
   name: 'Bill',
   description: 'An Bill',
   fields: () => ({
@@ -2069,7 +2782,7 @@ export const billType = new GraphQLObjectType({
     },
     payee: {
       type: vendorType,
-      resolve: (bill) => bill.has('payee') ? bill.get('payee').fetch().then(obj => { obj.__type = 'Vendor'; return obj; }) : null,
+      resolve: (bill) => bill.has('payee') ? bill.get('payee').fetch() : null,
     },
     mailingAddress: {
       type: new GraphQLNonNull(GraphQLString),
@@ -2087,7 +2800,47 @@ export const billType = new GraphQLObjectType({
       type: new GraphQLNonNull(GraphQLDateTime),
       resolve: (bill) => bill.get('dueDate'),
     },
-    itemsConnection: function () {
+
+    totalHT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('totalHT'),
+    },
+    VAT: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: (operation) => operation.get('VAT'),
+    },
+
+    lastPaymentDate: {
+      type: GraphQLDateTime,
+      resolve: (operation) => operation.get('lastPaymentDate'),
+    },
+
+    // VATSettings: {
+    //   type: new GraphQLNonNull(companyVATSettingsType),
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch().then(declaration => declaration.get('settings'))
+    //     : { enabled: false, },
+    // },
+    // VATDeclaration: {
+    //   type: VATDeclarationType,
+    //   resolve: (operation) => operation.has('VATDeclaration')
+    //     ? operation.get('VATDeclaration').fetch()
+    //     : null,
+    // },
+
+    VATDeclaration: {
+      type: VATDeclarationType,
+      resolve: (operation) => getVATDeclarationAtDate(operation.get('company').id, operation.get('date')),
+    },
+
+    inputType: {
+      type: new GraphQLNonNull(VATInputType),
+      resolve: (operation) => operation.has('inputType')
+        ? parseInt(operation.get('inputType'))
+        : 3 /* None */,
+    },
+
+    billItemsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'BillItems',
         nodeType: billItemType,
@@ -2126,7 +2879,7 @@ export const billType = new GraphQLObjectType({
 
       return connection;
     }(),
-    paymentsConnection: function () {
+    billPaymentsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'BillPayments',
         nodeType: paymentOfBillsItemType,
@@ -2184,7 +2937,7 @@ export const billType = new GraphQLObjectType({
     _status: {
       type: new GraphQLNonNull(transactionStatusType),
       resolve: (bill) => {
-        // const totalAmount = bill.get('total');
+        const totalAmount = bill.get('total');
         const balanceDue = bill.get('balanceDue');
         const _dueDate = moment(bill.get('dueDate'));
         const now = moment();
@@ -2198,11 +2951,11 @@ export const billType = new GraphQLObjectType({
           return 3; // 'Overdue';
         }
 
-        // const hasPayment = amountPaid !== 0;
-        //
-        // if(hasPayment){
-        //   return 'Partial';
-        // }
+        const hasPayment = balanceDue !== totalAmount;
+
+        if(hasPayment){
+          return 4; // 'Partial';
+        }
 
         return 1; // 'Open';
       },
@@ -2211,10 +2964,7 @@ export const billType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (bill) => bill.get('memo'),
     },
-    files: {
-      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
-      resolve: (bill) => bill.get('files') || [],
-    },
+    files: filesField('Bill'),
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -2225,10 +2975,13 @@ export const billType = new GraphQLObjectType({
       resolve: bill => bill.has('user') ? getUser(bill.get('user').id) : null,
     },
   }),
-  interfaces: [ nodeInterface ],
+  interfaces: [ nodeInterface, expenseOpInterfaceType, ],
+  isTypeOf: (obj) => isType(obj, 'Bill'),
 });
 
-export const paymentOfBillsItemType = new GraphQLObjectType({
+module.exports.billType = billType;
+
+const paymentOfBillsItemType = new GraphQLObjectType({
   name: 'PaymentOfBillsItem',
   description: 'An Bill Payment entry',
   fields: () => ({
@@ -2260,14 +3013,16 @@ export const paymentOfBillsItemType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const paymentOfBillsType = new GraphQLObjectType({
+module.exports.paymentOfBillsItemType = paymentOfBillsItemType;
+
+const paymentOfBillsType = new GraphQLObjectType({
   name: 'PaymentOfBills',
   description: 'A Payment of bills',
   fields: () => ({
     id: globalIdField('PaymentOfBills', object => [object.id, object.get('company').id].join(':')),
     payee: {
       type: vendorType,
-      resolve: (payment) => payment.has('payee') ? payment.get('payee').fetch().then(obj => { obj.__type = 'Vendor'; return obj; }) : null,
+      resolve: (payment) => payment.has('payee') ? payment.get('payee').fetch() : null,
     },
     date: {
       type: new GraphQLNonNull(GraphQLDateTime),
@@ -2289,7 +3044,7 @@ export const paymentOfBillsType = new GraphQLObjectType({
       type: new GraphQLNonNull(GraphQLString),
       resolve: (payment) => payment.get('creditToAccountCode'),
     },
-    itemsConnection: function () {
+    paymentItemsConnection: function () {
       const {connectionType, edgeType} = connectionDefinitions({
         name: 'PaymentOfBillsItems',
         nodeType: paymentOfBillsItemType,
@@ -2340,10 +3095,7 @@ export const paymentOfBillsType = new GraphQLObjectType({
       type: GraphQLString,
       resolve: (payment) => payment.get('memo'),
     },
-    files: {
-      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLURL))),
-      resolve: (payment) => payment.get('files') || [],
-    },
+    files: filesField('PaymentOfBills'),
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -2354,11 +3106,13 @@ export const paymentOfBillsType = new GraphQLObjectType({
       resolve: payment => payment.has('user') ? getUser(payment.get('user').id) : null,
     },
   }),
-  interfaces: [ nodeInterface, expenseOrPaymentOfBillsType ],
-  isTypeOf: (obj) => obj.__type === 'PaymentOfBills' || isType(obj, 'PaymentOfBills'),
+  interfaces: [ nodeInterface, expenseOrPaymentOfBillsType, expenseOpInterfaceType, ],
+  isTypeOf: (obj) => isType(obj, 'PaymentOfBills'),
 });
 
-export const productType = new GraphQLObjectType({
+module.exports.paymentOfBillsType = paymentOfBillsType;
+
+const productType = new GraphQLObjectType({
   name: 'Product',
   fields: () => ({
     id: globalIdField('Product', object => [object.id, object.get('company').id].join(':')),
@@ -2366,17 +3120,22 @@ export const productType = new GraphQLObjectType({
       type: new GraphQLNonNull(productKind),
       resolve: (item) => parseInt(item.get('type')),
     },
+
+    active: activityField(),
+
     displayName: {
       type: new GraphQLNonNull(GraphQLString),
       resolve: (item) => item.get('displayName'),
     },
-    image: {
-      type: GraphQLString,
-      resolve: (item) => item.get('image'),
-    },
+    image: imageField('Item'),
     sku: {
       type: GraphQLString,
       resolve: (item) => item.get('sku'),
+    },
+
+    salesEnabled: {
+      type: GraphQLBoolean,
+      resolve: (item) => item.has('salesEnabled') ? item.get('salesEnabled') : true,
     },
     salesDesc: {
       type: GraphQLString,
@@ -2386,10 +3145,44 @@ export const productType = new GraphQLObjectType({
       type: GraphQLFloat,
       resolve: (item) => item.get('salesPrice'),
     },
+    // salesPriceInputType: {
+    //   type: VATInputType,
+    //   resolve: (item) => item.has('salesPriceInputType') ? parseInt(item.get('salesPriceInputType')) : 1 /* HT */,
+    // },
+    salesVATPart: {
+      type: VATPartType,
+      resolve: (item) => item.has('salesVATPart') ? item.get('salesVATPart') : { inputType: 3 /* NO_VAT */, value: 0, },
+    },
     incomeAccountCode: {
       type: GraphQLString,
       resolve: (item) => item.get('incomeAccountCode'),
     },
+
+    purchaseEnabled: {
+      type: GraphQLBoolean,
+      resolve: (item) => item.has('purchaseEnabled') ? item.get('purchaseEnabled') : false,
+    },
+    purchaseDesc: {
+      type: GraphQLString,
+      resolve: (item) => item.get('purchaseDesc'),
+    },
+    cost: {
+      type: GraphQLFloat,
+      resolve: (item) => item.get('cost'),
+    },
+    // costInputType: {
+    //   type: VATInputType,
+    //   resolve: (item) => item.has('costInputType') ? parseInt(item.get('costInputType')) : 1 /* HT */,
+    // },
+    purchaseVATPart: {
+      type: VATPartType,
+      resolve: (item) => item.has('purchaseVATPart') ? item.get('purchaseVATPart') : { inputType: 3 /* NO_VAT */, value: 0, },
+    },
+    purchaseAccountCode: {
+      type: GraphQLString,
+      resolve: (item) => item.get('purchaseAccountCode'),
+    },
+
     createdAt: createdField(),
     updatedAt: editedField(),
     objectId: objectIdField(),
@@ -2403,7 +3196,9 @@ export const productType = new GraphQLObjectType({
   interfaces: [ nodeInterface ],
 });
 
-export const expenseItemType = new GraphQLObjectType({
+module.exports.productType = productType;
+
+const expenseItemType = new GraphQLObjectType({
   name: 'ExpenseItem',
   description: 'An Expense Item',
   fields: () => ({
@@ -2424,14 +3219,30 @@ export const expenseItemType = new GraphQLObjectType({
       type: new GraphQLNonNull(GraphQLFloat),
       resolve: (item) => item.get('amount'),
     },
+    VATPart: {
+      type: new GraphQLNonNull(VATPartType),
+      resolve: (item) => item.has('VATPart') ? function () {
+        const { inputType, value, } = item.get('VATPart');
+        return {
+          inputType,
+          value,
+        };
+      }() : {
+        inputType: 3 /* NO_VAT */,
+        value: 0,
+      },
+    },
     createdAt: createdField(),
     objectId: objectIdField(),
     className: classNameField(),
   }),
-  interfaces: [ nodeInterface ],
+  interfaces: [ nodeInterface, accountItemType, ],
+  isTypeOf: (obj) => isType(obj, 'ExpenseItem'),
 });
 
-export const billItemType = new GraphQLObjectType({
+module.exports.expenseItemType = expenseItemType;
+
+const billItemType = new GraphQLObjectType({
   name: 'BillItem',
   description: 'An Bill Item',
   fields: () => ({
@@ -2452,14 +3263,30 @@ export const billItemType = new GraphQLObjectType({
       type: new GraphQLNonNull(GraphQLFloat),
       resolve: (item) => item.get('amount'),
     },
+    VATPart: {
+      type: new GraphQLNonNull(VATPartType),
+      resolve: (item) => item.has('VATPart') ? function () {
+        const { inputType, value, } = item.get('VATPart');
+        return {
+          inputType,
+          value,
+        };
+      }() : {
+        inputType: 3 /* NO_VAT */,
+        value: 0,
+      },
+    },
     createdAt: createdField(),
     objectId: objectIdField(),
     className: classNameField(),
   }),
-  interfaces: [ nodeInterface ],
+  interfaces: [ nodeInterface, accountItemType, ],
+  isTypeOf: (obj) => isType(obj, 'BillItem'),
 });
 
-export const invoiceItemType = new GraphQLObjectType({
+module.exports.billItemType = billItemType;
+
+const invoiceItemType = new GraphQLObjectType({
   name: 'InvoiceItem',
   description: 'An Invoice Item',
   fields: () => ({
@@ -2474,7 +3301,7 @@ export const invoiceItemType = new GraphQLObjectType({
     },
     item: {
       type: productType,
-      resolve: (item) => item.has('item') ? item.get('item').fetch().then(obj => { obj.__type = 'Product'; return obj; }) : null,
+      resolve: (item) => item.has('item') ? item.get('item').fetch() : null,
     },
     description: {
       type: GraphQLString,
@@ -2489,17 +3316,33 @@ export const invoiceItemType = new GraphQLObjectType({
       resolve: (item) => item.get('rate'),
     },
     discountPart: {
-      type: discountPartType,
+      type: new GraphQLNonNull(discountPartType),
       resolve: (item) => item.get('discountPart'),
+    },
+    VATPart: {
+      type: new GraphQLNonNull(VATPartType),
+      resolve: (item) => item.has('VATPart') ? function () {
+        const { inputType, value, } = item.get('VATPart');
+        return {
+          inputType,
+          value,
+        };
+      }() : {
+        inputType: 3 /* NO_VAT */,
+        value: 0,
+      },
     },
     createdAt: createdField(),
     objectId: objectIdField(),
     className: classNameField(),
   }),
-  interfaces: [ nodeInterface ],
+  interfaces: [ nodeInterface, productItemType, ],
+  isTypeOf: (obj) => isType(obj, 'InvoiceItem'),
 });
 
-export const saleItemType = new GraphQLObjectType({
+module.exports.invoiceItemType = invoiceItemType;
+
+const saleItemType = new GraphQLObjectType({
   name: 'SaleItem',
   description: 'A Sale Item',
   fields: () => ({
@@ -2509,8 +3352,8 @@ export const saleItemType = new GraphQLObjectType({
       resolve: (item) => item.get('index'),
     },
     item: {
-      type: new GraphQLNonNull(productType),
-      resolve: (item) => item.has('item') ? item.get('item').fetch().then(obj => { obj.__type = 'Product'; return obj; }) : null,
+      type: productType,
+      resolve: (item) => item.has('item') ? item.get('item').fetch() : null,
     },
     date: {
       type: GraphQLDateTime,
@@ -2529,25 +3372,42 @@ export const saleItemType = new GraphQLObjectType({
       resolve: (item) => item.get('rate'),
     },
     discountPart: {
-      type: discountPartType,
+      type: new GraphQLNonNull(discountPartType),
       resolve: (item) => item.get('discountPart'),
+    },
+    VATPart: {
+      type: new GraphQLNonNull(VATPartType),
+      resolve: (item) => item.has('VATPart') ? function () {
+        const { inputType, value, } = item.get('VATPart');
+        return {
+          inputType,
+          value,
+        };
+      }() : {
+        inputType: 3 /* NO_VAT */,
+        value: 0,
+      },
     },
     createdAt: createdField(),
     objectId: objectIdField(),
     className: classNameField(),
   }),
-  interfaces: [ nodeInterface ],
+  interfaces: [ nodeInterface, productItemType, ],
+  isTypeOf: (obj) => isType(obj, 'SaleItem'),
 });
 
-export const {connection: CompanyBankAccountsConnection} = connectionDefinition(
+module.exports.saleItemType = saleItemType;
+
+const {connection: CompanyBankAccountsConnection} = connectionDefinition(
   'CompanyBankAccounts',
   bankType,
   () => {
     return getBankAccounts();
   }
 );
+module.exports.CompanyBankAccountsConnection = CompanyBankAccountsConnection;
 
-export const {connection: AccountOperationConnection} = connectionDefinition(
+const {connection: AccountOperationConnection} = connectionDefinition(
   'AccountOperations',
   operationType,
   (account) => {
@@ -2568,152 +3428,76 @@ export const {connection: AccountOperationConnection} = connectionDefinition(
 
   }
 );
+module.exports.AccountOperationConnection = AccountOperationConnection;
 
-export const {connection: TransactionOperationConnection} = connectionDefinition(
+const {connection: TransactionOperationConnection} = connectionDefinition(
   'TransactionOperations',
   operationType,
   (transaction) => {
-    // const query = transaction.relation('operations').query();
-    // return new Promise((resolve, reject) => {
-    //   query.find().then(
-    //     function (objects) {
-    //       resolve(objects.map(obj => { obj.__type = 'Transaction'; return obj; }));
-    //     },
-    //     function () {
-    //       reject()
-    //     }
-    //   );
-    // });
     return getTransactionOperations({ companyId: transaction.get('company').id, id: transaction.id, });
   }
 );
+module.exports.TransactionOperationConnection = TransactionOperationConnection;
 
-export const {connection: CompanyTransactionsConnection} = connectionDefinition(
+const {connection: CompanyTransactionsConnection} = connectionDefinition(
   'CompanyTransactions',
   transactionType,
   (company) => getTransactions(company)
 );
+module.exports.CompanyTransactionsConnection = CompanyTransactionsConnection;
 
-export const {connection: CompanyAccountsConnection} = connectionDefinition(
+const {connection: CompanyAccountsConnection} = connectionDefinition(
   'CompanyAccounts',
   accountType,
   (company) => getCompanyAccounts(company)
 );
+module.exports.CompanyAccountsConnection = CompanyAccountsConnection;
 
-export const {connection: UserCompaniesConnection, edgeType: UserCompaniesEdge} = connectionDefinition(
+const {connection: UserCompaniesConnection, edgeType: UserCompaniesEdge} = connectionDefinition(
   'UserCompanies',
   companyType,
   (user, info) => getCompanies()
 );
+module.exports.UserCompaniesConnection = UserCompaniesConnection;
+module.exports.UserCompaniesEdge = UserCompaniesEdge;
 
-export const { connection: CompanyVendorsBillsQueryConnection, edgeType: CompanyVendorsBillsQueryEdge, } = function() {
+const {connection: CompanySalesConnection, edgeType: CompanySalesEdge} = function() {
   const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyVendorsBillsQuery',
-    nodeType: vendorType,
+    name: 'CompanySales',
+    nodeType: saleOpInterfaceType,
     connectionFields: () => ({
       totalCount: {
         type: GraphQLInt,
         resolve: (conn) => conn.totalCount,
       },
 
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, results, } = await vendorsQueryBills(obj, {offset, limit, type, status, from, to, sortKey, sortDir,});
-        const vendors = await Parse.Promise.when(results);
-
-        const edges = vendors.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const {connection: CompanyBillsConnection, edgeType: CompanyBillsEdge} = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyBills',
-    nodeType: billType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
+      invoicesSumOfTotals: {
         type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
+        resolve: (conn) => conn.invoicesSumOfTotals,
       },
-      sumOfBalances: {
+      invoicesSumOfBalances: {
         type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfBalances,
+        resolve: (conn) => conn.invoicesSumOfBalances,
       },
 
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, payee, customer, }) {
-        const { count: totalCount, sumOfTotals, sumOfBalances, results: bills, } = await queryBills(obj, {offset, limit, type, status, from, to, sortKey, sortDir, payee, customer,});
-
-        const edges = bills.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount, sumOfTotals, sumOfBalances,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const {connection: CompanyInvoicesConnection, edgeType: CompanyInvoicesEdge} = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyInvoices',
-    nodeType: invoiceType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
+      salesSumOfTotals: {
         type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
+        resolve: (conn) => conn.salesSumOfTotals,
       },
-      sumOfBalances: {
+      salesSumOfBalances: {
         type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfBalances,
+        resolve: (conn) => conn.salesSumOfBalances,
       },
+
+      paymentsSumOfTotals: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfTotals,
+      },
+      paymentsSumOfCredits: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfCredits,
+      },
+
 
     })
   });
@@ -2725,52 +3509,20 @@ export const {connection: CompanyInvoicesConnection, edgeType: CompanyInvoicesEd
         ...filterArgs,
       },
       async resolve(obj, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer,}) {
-        const { count: totalCount, sumOfTotals, sumOfBalances, results: invoices, } = await queryInvoices(obj, {offset, limit, type, status, from, to, sortKey, sortDir, customer,});
+        const {
+          count: totalCount,
 
-        const edges = invoices.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
+          invoicesSumOfTotals = 0.0,
+          invoicesSumOfBalances = 0.0,
 
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount, sumOfTotals, sumOfBalances,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
+          salesSumOfTotals = 0.0,
+          salesSumOfBalances = 0.0,
 
-export const {connection: CompanySalesConnection, edgeType: CompanySalesEdge} = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanySales',
-    nodeType: saleType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
+          paymentsSumOfTotals = 0.0,
+          paymentsSumOfCredits = 0.0,
 
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, customer,}) {
-        const { count: totalCount, sumOfTotals, results: sales, } = await querySales(obj, {offset, limit, type, from, to, sortKey, sortDir, customer,});
+          results: sales,
+        } = await ops__querySales(obj, { offset, limit, type, status, from, to, sortKey, sortDir, customer, });
 
         const edges = sales.map((value, index) => ({
           cursor: offsetToCursor(offset + index),
@@ -2783,33 +3535,62 @@ export const {connection: CompanySalesConnection, edgeType: CompanySalesEdge} = 
             hasPreviousPage: false,
             hasNextPage: false,
           },
-          totalCount, sumOfTotals,
+          totalCount,
+
+          invoicesSumOfTotals,
+          invoicesSumOfBalances,
+
+          salesSumOfTotals,
+          salesSumOfBalances,
+
+          paymentsSumOfTotals,
+          paymentsSumOfCredits,
         };
       },
     },
     edgeType,
   };
 }();
+module.exports.CompanySalesConnection = CompanySalesConnection;
+module.exports.CompanySalesEdge = CompanySalesEdge;
 
-// const {connection: CompanyExpensesConnection, edgeType: CompanyExpensesEdge} = connectionDefinition(
-//   'CompanyExpenses',
-//   expenseType,
-//   (company, info) => getCompanyExpenses(company)
-// );
-
-export const {connection: CompanyExpensesConnection, edgeType: CompanyExpensesEdge} = function() {
+const { connection: CompanyExpensesConnection, edgeType: CompanyExpensesEdge, } = function() {
   const {connectionType, edgeType} = connectionDefinitions({
     name: 'CompanyExpenses',
-    nodeType: expenseType,
+    nodeType: expenseOpInterfaceType,
     connectionFields: () => ({
       totalCount: {
         type: GraphQLInt,
         resolve: (conn) => conn.totalCount,
       },
-      sumOfTotals: {
+
+      billsSumOfTotals: {
         type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
+        resolve: (conn) => conn.billsSumOfTotals,
       },
+      billsSumOfBalances: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.billsSumOfBalances,
+      },
+
+      expensesSumOfTotals: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.expensesSumOfTotals,
+      },
+      expensesSumOfBalances: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.expensesSumOfBalances,
+      },
+
+      paymentsSumOfTotals: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfTotals,
+      },
+      paymentsSumOfCredits: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfCredits,
+      },
+
 
     })
   });
@@ -2820,8 +3601,21 @@ export const {connection: CompanyExpensesConnection, edgeType: CompanyExpensesEd
         ...connectionArgs,
         ...filterArgs,
       },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, customer, payee, }) {
-        const { count: totalCount, sumOfTotals, results: expenses, } = await queryExpenses(obj, { offset, limit, type, from, to, sortKey, sortDir, customer, payee, });
+      async resolve(obj, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, customer, payee, }) {
+        const {
+          count: totalCount,
+
+          billsSumOfTotals = 0.0,
+          billsSumOfBalances = 0.0,
+
+          expensesSumOfTotals = 0.0,
+          expensesSumOfBalances = 0.0,
+
+          paymentsSumOfTotals = 0.0,
+          paymentsSumOfCredits = 0.0,
+
+          results: expenses,
+        } = await ops__queryExpenses(obj, { offset, limit, type, status, from, to, sortKey, sortDir, customer, payee, });
 
         const edges = expenses.map((value, index) => ({
           cursor: offsetToCursor(offset + index),
@@ -2834,157 +3628,27 @@ export const {connection: CompanyExpensesConnection, edgeType: CompanyExpensesEd
             hasPreviousPage: false,
             hasNextPage: false,
           },
-          totalCount, sumOfTotals,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const {connection: CompanyPaymentsOfBillsConnection, edgeType: CompanyPaymentsOfBillsEdge} = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyPaymentsOfBills',
-    nodeType: paymentOfBillsType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
-      sumOfCredits: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfCredits,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, payee, customer,}) {
-        const { count: totalCount, sumOfTotals, sumOfCredits, results: payments, } = await queryPaymentsOfBills(obj, {offset, limit, type, from, to, sortKey, sortDir, payee, customer,});
-
-        const edges = payments.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
           totalCount,
-          sumOfTotals, sumOfCredits,
+
+          billsSumOfTotals,
+          billsSumOfBalances,
+
+          expensesSumOfTotals,
+          expensesSumOfBalances,
+
+          paymentsSumOfTotals,
+          paymentsSumOfCredits,
+
         };
       },
     },
     edgeType,
   };
 }();
+module.exports.CompanyExpensesConnection = CompanyExpensesConnection;
+module.exports.CompanyExpensesEdge = CompanyExpensesEdge;
 
-export const {connection: CompanyPaymentsOfInvoicesConnection, edgeType: CompanyPaymentsOfInvoicesEdge} = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyPaymentsOfInvoices',
-    nodeType: paymentOfInvoicesType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
-      sumOfCredits: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfCredits,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, customer,}) {
-        const { count: totalCount, sumOfTotals, sumOfCredits, results: payments, } = await queryPaymentsOfInvoices(obj, {offset, limit, type, from, to, sortKey, sortDir, customer,});
-
-        const edges = payments.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount,
-          sumOfTotals, sumOfCredits,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: CompanyCustomersInvoicesQueryConnection, edgeType: CompanyCustomersInvoicesQueryEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyCustomersInvoicesQuery',
-    nodeType: customerType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, {offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1,}) {
-        const { count: totalCount, results, } = await customersQueryInvoices(obj, {offset, limit, type, status, from, to, sortKey, sortDir,});
-        const customers = await Parse.Promise.when(results);
-
-        const edges = customers.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: CompanyCustomersSalesQueryConnection, edgeType: CompanyCustomersSalesQueryEdge, } = function() {
+const { connection: CompanyCustomersSalesQueryConnection, edgeType: CompanyCustomersSalesQueryEdge, } = function() {
   const {connectionType, edgeType} = connectionDefinitions({
     name: 'CompanyCustomersSalesQuery',
     nodeType: customerType,
@@ -3004,7 +3668,7 @@ export const { connection: CompanyCustomersSalesQueryConnection, edgeType: Compa
         ...filterArgs,
       },
       async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, results, } = await customersQuerySales(obj, {offset, limit, type, from, to, sortKey, sortDir,});
+        const { count: totalCount, results, } = await ops__customersQuerySales(obj, { offset, limit, type, from, to, sortKey, sortDir, });
         const customers = await Parse.Promise.when(results);
 
         const edges = customers.map((value, index) => ({
@@ -3025,8 +3689,10 @@ export const { connection: CompanyCustomersSalesQueryConnection, edgeType: Compa
     edgeType,
   };
 }();
+module.exports.CompanyCustomersSalesQueryConnection = CompanyCustomersSalesQueryConnection;
+module.exports.CompanyCustomersSalesQueryEdge = CompanyCustomersSalesQueryEdge;
 
-export const { connection: CompanyVendorsExpensesQueryConnection, edgeType: CompanyVendorsExpensesQueryEdge, } = function() {
+const { connection: CompanyVendorsExpensesQueryConnection, edgeType: CompanyVendorsExpensesQueryEdge, } = function() {
   const {connectionType, edgeType} = connectionDefinitions({
     name: 'CompanyVendorsExpensesQuery',
     nodeType: vendorType,
@@ -3046,7 +3712,7 @@ export const { connection: CompanyVendorsExpensesQueryConnection, edgeType: Comp
         ...filterArgs,
       },
       async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, results, } = await vendorsQueryExpenses(obj, { offset, limit, type, from, to, sortKey, sortDir, });
+        const { count: totalCount, results, } = await ops__vendorsQueryExpenses(obj, { offset, limit, type, from, to, sortKey, sortDir, });
         const vendors = await Parse.Promise.when(results);
 
         const edges = vendors.map((value, index) => ({
@@ -3067,168 +3733,80 @@ export const { connection: CompanyVendorsExpensesQueryConnection, edgeType: Comp
     edgeType,
   };
 }();
+module.exports.CompanyVendorsExpensesQueryConnection = CompanyVendorsExpensesQueryConnection;
+module.exports.CompanyVendorsExpensesQueryEdge = CompanyVendorsExpensesQueryEdge;
 
-export const { connection: CompanyCustomersExpensesQueryConnection, edgeType: CompanyCustomersExpensesQueryEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyCustomersExpensesQuery',
-    nodeType: customerType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, results, } = await customersQueryExpenses(obj, { offset, limit, type, from, to, sortKey, sortDir, });
-        const customers = await Parse.Promise.when(results);
-
-        const edges = customers.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: CompanyVendorsPaymentsOfBillsQueryConnection, edgeType: CompanyVendorsPaymentsOfBillsQueryEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyVendorsPaymentsOfBillsQuery',
-    nodeType: vendorType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, results, } = await vendorsQueryPaymentsOfBills(obj, { offset, limit, type, from, to, sortKey, sortDir, });
-        const vendors = await Parse.Promise.when(results);
-
-        const edges = vendors.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: CompanyCustomersPaymentsOfInvoicesQueryConnection, edgeType: CompanyCustomersPaymentsOfInvoicesQueryEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CompanyCustomersPaymentsOfInvoicesQuery',
-    nodeType: customerType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, results, } = await customersQueryPaymentsOfInvoices(obj, {offset, limit, type, from, to, sortKey, sortDir,});
-        const customers = await Parse.Promise.when(results);
-
-        const edges = customers.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const {connection: CompanyEmployeesConnection, edgeType: CompanyEmployeesEdge} = connectionDefinition(
+const {connection: CompanyEmployeesConnection, edgeType: CompanyEmployeesEdge} = connectionDefinition(
   'CompanyEmployees',
   employeeType,
   (company, info) => getCompanyEmployees(company)
 );
-export const {connection: CompanyCustomersConnection, edgeType: CompanyCustomersEdge} = connectionDefinition(
+module.exports.CompanyEmployeesConnection = CompanyEmployeesConnection;
+module.exports.CompanyEmployeesEdge = CompanyEmployeesEdge;
+
+const {connection: CompanyCustomersConnection, edgeType: CompanyCustomersEdge} = connectionDefinition(
   'CompanyCustomers',
   customerType,
   (company, info) => getCompanyCustomers(company)
 );
-export const {connection: CompanyVendorsConnection, edgeType: CompanyVendorsEdge} = connectionDefinition(
+module.exports.CompanyCustomersConnection = CompanyCustomersConnection;
+module.exports.CompanyCustomersEdge = CompanyCustomersEdge;
+
+const {connection: CompanyVendorsConnection, edgeType: CompanyVendorsEdge} = connectionDefinition(
   'CompanyVendors',
   vendorType,
   (company, info) => getCompanyVendors(company)
 );
+module.exports.CompanyVendorsConnection = CompanyVendorsConnection;
+module.exports.CompanyVendorsEdge = CompanyVendorsEdge;
 
-export const {connection: CompanyProductsConnection, edgeType: CompanyProductsEdge} = connectionDefinition(
+
+const {connection: CompanyProductsConnection, edgeType: CompanyProductsEdge} = connectionDefinition(
   'CompanyProducts',
   productType,
   (company, info) => getCompanyProducts(company)
 );
 
-export const { connection: VendorExpensesConnection, edgeType: VendorExpensesEdge, } = function() {
+module.exports.CompanyProductsConnection = CompanyProductsConnection;
+module.exports.CompanyProductsEdge = CompanyProductsEdge;
+
+const { connection: VendorExpensesConnection, edgeType: VendorExpensesEdge, } = function() {
   const {connectionType, edgeType} = connectionDefinitions({
     name: 'VendorExpenses',
-    nodeType: expenseType,
+    nodeType: expenseOpInterfaceType,
     connectionFields: () => ({
       totalCount: {
         type: GraphQLInt,
         resolve: (conn) => conn.totalCount,
       },
-      sumOfTotals: {
+
+      billsSumOfTotals: {
         type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
+        resolve: (conn) => conn.billsSumOfTotals,
       },
+      billsSumOfBalances: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.billsSumOfBalances,
+      },
+
+      expensesSumOfTotals: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.expensesSumOfTotals,
+      },
+      expensesSumOfBalances: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.expensesSumOfBalances,
+      },
+
+      paymentsSumOfTotals: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfTotals,
+      },
+      paymentsSumOfCredits: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfCredits,
+      },
+
 
     })
   });
@@ -3239,8 +3817,21 @@ export const { connection: VendorExpensesConnection, edgeType: VendorExpensesEdg
         ...connectionArgs,
         ...filterArgs,
       },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, sumOfTotals, results: expenses, } = await queryExpenses({ id: obj.get('company').id, }, { offset, limit, type, from, to, sortKey, sortDir, payee: obj.id, }, false);
+      async resolve(obj, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }) {
+        const {
+          count: totalCount,
+
+          billsSumOfTotals = 0.0,
+          billsSumOfBalances = 0.0,
+
+          expensesSumOfTotals = 0.0,
+          expensesSumOfBalances = 0.0,
+
+          paymentsSumOfTotals = 0.0,
+          paymentsSumOfCredits = 0.0,
+
+          results: expenses,
+        } = await ops__queryExpenses({ id: obj.get('company').id, }, { offset, limit, type, status, from, to, sortKey, sortDir, payee: obj.id, }, false);
 
         const edges = expenses.map((value, index) => ({
           cursor: offsetToCursor(offset + index),
@@ -3253,102 +3844,17 @@ export const { connection: VendorExpensesConnection, edgeType: VendorExpensesEdg
             hasPreviousPage: false,
             hasNextPage: false,
           },
-          totalCount, sumOfTotals,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: CustomerExpensesConnection, edgeType: CustomerExpensesEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CustomerExpenses',
-    nodeType: expenseType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, sumOfTotals, results: expenses, } = await queryExpenses({ id: obj.get('company').id, }, { offset, limit, type, from, to, sortKey, sortDir, customer: obj.id, }, false);
-
-        const edges = expenses.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount, sumOfTotals,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: VendorPaymentsOfBillsConnection, edgeType: VendorPaymentsOfBillsEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'VendorPaymentsOfBills',
-    nodeType: paymentOfBillsType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
-      sumOfCredits: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfCredits,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, {offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, sumOfTotals, sumOfCredits, results: payments, } = await queryPaymentsOfBills({ id: obj.get('company').id, }, { offset, limit, type, from, to, sortKey, sortDir, payee: obj.id, }, false);
-
-        const edges = payments.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
           totalCount,
-          sumOfTotals, sumOfCredits,
+
+          billsSumOfTotals,
+          billsSumOfBalances,
+
+          expensesSumOfTotals,
+          expensesSumOfBalances,
+
+          paymentsSumOfTotals,
+          paymentsSumOfCredits,
+
         };
       },
     },
@@ -3356,167 +3862,46 @@ export const { connection: VendorPaymentsOfBillsConnection, edgeType: VendorPaym
   };
 }();
 
-export const { connection: CustomerPaymentsOfInvoicesConnection, edgeType: CustomerPaymentsOfInvoicesEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CustomerPaymentsOfInvoices',
-    nodeType: paymentOfInvoicesType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
-      sumOfCredits: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfCredits,
-      },
+module.exports.VendorExpensesConnection = VendorExpensesConnection;
+module.exports.VendorExpensesEdge = VendorExpensesEdge;
 
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, sumOfTotals, sumOfCredits, results: payments, } = await queryPaymentsOfInvoices({ id: obj.get('company').id, }, { offset, limit, type, from, to, sortKey, sortDir, customer: obj.id, }, false);
-
-        const edges = payments.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount,
-          sumOfTotals, sumOfCredits,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const {connection: VendorBillsConnection, edgeType: VendorBillsEdge} = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'VendorBills',
-    nodeType: billType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
-      sumOfBalances: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfBalances,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, sumOfTotals, sumOfBalances, results: invoices, } = await queryBills({ id: obj.get('company').id, }, { offset, limit, type, status, from, to, sortKey, sortDir, payee: obj.id, }, false);
-
-        const edges = invoices.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount, sumOfTotals, sumOfBalances,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: CustomerInvoicesConnection, edgeType: CustomerInvoicesEdge, } = function() {
-  const {connectionType, edgeType} = connectionDefinitions({
-    name: 'CustomerInvoices',
-    nodeType: invoiceType,
-    connectionFields: () => ({
-      totalCount: {
-        type: GraphQLInt,
-        resolve: (conn) => conn.totalCount,
-      },
-      sumOfTotals: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
-      },
-      sumOfBalances: {
-        type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfBalances,
-      },
-
-    })
-  });
-  return {
-    connection: {
-      type: connectionType,
-      args: {
-        ...connectionArgs,
-        ...filterArgs,
-      },
-      async resolve(obj, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, sumOfTotals, sumOfBalances, results: invoices, } = await queryInvoices({ id: obj.get('company').id, }, { offset, limit, type, status, from, to, sortKey, sortDir, customer: obj.id, }, false);
-
-        const edges = invoices.map((value, index) => ({
-          cursor: offsetToCursor(offset + index),
-          node: value,
-        }));
-
-        return {
-          edges,
-          pageInfo: {
-            hasPreviousPage: false,
-            hasNextPage: false,
-          },
-          totalCount, sumOfTotals, sumOfBalances,
-        };
-      },
-    },
-    edgeType,
-  };
-}();
-
-export const { connection: CustomerSalesConnection, edgeType: CustomerSalesEdge, } = function() {
+const { connection: CustomerSalesConnection, edgeType: CustomerSalesEdge, } = function() {
   const {connectionType, edgeType} = connectionDefinitions({
     name: 'CustomerSales',
-    nodeType: saleType,
+    nodeType: saleOpInterfaceType,
     connectionFields: () => ({
       totalCount: {
         type: GraphQLInt,
         resolve: (conn) => conn.totalCount,
       },
-      sumOfTotals: {
+
+      invoicesSumOfTotals: {
         type: GraphQLFloat,
-        resolve: (conn) => conn.sumOfTotals,
+        resolve: (conn) => conn.invoicesSumOfTotals,
       },
+      invoicesSumOfBalances: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.invoicesSumOfBalances,
+      },
+
+      salesSumOfTotals: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.salesSumOfTotals,
+      },
+      salesSumOfBalances: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.salesSumOfBalances,
+      },
+
+      paymentsSumOfTotals: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfTotals,
+      },
+      paymentsSumOfCredits: {
+        type: GraphQLFloat,
+        resolve: (conn) => conn.paymentsSumOfCredits,
+      },
+
 
     })
   });
@@ -3527,8 +3912,21 @@ export const { connection: CustomerSalesConnection, edgeType: CustomerSalesEdge,
         ...connectionArgs,
         ...filterArgs,
       },
-      async resolve(obj, { offset, limit, type, from, to, sortKey = 'date', sortDir = -1, }) {
-        const { count: totalCount, sumOfTotals, results: sales, } = await querySales({ id: obj.get('company').id, }, { offset, limit, type, from, to, sortKey, sortDir, customer: obj.id, }, false);
+      async resolve(obj, { offset, limit, type, status, from, to, sortKey = 'date', sortDir = -1, }) {
+        const {
+          count: totalCount,
+
+          invoicesSumOfTotals = 0.0,
+          invoicesSumOfBalances = 0.0,
+
+          salesSumOfTotals = 0.0,
+          salesSumOfBalances = 0.0,
+
+          paymentsSumOfTotals = 0.0,
+          paymentsSumOfCredits = 0.0,
+
+          results: sales,
+        } = await ops__querySales({ id: obj.get('company').id, }, { offset, limit, type, status, from, to, sortKey, sortDir, customer: obj.id, }, false);
 
         const edges = sales.map((value, index) => ({
           cursor: offsetToCursor(offset + index),
@@ -3541,10 +3939,22 @@ export const { connection: CustomerSalesConnection, edgeType: CustomerSalesEdge,
             hasPreviousPage: false,
             hasNextPage: false,
           },
-          totalCount, sumOfTotals,
+          totalCount,
+          invoicesSumOfTotals,
+          invoicesSumOfBalances,
+
+          salesSumOfTotals,
+          salesSumOfBalances,
+
+          paymentsSumOfTotals,
+          paymentsSumOfCredits,
+
         };
       },
     },
     edgeType,
   };
 }();
+
+module.exports.CustomerSalesConnection = CustomerSalesConnection;
+module.exports.CustomerSalesEdge = CustomerSalesEdge;

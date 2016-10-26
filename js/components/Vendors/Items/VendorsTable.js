@@ -24,21 +24,23 @@ import PaymentForm from '../../Expenses/PaymentForm/PaymentForm';
 
 import OverlayMenu from '../../utils/OverlayMenu';
 
-const DEFAULT_ACTIONS = {
+const DEFAULT_ACTIONS = obj => ({
   main: 'bill',
   actions: [
     'expense',
     'payment',
+    obj.active ? 'inactive' : 'active'
   ],
-};
+});
 
-const HAS_OPEN_ACTIONS = {
+const HAS_OPEN_ACTIONS = obj => ({
   main: 'payment',
   actions: [
     'bill',
     'expense',
+    obj.active ? 'inactive' : 'active'
   ],
-};
+});
 
 function getActionsStyle(rowIndex){
   return {
@@ -51,7 +53,7 @@ function getActionsStyle(rowIndex){
   };
 }
 
-class DropdownActions extends Component{
+class DropdownActions extends React.Component{
   state = { open: false, };
   render(){
     const { open, } = this.state;
@@ -65,9 +67,9 @@ class DropdownActions extends Component{
 
 function renderActions(self, { intl, store, rowIndex, }){
   const obj = store.getObjectAt(rowIndex);
-  const { main, actions, } = obj.expensesStatus.open.totalCount > 0
-    ? HAS_OPEN_ACTIONS
-    : DEFAULT_ACTIONS;
+  const { main, actions, } = (obj.expensesStatus ? obj.expensesStatus.open.totalCount : 0) > 0
+    ? HAS_OPEN_ACTIONS(obj)
+    : DEFAULT_ACTIONS(obj);
   return (
     typeof main === 'undefined' ? null : <OverlayMenu title={main ? intl.formatMessage(messages[`Action_${main}`]) : undefined} container={self} onMainAction={self._onMainAction.bind(self, obj, main)}>
       {actions.length > 0 && <DropdownActions>
@@ -98,7 +100,7 @@ function reverseSortDirection(sortDir) {
   return sortDir === SortTypes.DESC ? SortTypes.ASC : SortTypes.DESC;
 }
 
-class SortHeaderCell extends Component {
+class SortHeaderCell extends React.Component {
   // constructor(props, context){
   //   super(props, context);
   //   this.state = {
@@ -178,15 +180,15 @@ import moment from 'moment';
 
 import {Table, Column, Cell,} from '../../../../fixed-data-table';
 
-import {editStart as editStartBill} from '../../../redux/modules/bills';
-import {editStart as editStartPayment} from '../../../redux/modules/paymentsOfBills';
-import {editStart as editStartExpense} from '../../../redux/modules/expenses';
+import {editStart as editStartBill} from '../../../redux/modules/v2/bills';
+import {editStart as editStartPayment} from '../../../redux/modules/v2/paymentsOfBills';
+import {editStart as editStartExpense} from '../../../redux/modules/v2/expenses';
 
 import requiredPropType from 'react-prop-types/lib/all';
 
 import { Modes as SelectionModes, } from '../../../redux/modules/selection';
 
-export default class ExpensesTable extends Component{
+export default class ExpensesTable extends React.Component{
 
   static displayName = 'VendorsExpensesTable';
 
@@ -269,6 +271,8 @@ export default class ExpensesTable extends Component{
 
   _onAction = (type, obj) => {
 
+    let showModal = true;
+
     switch (type) {
       case 'bill':
         this.context.store.dispatch(
@@ -300,12 +304,24 @@ export default class ExpensesTable extends Component{
         });
         break;
 
+      case 'active':
+        showModal = false;
+
+        this.props.onActivate(obj);
+        break;
+
+      case 'inactive':
+        showModal = false;
+
+        this.props.onDeactivate(obj);
+        break;
+
       default:
 
         throw 'Invalid Operation';
     }
 
-    this.setState({
+    showModal && this.setState({
       modalOpen: true,
       modalType: type,
       payee: obj,
@@ -416,6 +432,15 @@ export default class ExpensesTable extends Component{
     this.props.goToVendor(obj);
   };
 
+  onOverdueBills = (obj, e) => {
+    stopEvent(e);
+
+    localStorage.setItem('vendor.type', 'overdue');
+    localStorage.setItem('vendor.status', 'overdue');
+
+    this.props.goToVendor(obj);
+  };
+
   _onToggleAll = (e) => {
     const { selection, page, toggleAll, toggleNone, } = this.props;
     const sel = selection[page] || { mode: SelectionModes.None, keys: {}, };
@@ -505,7 +530,6 @@ export default class ExpensesTable extends Component{
             payee={this.state.payee}
             company={this.props.company}
             viewer={this.props.viewer}
-            company={this.props.company}
             formKey={'NEW'}
             expensesAccounts={this.props.expensesAccounts}
             depositsAccounts={this.props.depositsAccounts}
@@ -552,7 +576,6 @@ export default class ExpensesTable extends Component{
             expense={this.state.obj}
             company={this.props.company}
             viewer={this.props.viewer}
-            company={this.props.company}
             formKey={this.state.obj.id}
             expensesAccounts={this.props.expensesAccounts}
             depositsAccounts={this.props.depositsAccounts}
@@ -612,10 +635,10 @@ export default class ExpensesTable extends Component{
     const rowsCount = loading ? 0 : store.getSize();
     const tableHeight = 36 + (rowsCount * 59) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -699,7 +722,7 @@ export default class ExpensesTable extends Component{
              <div>{loading || function(self){
                const obj = store.getObjectAt(rowIndex);
                return (
-                 <a style={{ fontWeight: 'bolder', color: '#000000', }} className={styles['link']} onClick={e => { stopEvent(e), self._openLink(obj); }}>{obj.displayName}</a>
+                 <a style={{ fontWeight: 'bolder', color: '#000000', ...(obj.active ? {} : { opacity: 0.5, }), }} className={styles['link']} onClick={e => { stopEvent(e), self._openLink(obj); }}>{obj.displayName}</a>
                );
              }(this)}</div>
              </Cell>
@@ -759,7 +782,7 @@ export default class ExpensesTable extends Component{
              <Cell {...props}>
              <div>{loading || function(){
                const obj = store.getObjectAt(rowIndex);
-               return intl.formatNumber(obj.expensesStatus.open.amount, { format: 'MAD', });
+               return intl.formatNumber(obj.expensesStatus ? obj.expensesStatus.open.amount : 0.0, { format: 'MAD', });
              }()}</div>
              </Cell>
            )}
@@ -812,10 +835,10 @@ export default class ExpensesTable extends Component{
     const rowsCount = loading ? 0 : store.getSize();
     const tableHeight = 36 + (rowsCount * 59) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -899,7 +922,7 @@ export default class ExpensesTable extends Component{
              <div>{loading || function(self){
                const obj = store.getObjectAt(rowIndex);
                return (
-                 <a style={{ fontWeight: 'bolder', color: '#000000', }} className={styles['link']} onClick={e => { stopEvent(e), self._openLink(obj); }}>{obj.displayName}</a>
+                 <a style={{ fontWeight: 'bolder', color: '#000000', ...(obj.active ? {} : { opacity: 0.5, }), }} className={styles['link']} onClick={e => { stopEvent(e), self._openLink(obj); }}>{obj.displayName}</a>
                );
              }(this)}</div>
              </Cell>
@@ -960,8 +983,15 @@ export default class ExpensesTable extends Component{
              <div>{loading || function(self){
                const obj = store.getObjectAt(rowIndex);
                return (
-                 <a className={styles['link-2']} onClick={self.onOpenBills.bind(self, obj)}>{intl.formatMessage(messages['Open_Bills'], { count: obj.expensesStatus.open.totalCount, })}
-                 </a>
+                 <div>
+
+                   <a style={{ display: 'inline-block', }} className={styles['link-2']} onClick={self.onOpenBills.bind(self, obj)}>{intl.formatMessage(messages['Open_Bills'], { count: obj.expensesStatus ? obj.expensesStatus.open.totalCount : 0, })}
+                   </a>
+
+                   {(obj.expensesStatus ? obj.expensesStatus.overdue.totalCount : 0) > 0 ? <a style={{ marginLeft: 3, display: 'inline-block', }} className={styles['link-2']} onClick={self.onOverdueBills.bind(self, obj)}>({intl.formatMessage(messages['Overdue_Bills'], { count: obj.expensesStatus ? obj.expensesStatus.overdue.totalCount : 0, })})
+                   </a> : null}
+
+                 </div>
                );
              }(this)}</div>
              </Cell>
@@ -1015,10 +1045,10 @@ export default class ExpensesTable extends Component{
   //   const rowsCount = loading ? 0 : store.getSize();
   //   const tableHeight = 36 + (rowsCount * 59) + 2;
   //   // const bodyWidth = Math.max(956,
-  //   //   this.props.bodyWidth - 225 - 60
+  //   //   this.props.bodyWidth - 165 - 60
   //   // )
   //   // ;
-  //   const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+  //   const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
   //   const tableWidth = bodyWidth - 1;
   //
   //   const isEmpty = rowsCount === 0;
@@ -1102,7 +1132,7 @@ export default class ExpensesTable extends Component{
   //            <div>{loading || function(self){
   //              const obj = store.getObjectAt(rowIndex);
   //              return (
-  //                <a style={{ fontWeight: 'bolder', color: '#000000', }} className={styles['link']} onClick={e => { stopEvent(e), self._openLink(obj); }}>{obj.displayName}</a>
+  //                <a style={{ fontWeight: 'bolder', color: '#000000', ...(obj.active ? {} : { opacity: 0.5, }), }} className={styles['link']} onClick={e => { stopEvent(e), self._openLink(obj); }}>{obj.displayName}</a>
   //              );
   //            }(this)}</div>
   //            </Cell>
@@ -1146,7 +1176,7 @@ export default class ExpensesTable extends Component{
   //            <Cell {...props}>
   //            <div>{loading || function(){
   //              const obj = store.getObjectAt(rowIndex);
-  //              return intl.formatNumber(obj.expensesStatus.open.amount, { format: 'MAD', });
+  //              return intl.formatNumber(obj.expensesStatus ? obj.expensesStatus.open.amount : 0.0, { format: 'MAD', });
   //            }()}</div>
   //            </Cell>
   //          )}
@@ -1214,7 +1244,7 @@ function decoratePaymentItem({ id, amount, bill: { id: billId, objectId, date, d
   return obj;
 }
 
-function decorateBill({ objectId, __dataID__, id, paymentRef, vendor, billingAddress, terms, date, dueDate, discountType, discountValue, itemsConnection, paymentsConnection, memo, files, }) {
+function decorateBill({ objectId, __dataID__, totalHT, VAT, inputType, id, paymentRef, vendor, billingAddress, terms, date, dueDate, discountType, discountValue, itemsConnection, paymentsConnection, memo, files, }) {
   const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
 
   function calcBillStatus() {
@@ -1259,6 +1289,7 @@ function decorateBill({ objectId, __dataID__, id, paymentRef, vendor, billingAdd
     totalAmountReceived: paymentsConnection.totalAmountReceived,
     status: calcBillStatus(),
     memo, files,
+    totalHT, VAT, inputType,
     itemsConnection,
     paymentsConnection,
     objectId,

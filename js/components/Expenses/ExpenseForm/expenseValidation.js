@@ -8,5 +8,7 @@ const validation = createValidator({
   creditToAccountCode: [required],
 
   payee: [required],
+
+  inputType: [required],
 });
 export default validation;

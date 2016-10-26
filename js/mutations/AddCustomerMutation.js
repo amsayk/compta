@@ -2,6 +2,12 @@ import Relay from 'react-relay';
 
 export default class AddCustomerMutation extends Relay.Mutation {
   static fragments = {
+    customer: () => Relay.QL`
+      fragment on Customer {
+        id,
+        objectId,
+      }
+    `,
     company: () => Relay.QL`
       fragment on Company {
         id,
@@ -22,6 +28,20 @@ export default class AddCustomerMutation extends Relay.Mutation {
       fragment on AddCustomerPayload {
         customerEdge{
           node{
+          salesStatus{
+
+                      open{
+                        totalCount,
+                        amount,
+                      },
+
+                      overdue{
+                        totalCount,
+                        amount,
+                      },
+
+                    },
+                    active,
             objectId,
             id,
             displayName,
@@ -79,6 +99,7 @@ export default class AddCustomerMutation extends Relay.Mutation {
         fragment on AddCustomerPayload {
           customerEdge{
             node{
+            active,
               objectId,
               id,
               displayName,
@@ -115,26 +136,28 @@ export default class AddCustomerMutation extends Relay.Mutation {
     };
   }
   getOptimisticResponse() {
-    return {
-      // FIXME: totalCount gets updated optimistically, but this edge does not
-      // get added until the server responds
-      customerEdge: {
-        node: {
-          company: this.props.company,
-          companyId: this.props.company.id,
-          ...this.props.fieldInfos.reduce(function (props, {fieldName, value}) {
-            return {
-              ...props,
-              [fieldName]: value,
-            };
-          }, {}),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      },
-      company: {
-        id: this.props.company.id,
-      },
-    };
+    return null;
+    // return {
+    //   // FIXME: totalCount gets updated optimistically, but this edge does not
+    //   // get added until the server responds
+    //   customerEdge: {
+    //     node: {
+    //       company: this.props.company,
+    //       companyId: this.props.company.id,
+    //       ...(this.props.customer ? this.props.customer : {} ),
+    //       ...this.props.fieldInfos.reduce(function (props, {fieldName, value}) {
+    //         return {
+    //           ...props,
+    //           [fieldName]: value,
+    //         };
+    //       }, {}),
+    //       createdAt: new Date().toISOString(),
+    //       updatedAt: new Date().toISOString(),
+    //     },
+    //   },
+    //   company: {
+    //     id: this.props.company.id,
+    //   },
+    // };
   }
 }

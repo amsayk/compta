@@ -1,5 +1,1 @@
-import Error from './Error';
-
-export default {
-  Error,
-};
+export Alert from './Alert';

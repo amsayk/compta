@@ -26,7 +26,7 @@ import events from 'dom-helpers/events';
 import CSSModules from 'react-css-modules';
 
 @CSSModules(styles, { allowMultiple: true, })
-class Search extends Component{
+class Search extends React.Component{
   static displayName = 'AppSearch';
   static propTypes = {};
   static contextTypes = {};
@@ -200,7 +200,7 @@ class RelayRoute extends Relay.Route {
 }
 
 function wrapWithC(MyComponent, props) {
-  class CWrapper extends Component {
+  class CWrapper extends React.Component {
     static propTypes = {
       loading: PropTypes.bool.isRequired,
     };
@@ -250,6 +250,16 @@ function wrapWithC(MyComponent, props) {
 
           company(id: $companyId){
 
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
+
             objectId,
 
             id,
@@ -267,7 +277,7 @@ function createContainer({ company, onClose, }){
   const Route = new RelayRoute({ companyId: company.id, });
   const MyComponent = wrapWithC(Search, { companyId: company.id, onClose, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -300,7 +310,7 @@ function createContainer({ company, onClose, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {

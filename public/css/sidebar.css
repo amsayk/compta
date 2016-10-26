@@ -1,0 +1,27 @@
+.sidebar-link-group-children{
+    font-size: 12px!important;
+}
+
+.sidebar-link-icon{
+    color: #c0d0e4;
+}
+.sidebar-link-icon.active{
+    color: #fff;
+}
+.sidebar-link-text{
+    color: #c0d0e4;
+}.sidebar-link-text.active{
+    color: #fff;
+}
+.sidebar-link-chevron{
+}
+
+.sidebar-wrapper *:not(.fab){
+    /*background: #05283c!important;*/
+}
+.sidebar{}
+.sidebar-logo{
+    color: yellowgreen!important;
+}
+.sidebar-logo-text{}
+.sidebar-header-account{}

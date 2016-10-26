@@ -32,12 +32,12 @@ export default defineMessages({
 
   x_payments_made_since: {
     id: 'invoice-form.message-x-payments-made-since',
-    defaultMessage: 'made since {lastPaymentDate, date, medium}.',
+    defaultMessage: 'made since {lastPaymentDate}.',
   },
 
   x_payments_made_on: {
     id: 'invoice-form.message-x-payments-made-on',
-    defaultMessage: 'made on {lastPaymentDate, date, medium}.',
+    defaultMessage: 'made on {lastPaymentDate}.',
   },
 
   ErrorTitle: {

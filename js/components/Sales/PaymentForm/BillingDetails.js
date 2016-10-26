@@ -26,7 +26,7 @@ function normalizeMoment(d){
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'PaymentBillingDetails';
 
@@ -47,7 +47,7 @@ export default class extends Component {
 
         <div styleName='billing-details'>
 
-          <form>
+          <div>
 
             <div className='row'>
 
@@ -86,7 +86,7 @@ export default class extends Component {
 
             </div>
 
-          </form>
+          </div>
 
         </div>
 

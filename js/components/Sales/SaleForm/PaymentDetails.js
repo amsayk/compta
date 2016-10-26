@@ -46,7 +46,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -81,7 +81,7 @@ export default class extends Component {
 
         <div styleName='payment-details'>
 
-          <form>
+          <div>
 
             <div className='row'>
 
@@ -127,7 +127,7 @@ export default class extends Component {
 
                   <label style={{display: 'block'}} styleName='subsection12TitleText' htmlFor='paymentRef'>Nº de référence</label>
 
-                  <input value={getFieldValue(paymentRef)} onChange={paymentRef.onChange} style={{}} className='form-control' id='paymentRef'/>
+                  <input value={getFieldValue(paymentRef, '')} onChange={paymentRef.onChange} style={{}} className='form-control' id='paymentRef'/>
 
                 </fieldset>
 
@@ -184,7 +184,7 @@ export default class extends Component {
 
             </div>
 
-          </form>
+          </div>
 
         </div>
 

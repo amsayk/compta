@@ -3,7 +3,7 @@ import Relay from 'react-relay';
 
 import Modal from 'react-bootstrap/lib/Modal';
 
-import Dialog, { Body, } from '../../utils/Dialog';
+// import Dialog, { Body, } from '../../utils/Dialog';
 
 import classnames from 'classnames';
 
@@ -19,48 +19,124 @@ import LazyCache from 'react-lazy-cache';
 
 import Loading from '../../Loading/Loading';
 
-import AddBillMutation from '../../../mutations/AddBillMutation';
-import AddExpenseMutation from '../../../mutations/AddExpenseMutation';
-import ReceivePaymentOfBillsMutation from '../../../mutations/ReceivePaymentOfBillsMutation';
+import AddBillMutation from '../../../mutations/v2/AddBillMutation';
+import AddExpenseMutation from '../../../mutations/v2/AddExpenseMutation';
+import MakePaymentOfBillsMutation from '../../../mutations/v2/MakePaymentOfBillsMutation';
 
-import RemoveExpenseMutation from '../../../mutations/RemoveExpenseMutation';
-import RemoveBillMutation from '../../../mutations/RemoveBillMutation';
-import RemovePaymentOfBillsMutation from '../../../mutations/RemovePaymentOfBillsMutation';
+import RemoveExpenseMutation from '../../../mutations/v2/RemoveExpenseMutation';
+import RemoveBillMutation from '../../../mutations/v2/RemoveBillMutation';
+import RemovePaymentOfBillsMutation from '../../../mutations/v2/RemovePaymentOfBillsMutation';
 
-import AddInvoiceMutation from '../../../mutations/AddInvoiceMutation';
-import AddSaleMutation from '../../../mutations/AddSaleMutation';
-import ReceivePaymentOfInvoicesMutation from '../../../mutations/ReceivePaymentOfInvoicesMutation';
+import AddInvoiceMutation from '../../../mutations/v2/AddInvoiceMutation';
+import AddSaleMutation from '../../../mutations/v2/AddSaleMutation';
+import ReceivePaymentOfInvoicesMutation from '../../../mutations/v2/ReceivePaymentOfInvoicesMutation';
 
-import RemoveInvoiceMutation from '../../../mutations/RemoveInvoiceMutation';
-import RemoveSaleMutation from '../../../mutations/RemoveSaleMutation';
-import RemovePaymentOfInvoicesMutation from '../../../mutations/RemovePaymentOfInvoicesMutation';
+import RemoveInvoiceMutation from '../../../mutations/v2/RemoveInvoiceMutation';
+import RemoveSaleMutation from '../../../mutations/v2/RemoveSaleMutation';
+import RemovePaymentOfInvoicesMutation from '../../../mutations/v2/RemovePaymentOfInvoicesMutation';
 
 import Revision from '../../../utils/revision';
 
 import stopEvent from '../../../utils/stopEvent';
 
-import {editStart as editStartInvoice} from '../../../redux/modules/invoices';
-import {editStart as editStartPaymentOfInvoices} from '../../../redux/modules/paymentsOfInvoices';
-import {editStart as editStartSale} from '../../../redux/modules/sales';
+import {editStart as editStartInvoice} from '../../../redux/modules/v2/invoices';
+import {editStart as editStartPaymentOfInvoices} from '../../../redux/modules/v2/paymentsOfInvoices';
+import {editStart as editStartSale} from '../../../redux/modules/v2/sales';
 
-import InvoiceForm  from '../../Sales/InvoiceForm/InvoiceForm';
-import SaleForm  from '../../Sales/SaleForm/SaleForm';
-import PaymentOfInvoicesForm  from '../../Sales/PaymentForm/PaymentForm';
+// import InvoiceForm  from '../../Sales/InvoiceForm/InvoiceForm';
+// import SaleForm  from '../../Sales/SaleForm/SaleForm';
+// import PaymentOfInvoicesForm  from '../../Sales/PaymentForm/PaymentForm';
 
-import {editStart as editStartExpense} from '../../../redux/modules/expenses';
-import {editStart as editStartPaymentOfBills} from '../../../redux/modules/paymentsOfBills';
-import {editStart as editStartBill} from '../../../redux/modules/bills';
+import {editStart as editStartExpense} from '../../../redux/modules/v2/expenses';
+import {editStart as editStartPaymentOfBills} from '../../../redux/modules/v2/paymentsOfBills';
+import {editStart as editStartBill} from '../../../redux/modules/v2/bills';
 
-import ExpenseForm  from '../../Expenses/ExpenseForm/ExpenseForm';
-import BillForm  from '../../Expenses/BillForm/BillForm';
-import PaymentOfBillsForm  from '../../Expenses/PaymentForm/PaymentForm';
+// import ExpenseForm  from '../../Expenses/ExpenseForm/ExpenseForm';
+// import BillForm  from '../../Expenses/BillForm/BillForm';
+// import PaymentOfBillsForm  from '../../Expenses/PaymentForm/PaymentForm';
+
+import LoadingActions from '../../Loading/actions';
+
+let InvoiceForm = null;
+let SaleForm = null;
+let PaymentOfInvoicesForm = null;
+
+let ExpenseForm = null;
+let BillForm = null;
+let PaymentOfBillsForm = null;
+
+function loadComponent(type, cb) {
+  LoadingActions.show();
+
+  switch (type){
+    case 'invoice':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        InvoiceForm = require('../../Sales/InvoiceForm/InvoiceForm').default;
+        cb();
+      }, 'InvoiceForm');
+
+      break;
+
+    case 'paymentOfInvoices':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        PaymentOfInvoicesForm = require('../../Sales/PaymentForm/PaymentForm').default;
+        cb();
+      }, 'PaymentOfInvoicesForm');
+
+      break;
+
+    case 'sale':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        SaleForm = require('../../Sales/SaleForm/SaleForm').default;
+        cb();
+      }, 'SaleForm');
+
+      break;
+
+    case 'expense':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        ExpenseForm = require('../../Expenses/ExpenseForm/ExpenseForm').default;
+        cb();
+      }, 'ExpenseForm');
+
+      break;
+
+    case 'paymentOfBills':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        PaymentOfBillsForm = require('../../Expenses/PaymentForm/PaymentForm').default;
+        cb();
+      }, 'PaymentOfBillsForm');
+
+      break;
+
+    case 'bill':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        BillForm = require('../../Expenses/BillForm/BillForm').default;
+        cb();
+      }, 'BillForm');
+
+      break;
+  }
+}
 
 import styles from './Recent.scss';
 
 import CSSModules from 'react-css-modules';
 
 @CSSModules(styles, { allowMultiple: true, })
-class Recent extends Component{
+class Recent extends React.Component{
   static displayName = 'Recent';
   static propTypes = {};
   static contextTypes = {
@@ -89,11 +165,11 @@ class Recent extends Component{
     }, onReadyStateChange);
   };
 
-  _onReceivePaymentOfBills = ({ objectId, }) => {
-    this._onPaymentVendorSelected({
-      id: objectId,
-    });
-  };
+  // _onMakePaymentOfBills = ({ objectId, }) => {
+  //   this._onPaymentVendorSelected({
+  //     id: objectId,
+  //   });
+  // };
 
   _onModalOpen = (type, e) => {
     stopEvent(e);
@@ -219,7 +295,7 @@ class Recent extends Component{
             formKey={'NEW'}
             onBill={this._onBill}
             onCancel={this._close}
-            onReceivePayments={this._onReceivePaymentOfBills}
+            onReceivePayments={this._onMakePaymentOfBills}
           />
         );
 
@@ -256,7 +332,7 @@ class Recent extends Component{
     }
   }
 
-  _onReceivePaymentOfBills = (bills) => {
+  _onMakePaymentOfBills = (bills) => {
     let amountReceived = 0.0;
 
     function decorateBillItem({ id, objectId, date, dueDate, memo, paymentRef, itemsConnection, paymentsConnection, }){
@@ -291,12 +367,25 @@ class Recent extends Component{
       editStartPaymentOfBills(
         'NEW', items, {id: 'NEW', company: this.props.company, }));
 
-    this.setState({
-      modalOpen: true,
-      modalType: 'paymentOfBills',
-      amountReceived,
-      selectedBills: bills,
+    setImmediate(() => {
+
+      if(bills && bills.length > 0){
+        const id = bills[0].payee.objectId;
+        this._onPaymentVendorSelected({
+          id,
+        });
+      }
+
     });
+
+    loadComponent('paymentOfBills', () => {
+      this.setState({
+        modalOpen: true,
+        modalType: 'paymentOfBills',
+        amountReceived,
+        selectedBills: bills,
+      });
+    })
   };
 
   _handleClose = () => {
@@ -373,7 +462,7 @@ class RelayRoute extends Relay.Route {
 }
 
 function wrapWithC(MyComponent, props) {
-  class CWrapper extends Component {
+  class CWrapper extends React.Component {
     static propTypes = {
       loading: PropTypes.bool.isRequired,
     };
@@ -443,10 +532,16 @@ function wrapWithC(MyComponent, props) {
                 date,
                 dueDate,
                 terms,
+
+                totalHT,
+                VAT,
+
+                inputType,
+                
                 memo,
                 files,
                 refNo,
-                itemsConnection{
+                itemsConnection : invoiceItemsConnection{
                   totalCount,
                   totalAmount,
                   edges{
@@ -471,7 +566,7 @@ function wrapWithC(MyComponent, props) {
                     }
                   }
                 },
-                paymentsConnection{
+                paymentsConnection : invoicePaymentsConnection{
                   totalAmountReceived,
                 },
                 discountType,
@@ -495,9 +590,15 @@ function wrapWithC(MyComponent, props) {
                 date,
                 dueDate,
                 terms,
+
+                totalHT,
+                VAT,
+
+                inputType,
+
                 memo,
                 files,
-                itemsConnection{
+                itemsConnection : billItemsConnection{
                   totalCount,
                   totalAmount,
                   edges{
@@ -511,7 +612,7 @@ function wrapWithC(MyComponent, props) {
                     }
                   }
                 },
-                paymentsConnection{
+                paymentsConnection : billPaymentsConnection{
                   totalAmountPaid,
                 },
               }
@@ -553,9 +654,19 @@ function wrapWithC(MyComponent, props) {
 
           company(id: $companyId){
 
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
+
             ${AddBillMutation.getFragment('company')},
             ${AddExpenseMutation.getFragment('company')},
-            ${ReceivePaymentOfBillsMutation.getFragment('company')},
+            ${MakePaymentOfBillsMutation.getFragment('company')},
 
             ${RemoveBillMutation.getFragment('company')},
             ${RemoveExpenseMutation.getFragment('company')},
@@ -637,17 +748,36 @@ function wrapWithC(MyComponent, props) {
             companyProducts(first: 1000){
               edges{
                 node{
-                  objectId,
-                  id,
-                  type,
-                  displayName,
-                  image,
-                  sku,
-                  salesDesc,
-                  salesPrice,
-                  incomeAccountCode,
-                  updatedAt,
-                  createdAt,
+                  active,
+                    className,
+                    objectId,
+                    id,
+                    type,
+                    displayName,
+                    image,
+                    image{
+                      objectId,
+                      url,
+                    },
+                    sku,
+                    salesEnabled,
+                    salesDesc,
+                    salesPrice,
+                    salesVATPart{
+                      inputType,
+                      value,
+                    },
+                    incomeAccountCode,
+                    purchaseEnabled,
+                    purchaseDesc,
+                    cost,
+                    purchaseVATPart{
+                      inputType,
+                      value,
+                    },
+                    purchaseAccountCode,
+                    updatedAt,
+                    createdAt,
                 }
               }
             },
@@ -785,7 +915,7 @@ function createContainer({ company, onClose, }){
   const Route = new RelayRoute({ companyId: company.id, });
   const MyComponent = wrapWithC(Recent, { companyId: company.id, onClose, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -818,7 +948,7 @@ function createContainer({ company, onClose, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {

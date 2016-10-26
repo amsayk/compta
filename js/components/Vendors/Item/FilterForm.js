@@ -69,7 +69,7 @@ function normalizeMoment(m){
   },
 }))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'VendorExpensesFilterForm';
 
@@ -179,7 +179,7 @@ export default class extends Component {
                  const top = getScrollTop();
                  const left = getScrollLeft();
                  style.top = `${398 - top}px`;
-                 style.left = `${450 + (this.props.drawerOpen ? 245 : 30) - left}px`;
+                 style.left = `${389 + 29 + (this.props.drawerOpen ? 245 : 29) - 218/*Width of batch actions*/ - left}px`;
                }
              }}
              className={classnames({'expenses-filter-form': true, [styles['expenses-filter-form'] || '']: true, })}
@@ -197,7 +197,7 @@ export default class extends Component {
 
                   <div style={{}}>
 
-                    <form onSubmit={doSave}>
+                    <div onSubmit={doSave}>
 
                       <div className='row'>
 
@@ -332,7 +332,7 @@ export default class extends Component {
 
                       </div>}
 
-                    </form>
+                    </div>
 
                   </div>
 

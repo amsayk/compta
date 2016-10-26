@@ -8,9 +8,12 @@
 @import "modal.css";
 @import "notifications.css";
 @import "mdl-checkbox.css";
-@import "react-vis-overrides.css";
+/*@import "react-vis-overridedes.css";*/
 @import "table.css";
 @import "fab.css";
+@import "sidebar.css";
+@import "wizard.css";
+@import "alert.css";
 
 .height100Percent, #app > div, #app > div > div{
   height: 100%;
@@ -105,7 +108,7 @@ a:hover, a:focus {
 }
 
 .material-icons.md-36 {
-    font-size: 36px;
+    /*font-size: 36px;*/
 }
 
 .material-icons.md-48 {
@@ -175,7 +178,7 @@ button.valid{
 }
 
 .content {
-    margin-left: 225px;
+    margin-left: 165px; /* --sidebar-width */
     transition: margin-left .5s ease-in;
 }
 

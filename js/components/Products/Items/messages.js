@@ -3,6 +3,24 @@ import {
 } from 'react-intl';
 
 export default defineMessages({
+  Action_active: {
+    id: 'products-items-page.action-active',
+    defaultMessage: 'Rendre actif',
+  },
+  Action_inactive: {
+    id: 'products-items-page.action-inactive',
+    defaultMessage: 'Rendre inactif',
+  },
+
+  ConfirmDeactivate: {
+    id: 'products-items-page.message.confirm-deactive',
+    defaultMessage: 'Etes-vous sûr de vouloir rendre {displayName} inactif?'
+  },
+  ConfirmActivate: {
+    id: 'products-items-page.message.confirm-active',
+    defaultMessage: 'Etes-vous sûr de vouloir rendre {displayName} actif?'
+  },
+
   Done: {
     id: 'products-items-page.label-done',
     defaultMessage: 'Terminer',

@@ -1,0 +1,22 @@
+version: '2'
+services:
+  app:
+    build: .
+    ports:
+     - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URI=mongodb://db:27017/compta-enterprise
+      - APPLICATION_ID=xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT
+      - JAVASCRIPT_KEY=UWvZmYpzg7J3jIOhI0Bg5H1ELKjYlfu9sYDzjDXW
+      - MASTER_KEY=bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb
+      - CLIENT_CLASS_CREATION=true
+      - ANON_USERS=true
+      - SERVER_URL=http://localhost:3000/parse
+    depends_on:
+     - db
+  db:
+    image: mongo:latest
+    volumes:
+     - /var/lib/compta-enterprise/data/db:/data/db

@@ -39,7 +39,7 @@ function getActionsStyle(rowIndex){
   };
 }
 
-class DropdownActions extends Component{
+class DropdownActions extends React.Component{
   state = { open: false, };
   render(){
     const { open, } = this.state;
@@ -84,7 +84,7 @@ function reverseSortDirection(sortDir) {
   return sortDir === SortTypes.DESC ? SortTypes.ASC : SortTypes.DESC;
 }
 
-class SortHeaderCell extends Component {
+class SortHeaderCell extends React.Component {
   // constructor(props, context){
   //   super(props, context);
   //   this.state = {
@@ -155,7 +155,7 @@ import requiredPropType from 'react-prop-types/lib/all';
 
 import { Modes as SelectionModes, } from '../../../redux/modules/selection';
 
-export default class SalesTable extends Component{
+export default class SalesTable extends React.Component{
 
   static displayName = 'EmployeesSalesTable';
 
@@ -332,10 +332,10 @@ export default class SalesTable extends Component{
     const rowsCount = loading ? 0 : store.getSize();
     const tableHeight = 36 + (rowsCount * 59) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;

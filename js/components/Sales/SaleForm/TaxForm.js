@@ -21,7 +21,7 @@ import stopEvent from '../../../utils/stopEvent';
 const MAX = 100;
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
     store: PropTypes.object.isRequired,
@@ -103,7 +103,7 @@ export default class extends Component{
                     style={{width: 200, textAlign: 'right',}}
                     className={classnames('form-control', {'has-error': !pristine && taxPercent.invalid,})}
                     placeholder={intl.formatMessage(messages['taxRate'])}
-                    value={value}
+                    value={value || ''}
                     onChange={e => {
                       this.setState({
                         value: e.target.value,

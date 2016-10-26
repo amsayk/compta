@@ -1,3 +1,7 @@
+.products-table :global .overlay-menu{
+  text-align: right!important;
+}
+
 .link:hover, .link-2:hover{
   text-decoration: underline;
 }
@@ -128,7 +132,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  // left: 225px;
+  // left: 165px; // --sidebar-width
 
   padding: 0;
 
@@ -478,7 +482,7 @@ body .table {
 
 .empty {
   // position: absolute;;
-  // left: 225px;
+  // left: 165px; // --sidebar-width
   // top: 0;
   // bottom: 0;
   // right: 0;

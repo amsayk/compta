@@ -1,8 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import Relay from 'react-relay';
 
-import Sidebar from '../../Sidebar/AppSidebar';
-
 import LazyCache from 'react-lazy-cache';
 
 import moment from 'moment';
@@ -13,13 +11,15 @@ import styles from './Items.scss';
 
 import classnames from 'classnames';
 
+import Title from '../../Title/Title';
+
 import events from 'dom-helpers/events';
 
-import concat from 'lodash.concat';
+// import concat from 'lodash.concat';
 import orderBy from 'lodash.orderby';
 import take from 'lodash.take';
 import drop from 'lodash.drop';
-import uniq from 'lodash.uniqby';
+// import uniq from 'lodash.uniqby';
 
 import { getBodyWidth, } from '../../../utils/dimensions';
 
@@ -37,7 +37,7 @@ import Pagination from './Pagination';
 import Header from './Header';
 import ProductsTable from './ProductsTable';
 
-import {getBodyHeight,} from '../../../utils/dimensions';
+// import {getBodyHeight,} from '../../../utils/dimensions';
 
 import RelayRoute from '../../../routes/ProductsRoute';
 
@@ -47,9 +47,13 @@ const DEFAULT_LIMIT    = 7;
 const DEFAULT_SORT_KEY = 'displayName';
 const DEFAULT_SORT_DIR = -1;
 
-function clamp(value, min, max){
-  return Math.min(Math.max(value, min), max);
-}
+// function clamp(value, min, max){
+//   return Math.min(Math.max(value, min), max);
+// }
+
+import Actions from '../../confirm/actions';
+import NotifyActions from '../../notification/NotifyActions';
+
 
 import {
   intlShape,
@@ -58,7 +62,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-class Items extends Component {
+class Items extends React.Component {
 
   static propTypes = {
     loading: PropTypes.bool.isRequired,
@@ -69,6 +73,57 @@ class Items extends Component {
   static contextTypes = {
     store: PropTypes.object.isRequired,
     intl: intlShape.isRequired,
+  };
+
+  _deactivateProduct = (product) => {
+    const { intl, } = this.context;
+
+    const { objectId, displayName, } = product;
+
+    Actions.show(intl.formatMessage(messages['ConfirmDeactivate'], { displayName, }))
+      .then(() => {
+
+        Relay.Store.commitUpdate(new AddProductMutation({
+          id: objectId,
+          fieldInfos: [ { fieldName: 'active', value: false, }],
+          company: this.props.company,
+          viewer: this.props.viewer,
+          item: product,
+        }), {
+          onSuccess: function ({addProduct: {productEdge: {node: {objectId, ...props,}}}}) {
+          },
+          onFailure: function (transaction) {
+            const error = transaction.getError();
+          },
+        });
+      })
+      .catch(() => {});
+
+  };
+
+  _activateProduct = (product) => {
+    const { intl, } = this.context;
+
+    const { objectId, displayName, } = product;
+
+    Actions.show(intl.formatMessage(messages['ConfirmActivate'], { displayName, }))
+      .then(() => {
+
+        Relay.Store.commitUpdate(new AddProductMutation({
+          id: objectId,
+          fieldInfos: [ { fieldName: 'active', value: true, }],
+          company: this.props.company,
+          viewer: this.props.viewer,
+          item: product,
+        }), {
+          onSuccess: function ({addProduct: {productEdge: {node: {objectId, ...props,}}}}) {
+          },
+          onFailure: function (transaction) {
+            const error = transaction.getError();
+          },
+        })
+      })
+      .catch(() => {});
   };
 
   _onSortChange = (columnKey, dir) => {
@@ -105,6 +160,8 @@ class Items extends Component {
 
   componentDidMount(){
     events.on(window, 'resize', this._handleWindowResize);
+
+    ga('send', 'pageview', '/modal/app/products');
   }
 
   render() {
@@ -162,6 +219,8 @@ class Items extends Component {
                   bodyWidth={bodyWidth}
                   company={this.props.company}
                   viewer={this.props.viewer}
+                  salesAccounts={this.props.salesAccounts}
+                  expensesAccounts={this.props.expensesAccounts}
                   topLoading={loading}
                   filterArgs={{
                     offset,
@@ -190,12 +249,16 @@ class Items extends Component {
                   <div styleName='products-table' style={{marginTop: 3,}}>
 
                     <ProductsTable
+                      onActivate={this._activateProduct}
+                      onDeactivate={this._deactivateProduct}
                       bodyWidth={bodyWidth}
                       relay={this.props.relay}
                       company={this.props.company}
                       viewer={this.props.viewer}
                       topLoading={loading || stale}
                       styles={this.props.styles}
+                      salesAccounts={this.props.salesAccounts}
+                      expensesAccounts={this.props.expensesAccounts}
                       totalCount={totalCount}
                       onSortChange={this._onSortChange}
                       products={data}
@@ -233,6 +296,8 @@ class Items extends Component {
 
           </div>
 
+          <Title title={`Produits et services`}/>
+
         </Body>
 
         <Footer>
@@ -254,7 +319,7 @@ class Items extends Component {
 
 function wrapWithC(MyComponent, props) {
 
-  class CWrapper extends Component {
+  class CWrapper extends React.Component {
 
     static propTypes = {
       loading: PropTypes.bool.isRequired,
@@ -275,6 +340,8 @@ function wrapWithC(MyComponent, props) {
           products: root.products,
           companies: root.companies,
           company: root.company,
+          expensesAccounts: props.expensesAccounts,
+          salesAccounts: props.salesAccounts,
           root: root,
           viewer: root,
           relay: relay,
@@ -320,6 +387,16 @@ function wrapWithC(MyComponent, props) {
 
             company(id: $companyId) {
 
+              VATSettings{
+                enabled,
+                agency,
+                startDate,
+                IF,
+                frequency,
+                regime,
+                percentages{ value, },
+              },
+
               ${AddProductMutation.getFragment('company')},
 
               objectId,
@@ -361,15 +438,35 @@ function wrapWithC(MyComponent, props) {
               products: companyProducts(first: 100000){
                 edges{
                   node{
+                  ${AddProductMutation.getFragment('item')},
+                    active,
+                    className,
                     objectId,
                     id,
                     type,
                     displayName,
                     image,
+                    image{
+                      objectId,
+                      url,
+                    },
                     sku,
+                    salesEnabled,
                     salesDesc,
                     salesPrice,
+                    salesVATPart{
+                      inputType,
+                      value,
+                    },
                     incomeAccountCode,
+                    purchaseEnabled,
+                    purchaseDesc,
+                    cost,
+                    purchaseVATPart{
+                      inputType,
+                      value,
+                    },
+                    purchaseAccountCode,
                     updatedAt,
                     createdAt,
                   }
@@ -388,7 +485,7 @@ function createContainer({ viewer, params, company, companies, ...props, }){
   const MyComponent = wrapWithC(Items, { ...props, params, company, });
   const Route = new RelayRoute({ companyId: company.id,  });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -426,7 +523,7 @@ function createContainer({ viewer, params, company, companies, ...props, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {

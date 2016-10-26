@@ -10,7 +10,31 @@ import * as companyActions from '../../../redux/modules/companies';
 
 import { setBeforeUnloadMessage, unsetBeforeUnloadMessage, } from '../../../utils/unbeforeunload';
 
+import LoadingActions from '../../Loading/actions';
+
 import Actions from '../../confirm/actions';
+
+import Logo from './Logo';
+
+import formatAddress from '../../../utils/formatAddress';
+
+function getAddress({
+  company_streetAddress,
+  company_cityTown,
+  company_stateProvince,
+  company_postalCode,
+  company_country,
+}){
+  const addr = formatAddress({
+    address: company_streetAddress,
+    city: company_cityTown,
+    subdivision: company_stateProvince,
+    postalCode: company_postalCode,
+    country: company_country,
+  });
+
+  return addr.length === 0 ? undefined : [...addr].join('<br/>');
+}
 
 // import TelInput from '../../utils/TelInput';
 
@@ -70,7 +94,7 @@ function getMinHeight() {
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'AppSettingsForm';
 
@@ -85,6 +109,8 @@ export default class extends Component {
 
   componentDidMount() {
     events.on(window, 'resize', this._handleWindowResize);
+
+    ga('send', 'pageview', '/modal/app/settings');
   }
 
   componentWillUnmount() {
@@ -97,7 +123,7 @@ export default class extends Component {
 
   _setFormRef = (ref) => {
     this._form = ref;
-  }
+  };
 
   leave = (then) => {
     if(this._form){
@@ -116,7 +142,7 @@ export default class extends Component {
 
     let tableHeight = 0;
 
-    tableHeight += self.state.selected === 0 ? 170 : 120;
+    tableHeight += self.state.selected === 0 ? 350 : 250;
     tableHeight += self.state.selected === 1 ? 600 : 500;
     tableHeight += self.state.selected === 2 ? 400 : 350;
 
@@ -149,7 +175,7 @@ export default class extends Component {
             </div>
 
             <div styleName='icon'>
-              <i style={{verticalAlign: 'middle'}} className='material-icons md-light' style={{}}>settings</i>
+              <i className='material-icons md-light' style={{verticalAlign: 'middle'}}>settings</i>
             </div>
 
           </div>
@@ -184,9 +210,9 @@ export default class extends Component {
                   <a>{intl.formatMessage(messages['Payments'])}</a>
                 </div>
 
-                <div onClick={this._setTab.bind(this, 'settings')} styleName='trowserNavItem settingsNavItem' className={tab === 'settings' ? this.props.styles['selected'] : ''}>
-                  <a>{intl.formatMessage(messages['Advanced'])}</a>
-                </div>
+                {/*<div onClick={this._setTab.bind(this, 'settings')} styleName='trowserNavItem settingsNavItem' className={tab === 'settings' ? this.props.styles['selected'] : ''}>
+                 <a>{intl.formatMessage(messages['Advanced'])}</a>
+                 </div>*/}
 
               </nav>
 
@@ -218,8 +244,8 @@ export default class extends Component {
                             rowHeight={170}
                             rowHeightGetter={rowIndex => {
                                 switch (rowIndex){
-                                  case 0 : return self.state.selected === 0 ? 170 : 120;
-                                  case 1 : return self.state.selected === 1 ? 600 : 500;
+                                  case 0 : return self.state.selected === 0 ? 350 : 250;
+                                  case 1 : return self.state.selected === 1 ? 650 : 525;
                                   case 2 : return self.state.selected === 2 ? 400 : 350;
                                 }
                               }}
@@ -253,7 +279,7 @@ export default class extends Component {
                       case 'sales': return <SalesSettings ref={self._setRef.bind(self, 'sales')} root={self.props.root} viewer={self.props.viewer} company={self.props.company} bodyWidth={bodyWidth}/>;
                       case 'expenses': return <ExpensesSettings ref={self._setRef.bind(self, 'expenses')} root={self.props.root} viewer={self.props.viewer} company={self.props.company} bodyWidth={bodyWidth}/>;
                       case 'payments': return <PaymentsSettings ref={self._setRef.bind(self, 'payments')} root={self.props.root} viewer={self.props.viewer}  company={self.props.company} bodyWidth={bodyWidth}/>;
-                      case 'settings': return <AdvancedSettings ref={self._setRef.bind(self, 'settings')} root={self.props.root} viewer={self.props.viewer} company={self.props.company} bodyWidth={bodyWidth}/>;
+                      // case 'settings': return <AdvancedSettings ref={self._setRef.bind(self, 'settings')} root={self.props.root} viewer={self.props.viewer} company={self.props.company} bodyWidth={bodyWidth}/>;
 
                       default:
 
@@ -292,12 +318,13 @@ export default class extends Component {
   };
 
   _setActiveRow = (rowIndex, e) => {
-    if(e){
-      e.preventDefault();
-      e.stopPropagation();
-    }
 
     if(rowIndex !== this.state.selected){
+      if(e){
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
       const done = () => {
         this.setState({
           selected: rowIndex,
@@ -371,9 +398,9 @@ export default class extends Component {
 const CompanyName = function () {
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
-    propTypes: {
+    static propTypes = {
       company: PropTypes.object.isRequired,
     };
 
@@ -395,15 +422,22 @@ const CompanyName = function () {
 
                 <div style={{textAlign: 'left'}}>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}} style={{textAlign: 'left'}}>
+
+                    <div styleName='inlineBlock logoContainer'>
+
+                      {/*<span styleName='logoPlaceHolder inlineBlock'>{ this.props.company.logo ? <img width="128px" height='128px' src={this.props.company.logo.url} /> : null }</span>*/}
+                      <span styleName='logoPlaceHolder inlineBlock'>{ this.props.company.logo ? <img height='150px' src={this.props.company.logo.url} /> : null }</span>
+
+                    </div>
 
                     <fieldset className='form-group'>
 
-                      <label>{this.props.company.displayName}</label>
+                      <label style={{ fontFamily: '"HelveticaNeueBold", Helvetica, Arial, sans-serif' }}>{this.props.company.displayName}</label>
 
                     </fieldset>
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -465,17 +499,23 @@ const CompanyName = function () {
       fields: [
         'id',
         'displayName',
+        'logo',
       ],
       validate: companyValidation,
       asyncValidate,
       asyncBlurFields: ['displayName'],
     }, (state, ownProps) => ({
       saveError: state.companies.saveError,
-      initialValues: pick(ownProps.company, [ 'id', 'displayName', ]), // Pass company on edit
+      initialValues: {
+        id: ownProps.company.id,
+        displayName: ownProps.company.displayName,
+        logo: ownProps.company.logo,
+      },
+      // pick(ownProps.company, [ 'id', 'displayName', ]), // Pass company on edit
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -483,7 +523,7 @@ const CompanyName = function () {
       this.props.editStart(this.props.company.id);
     }
 
-    propTypes: {
+    static propTypes = {
       company: PropTypes.object.isRequired,
       viewer: PropTypes.object.isRequired,
     };
@@ -567,7 +607,7 @@ const CompanyName = function () {
         fields: {
           id,
           displayName,
-          // displayNameValidation,
+          logo,
         },
         handleSubmit,
         valid,
@@ -582,8 +622,31 @@ const CompanyName = function () {
       } = this.props;
 
       const doUpdate = handleSubmit((data) => {
-        return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => ({fieldName: key, value: data[key]})), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
+        LoadingActions.show();
+
+        const fieldInfos = Object.keys(data).filter(key => key !== 'id' && key !== 'logo').map(key => ({fieldName: key, value: data[key]}));
+        const _data = {id: this.props.company.id, fieldInfos, viewer: this.props.viewer, root: this.props.root, company: this.props.company, };
+
+        const logoValue = data['logo'];
+
+        const {
+          fields: {
+            logo,
+          }
+        } = this.props;
+
+        if(logo.dirty){
+          _data.logo = logoValue ? {
+            ...pick(logoValue, [ 'name', 'type', 'size' ]),
+            dataBase64: logoValue.url.split(/,/)[1],
+          } : {
+            isNull: true,
+          };
+        }
+
+        return  update(_data)
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -610,13 +673,24 @@ const CompanyName = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate} style={{textAlign: 'left'}}>
+
+                    {/*<div styleName='inlineBlock logoContainer'>
+
+                      <span styleName='logoPlaceHolder inlineBlock'></span>
+
+                      <div styleName='avatar-edit'>
+                        <i className='material-icons '>photo_camera</i>
+                      </div>
+
+                    </div>*/}
+                    <Logo onChange={logo.onChange} value={getFieldValue(logo)}/>
 
                     <fieldset className={classnames('form-group', {'has-danger': !pristine && displayName.invalid,})}>
 
                       <input
                         {...displayName}
-                         value={getFieldValue(displayName)}
+                         value={getFieldValue(displayName, '')}
                         disabled={submitting}
                         autoFocus
                         type='text'
@@ -629,7 +703,7 @@ const CompanyName = function () {
 
                     </fieldset>
 
-                  </form>
+                  </div>
 
                   {saveError && <div styleName='error'>{intl.formatMessage({ ...saveError, id: saveError._id, })}</div>}
 
@@ -678,9 +752,9 @@ const CompanyName = function () {
 const CompanyInfo = function () {
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
-    propTypes: {
+    static propTypes = {
       company: PropTypes.object.isRequired,
     };
 
@@ -702,7 +776,7 @@ const CompanyInfo = function () {
 
                 <div>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}}>
 
                     <div className='form-group row'>
 
@@ -721,7 +795,17 @@ const CompanyInfo = function () {
                       <label htmlFor='siege-sociale' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Address'])}</label>
 
                       <div className='col-sm-8'>
-                        <p className='form-control-static' styleName={'labelText'}>{this.props.company.address || '--'}</p>
+                        <p className='form-control-static' styleName={'labelText'} dangerouslySetInnerHTML={{__html: getAddress(this.props.company) || '--'}}></p>
+                      </div>
+
+                    </div>
+
+                    <div className='form-group row'>
+
+                      <label htmlFor='capital' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Capital'])}</label>
+
+                      <div className='col-sm-8'>
+                        <p className='form-control-static' styleName={'labelText'}>{this.props.company.capital || '--'}</p>
                       </div>
 
                     </div>
@@ -738,7 +822,7 @@ const CompanyInfo = function () {
 
                     <div className='form-group row'>
 
-                      <label htmlFor='webSite' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Activity'])}</label>
+                      <label htmlFor='webSite' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Site'])}</label>
 
                       <div className='col-sm-8'>
                         <p className='form-control-static' styleName={'labelText'}>{this.props.company.webSite || '--'}</p>
@@ -758,7 +842,7 @@ const CompanyInfo = function () {
 
                     <div className='form-group row'>
 
-                      <label htmlFor='fax' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Tel'])}</label>
+                      <label htmlFor='fax' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Fax'])}</label>
 
                       <div className='col-sm-8'>
                         <p className='form-control-static' styleName={'labelText'}>{this.props.company.fax || '--'}</p>
@@ -777,7 +861,7 @@ const CompanyInfo = function () {
                     </div>
 
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -807,7 +891,17 @@ const CompanyInfo = function () {
       fields: [
         'id',
         'legalForm',
-        'address',
+
+        // 'address',
+
+        'company_streetAddress',
+        'company_cityTown',
+        'company_stateProvince',
+        'company_postalCode',
+        'company_country',
+
+        'capital',
+
         'activity',
         'webSite',
         'tel',
@@ -816,11 +910,29 @@ const CompanyInfo = function () {
       ],
     }, (state, ownProps) => ({
       saveError: state.companies.saveError,
-      initialValues: pick(ownProps.company, ['id', 'legalForm', 'address', 'activity', 'webSite', 'tel', 'fax', 'email',]), // Pass company on edit
+      initialValues: pick(ownProps.company, [
+        'id',
+        'legalForm',
+        // 'address',
+
+        'company_streetAddress',
+        'company_cityTown',
+        'company_stateProvince',
+        'company_postalCode',
+        'company_country',
+
+        'capital',
+
+        'activity',
+        'webSite',
+        'tel',
+        'fax',
+        'email',
+      ]), // Pass company on edit
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -828,7 +940,7 @@ const CompanyInfo = function () {
       this.props.editStart(this.props.company.id);
     }
 
-    propTypes: {
+    static propTypes = {
       company: PropTypes.object.isRequired,
       viewer: PropTypes.object.isRequired,
     };
@@ -912,7 +1024,16 @@ const CompanyInfo = function () {
         fields: {
           id,
           legalForm,
-          address,
+
+          // address,
+          company_streetAddress,
+          company_cityTown,
+          company_stateProvince,
+          company_postalCode,
+          company_country,
+
+          capital,
+
           activity,
           webSite,
           tel,
@@ -932,8 +1053,10 @@ const CompanyInfo = function () {
       } = this.props;
 
       const doUpdate = handleSubmit((data) => {
+        LoadingActions.show();
         return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => ({fieldName: key, value: key === 'legalForm' ? (data[key] ? legalFormsById[data[key]] : undefined) : data[key]})), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -962,7 +1085,7 @@ const CompanyInfo = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate}>
 
                     <div className='form-group row'>
 
@@ -1013,7 +1136,92 @@ const CompanyInfo = function () {
                       <label htmlFor='siege-sociale' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Address'])}</label>
 
                       <div className='col-sm-8'>
-                        <textarea disabled={submitting} maxLength={'300'} {...address} value={getFieldValue(address)} value={address.value || ''} rows='5' className='form-control' id='siege-sociale'/>
+
+                        {/*<textarea
+                          disabled={submitting}
+                          maxLength={'300'}
+                          {...address}
+                          value={getFieldValue(address, '')}
+                          // value={address.value || ''}
+                          rows='5'
+                          className='form-control' id='siege-sociale'
+                        />*/}
+
+                        <div className={classnames('tab-pane fade', {'active in': true,})} role='tabpanel'>
+
+                          <div className='form-group row'>
+
+                            <div style={{ paddingLeft: 0, paddingRight: 0, }} className='col-sm-12'>
+                              <textarea
+                                style={{resize: 'none'}}
+                                disabled={submitting}
+                                onChange={company_streetAddress.onChange}
+                                value={getFieldValue(company_streetAddress, '')}
+                                placeholder={intl.formatMessage(messages['placeholder_Street'])}
+                                className='form-control'/>
+                            </div>
+
+                          </div>
+
+                          <div className='form-group row'>
+
+                            <div style={{ paddingLeft: 0, }} className='col-sm-6'>
+                              <input
+                              onChange={company_cityTown.onChange}
+                              value={getFieldValue(company_cityTown, '')}
+                              disabled={submitting} type='text' className='form-control'
+                              placeholder={intl.formatMessage(messages['placeholder_cityTown'])}/>
+                            </div>
+
+                            <div style={{ paddingRight: 0, }} className='col-sm-6'>
+                              <input
+                              onChange={company_stateProvince.onChange}
+                              value={getFieldValue(company_stateProvince, '')}
+                                disabled={submitting} type='text' className='form-control'
+                                placeholder={intl.formatMessage(messages['placeholder_stateProvince'])}/>
+                            </div>
+
+                          </div>
+
+                          <div className='form-group row'>
+
+                            <div style={{ paddingLeft: 0, }} className='col-sm-6'>
+                              <input
+                              onChange={company_postalCode.onChange}
+                              value={getFieldValue(company_postalCode, '')}
+                                disabled={submitting} type='text' className='form-control'
+                                placeholder={intl.formatMessage(messages['placeholder_postalCode'])}/>
+                            </div>
+
+                            <div style={{ paddingRight: 0, }} className='col-sm-6'>
+                              <input
+                              onChange={company_country.onChange}
+                              value={getFieldValue(company_country, '')}
+                                disabled={submitting} type='text' className='form-control'
+                                placeholder={intl.formatMessage(messages['placeholder_country'])}/>
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <div className='form-group row'>
+
+                      <label htmlFor='capital' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Capital'])}</label>
+
+                      <div className='col-sm-8'>
+                        <input
+                          disabled={submitting}
+                          {...capital}
+                          value={getFieldValue(capital, '')}
+                          type='text'
+                          className='form-control'
+                          id='capital'
+                        />
                       </div>
 
                     </div>
@@ -1023,7 +1231,14 @@ const CompanyInfo = function () {
                       <label htmlFor='activity' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Activity'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} {...activity} value={getFieldValue(activity)} type='text' className='form-control' id='activity'/>
+                        <input
+                          disabled={submitting}
+                          {...activity}
+                          value={getFieldValue(activity, '')}
+                          type='text'
+                          className='form-control'
+                          id='activity'
+                        />
                       </div>
 
                     </div>
@@ -1037,6 +1252,7 @@ const CompanyInfo = function () {
                         <input
                           disabled={submitting}
                           {...webSite}
+                          value={getFieldValue(webSite, '')}
                           type='text'
                           className={classnames('form-control', { 'form-control-danger': !pristine && webSite.invalid, })}
                           id='webSite'
@@ -1051,7 +1267,14 @@ const CompanyInfo = function () {
                       <label htmlFor='tel' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Tel'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} onChange={tel.onChange} value={getFieldValue(tel)} type='text' className='form-control' id='tel'/>
+                        <input
+                          disabled={submitting}
+                          onChange={tel.onChange}
+                          value={getFieldValue(tel, '')}
+                          type='text'
+                          className='form-control'
+                          id='tel'
+                        />
                         {/*<TelInput disabled={submitting} onChange={tel.onChange} value={getFieldValue(tel)} />*/}
                       </div>
 
@@ -1062,7 +1285,14 @@ const CompanyInfo = function () {
                       <label htmlFor='fax' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Fax'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} onChange={fax.onChange} value={getFieldValue(fax)} type='text' className='form-control' id='fax'/>
+                        <input
+                          disabled={submitting}
+                          onChange={fax.onChange}
+                          value={getFieldValue(fax, '')}
+                          type='text'
+                          className='form-control'
+                          id='fax'
+                        />
                         {/*<TelInput disabled={submitting} onChange={fax.onChange} value={getFieldValue(fax)} />*/}
                       </div>
 
@@ -1077,7 +1307,7 @@ const CompanyInfo = function () {
                         <input
                           disabled={submitting}
                           {...email}
-                           value={getFieldValue(email)}
+                           value={getFieldValue(email, '')}
                           type='email'
                           className={classnames('form-control', { 'form-control-danger': !pristine && email.invalid, })}
                           id='email'/>
@@ -1086,7 +1316,7 @@ const CompanyInfo = function () {
 
                     </div>
 
-                  </form>
+                  </div>
 
                   {saveError && <div styleName='error'>{intl.formatMessage({ ...saveError, id: saveError._id, })}</div>}
 
@@ -1140,9 +1370,9 @@ const CompanyInfo = function () {
 const AdvancedInfoForm = function () {
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
-    propTypes: {
+    static propTypes = {
       company: PropTypes.object.isRequired,
     };
 
@@ -1164,14 +1394,14 @@ const AdvancedInfoForm = function () {
 
                 <div>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}}>
 
                     <div className='form-group row'>
 
-                      <label htmlFor='if' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['IF'])}</label>
+                      <label htmlFor='if' styleName='alignRight' className='col-sm-4 form-control-label'>{'ICE'}</label>
 
                       <div className='col-sm-8'>
-                        <p className='form-control-static' styleName={'labelText'}>{this.props.company.if || '--'}</p>
+                        <p className='form-control-static' styleName={'labelText'}>{this.props.company.ice || '--'}</p>
                       </div>
 
                     </div>
@@ -1226,7 +1456,7 @@ const AdvancedInfoForm = function () {
 
                     </div>
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -1248,7 +1478,8 @@ const AdvancedInfoForm = function () {
       form: 'company',
       fields: [
         'id',
-        'if',
+        'ice',
+        // 'if',
         'rc',
         'patente',
         'cnss',
@@ -1257,11 +1488,20 @@ const AdvancedInfoForm = function () {
       ],
     }, (state, ownProps) => ({
       saveError: state.companies.saveError,
-      initialValues: pick(ownProps.company, ['id', 'if', 'rc', 'patente', 'cnss', 'banque', 'rib',]), // Pass company on edit
+      initialValues: pick(ownProps.company, [
+        'id',
+        'ice',
+        // 'if',
+        'rc',
+        'patente',
+        'cnss',
+        'banque',
+        'rib',
+      ]), // Pass company on edit
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -1347,7 +1587,7 @@ const AdvancedInfoForm = function () {
         editStop,
         fields: {
           id,
-          if: _if,
+          ice,
           rc,
           patente,
           cnss,
@@ -1367,8 +1607,10 @@ const AdvancedInfoForm = function () {
       } = this.props;
 
       const doUpdate = handleSubmit((data) => {
+        LoadingActions.show();
         return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => ({fieldName: key, value: data[key]})), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -1394,14 +1636,14 @@ const AdvancedInfoForm = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate}>
 
                     <div className='form-group row'>
 
-                      <label htmlFor='if' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['IF'])}</label>
+                      <label htmlFor='if' styleName='alignRight' className='col-sm-4 form-control-label'>{'ICE'}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} {..._if} value={getFieldValue(_if)} autoFocus type='text' className='form-control' id='if'/>
+                        <input disabled={submitting} {...ice} value={getFieldValue(ice, '')} autoFocus type='text' className='form-control' id='ice'/>
                       </div>
 
                     </div>
@@ -1411,7 +1653,7 @@ const AdvancedInfoForm = function () {
                       <label htmlFor='rc' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['RC'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} {...rc} value={getFieldValue(rc)} type='text' className='form-control' id='rc'/>
+                        <input disabled={submitting} {...rc} value={getFieldValue(rc, '')} type='text' className='form-control' id='rc'/>
                       </div>
 
                     </div>
@@ -1421,7 +1663,7 @@ const AdvancedInfoForm = function () {
                       <label htmlFor='patente' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Patent'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} {...patente} value={getFieldValue(patente)} type='text' className='form-control' id='patente'/>
+                        <input disabled={submitting} {...patente} value={getFieldValue(patente, '')} type='text' className='form-control' id='patente'/>
                       </div>
 
                     </div>
@@ -1431,7 +1673,7 @@ const AdvancedInfoForm = function () {
                       <label htmlFor='cnss' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['CNSS'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} {...cnss} value={getFieldValue(cnss)} type='text' className='form-control' id='cnss'/>
+                        <input disabled={submitting} {...cnss} value={getFieldValue(cnss, '')} type='text' className='form-control' id='cnss'/>
                       </div>
 
                     </div>
@@ -1441,7 +1683,7 @@ const AdvancedInfoForm = function () {
                       <label htmlFor='banque' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['Banque'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} {...banque} value={getFieldValue(banque)} type='text' className='form-control' id='banque'/>
+                        <input disabled={submitting} {...banque} value={getFieldValue(banque, '')} type='text' className='form-control' id='banque'/>
                       </div>
 
                     </div>
@@ -1451,13 +1693,13 @@ const AdvancedInfoForm = function () {
                       <label htmlFor='rib-bancaire' styleName='alignRight' className='col-sm-4 form-control-label'>{intl.formatMessage(messages['RIB'])}</label>
 
                       <div className='col-sm-8'>
-                        <input disabled={submitting} {...rib} value={getFieldValue(rib)} type='text' className='form-control' id='rib-bancaire'/>
+                        <input disabled={submitting} {...rib} value={getFieldValue(rib, '')} type='text' className='form-control' id='rib-bancaire'/>
                       </div>
 
                     </div>
 
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -1513,6 +1755,12 @@ function wrap(Component) {
 
           fragment on Company{
 
+            company_streetAddress,
+            company_cityTown,
+            company_stateProvince,
+            company_postalCode,
+            company_country,
+
             ${UpdateCompanyMutation.getFragment('company')},
 
             id,
@@ -1521,17 +1769,24 @@ function wrap(Component) {
             lastTransactionIndex, lastPaymentsTransactionIndex,
             legalForm,
             address,
+            capital,
             activity,
             webSite,
             tel,
             fax,
             email,
+            ice,
             if,
             rc,
             patente,
             cnss,
             banque,
             rib,
+
+            logo {
+              objectId,
+              url,
+            },
 
           }
 

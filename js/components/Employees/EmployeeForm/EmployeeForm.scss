@@ -1,3 +1,9 @@
+.modal :global .modal-footer{
+  bottom: 15px;
+  position: absolute;
+  width: 100%;
+}
+
 .submitting{
   vertical-align: middle;
   display: inline-block;

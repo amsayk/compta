@@ -13,7 +13,7 @@ export default defineMessages({
   emailError: {
     id: 'account-form.error.displayName',
     description: '',
-    defaultMessage: 'Ce nom de la société a déjà été utilisée',
+    defaultMessage: 'Ce nom d\'utilisateur a déjà été utilisée',
   },
 
   formTitle: {

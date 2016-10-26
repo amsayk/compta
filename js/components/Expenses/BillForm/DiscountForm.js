@@ -26,7 +26,7 @@ const discountTypesByIndex = { 1: 'Value', 2: 'Percent', };
 const discountTypesById = { 'Value': 1, 'Percent': 2, };
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -136,7 +136,7 @@ export default class extends Component{
                     type='text'
                     className={classnames('form-control', {'has-error': !pristine && discountValue.invalid})}
                     // placeholder={intl.formatMessage(messages['discountRate'])}
-                    value={value}
+                    value={value ? value : ''}
                     onChange={e => {
                       this.setState({
                         value: e.target.value,

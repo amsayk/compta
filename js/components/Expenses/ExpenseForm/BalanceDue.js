@@ -16,7 +16,7 @@ import requiredPropType from 'react-prop-types/lib/all';
 import getFieldValue from '../../utils/getFieldValue';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'ExpenseAmountDue';
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -37,14 +37,14 @@ export default class extends Component {
       formKey,
       expense,
       store,
-      fields: {dirty,},
+      fields: { dirty,},
     } = this.props;
     const hasExpense = formKey !== 'NEW';
 
     const _dirty = dirty || store.isDirty;
 
     const total = hasExpense && ! _dirty
-      ? expense.totalAmountPaid : store.subtotal;
+      ? expense.totalAmountPaid : store.getTotal();
     return (
       <div styleName='balance-due-wrapper'>
 

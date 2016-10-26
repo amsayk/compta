@@ -1,8 +1,12 @@
 import React, {Component, PropTypes} from 'react';
 import Relay from 'react-relay';
 
+import LoadingActions from '../../Loading/actions';
+
 import {bindActionCreators} from 'redux';
 import {reduxForm} from 'redux-form';
+
+import shallowCompare from 'react-addons-shallow-compare';
 
 // import uid from '../../../utils/uid';
 
@@ -23,7 +27,7 @@ import DropdownButton from 'react-bootstrap/lib/DropdownButton';
 import MenuItem from 'react-bootstrap/lib/MenuItem';
 
 import paymentValidation, {} from './paymentValidation';
-import * as paymentActions from '../../../redux/modules/paymentsOfInvoices';
+import * as paymentActions from '../../../redux/modules/v2/paymentsOfInvoices';
 
 import JournalEntries from '../../JournalEntries/JournalEntries';
 
@@ -106,11 +110,11 @@ import messages from './messages';
     date: normalizeMoment(moment()).format(),
     depositToAccountCode: ownProps.company.paymentsSettings.defaultDepositToAccountCode,
     customer: ownProps.invoice ? {
-      className: `Customer_${ownProps.company.objectId}`,
+      className: `People_${ownProps.company.objectId}`,
       id: ownProps.invoice.customer.objectId,
       objectId: ownProps.invoice.customer.objectId,
     } : (ownProps.customer ? {
-      className: `Customer_${ownProps.company.objectId}`,
+      className: `People_${ownProps.company.objectId}`,
       id: ownProps.customer.objectId,
       objectId: ownProps.customer.objectId,
     } : undefined),
@@ -118,7 +122,7 @@ import messages from './messages';
   },
 }), dispatch => bindActionCreators(paymentActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'PaymentForm';
 
@@ -230,13 +234,18 @@ export default class extends Component {
 
     const {
       formKey,
+      payment,
       editing: {
         [formKey]: store,
       },
       customerOpenInvoices,
+      fields: { id, },
     } = nextProps;
 
-    switch (formKey) {
+    const idValue = getFieldValue(id);
+    const isSaved = payment || typeof idValue !== 'undefined';
+
+    switch (isSaved ? null : formKey) {
       case 'NEW':
 
           const {
@@ -263,7 +272,7 @@ export default class extends Component {
                 customerOpenInvoices.edges.map(
                   ({node}) => decorateInvoiceItem(store, node, invoice)),
 
-                payment.itemsConnection.edges.map(
+                (payment || this._payment).itemsConnection.edges.map(
                   ({node}) => decoratePaymentItem(store, node))
               ),
 
@@ -274,7 +283,7 @@ export default class extends Component {
 
             [ 'asc', 'desc' ],
           ),
-          {id: formKey, company: nextProps.company}
+          {id: idValue, company: nextProps.company}
         );
     }
   }
@@ -322,6 +331,8 @@ export default class extends Component {
     // this._showHelp();
 
     this.refs.client && this.refs.client.focus();
+
+    ga('send', 'pageview', '/modal/app/recvpayment');
   }
 
   _showHelp(){
@@ -443,7 +454,7 @@ export default class extends Component {
     };
 
     _onSave(){
-      return this.__onSubmit || (this.__onSubmit = this.props.handleSubmit((data) => {
+      return this.props.handleSubmit((data) => {
 
         const {
           styles,
@@ -487,8 +498,11 @@ export default class extends Component {
         // }
 
         return new Promise((resolve, reject) => {
-          this.props.save({ ...decorateData(data), id: this.props.payment && this.props.payment.objectId, payment: this.props.payment, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
+          LoadingActions.show();
+          this.props.save({ ...decorateData(data), id: this.props.payment ? this.props.payment.objectId : getFieldValue(this.props.fields.id), payment: this.props.payment, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
                 .then(result => {
+                  LoadingActions.hide();
+
                   if (result && typeof result.error === 'object') {
                     return reject(); // messages['error']
                   }
@@ -499,15 +513,12 @@ export default class extends Component {
                   //   this._handleSaveAndNew();
                   // }
                  resolve();
-               })/*.catch((error) => {
-                  if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                  reject(messages['error']);
-                })*/;
+               });
         });
-      }));
+      });
     }
     _onSaveClose(close = true){
-      return this.__onSubmitClose || (this.__onSubmitClose = this.props.handleSubmit((data) => {
+      return this.props.handleSubmit((data) => {
 
         const {
           styles,
@@ -551,8 +562,11 @@ export default class extends Component {
         // }
 
         return new Promise((resolve, reject) => {
-          this.props.save({ ...decorateData(data), id: this.props.payment && this.props.payment.objectId, payment: this.props.payment, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
+          LoadingActions.show();
+          this.props.save({ ...decorateData(data), id: this.props.payment ? this.props.payment.objectId : getFieldValue(this.props.fields.id), payment: this.props.payment, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
                 .then(result => {
+                  LoadingActions.hide();
+
                   if (result && typeof result.error === 'object') {
                     return reject(); // messages['error']
                   }
@@ -563,12 +577,151 @@ export default class extends Component {
                     this._handleSaveAndNew();
                   }
                  resolve();
-               })/*.catch((error) => {
-                  if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                  reject(messages['error']);
-                })*/;
+               });
         });
-      }));
+      });
+    }
+  _onSaveOnly(){
+      return this.props.handleSubmit((data) => {
+
+        const {
+          styles,
+          formKey,
+          editing: {
+            [formKey]: store,
+          },
+        } = this.props;
+
+        const items = [];
+
+        for(let i = 0, _len = store.getSize(); i < _len; i++){
+          const line = store.getObjectAt(i);
+
+          if(typeof line.amount !== 'undefined' && line.amount !== null){
+            const {valid} = store.isValid(line);
+
+            if(valid){
+              items.push(decoratePaymentItemForServer(i, line));
+            }else{
+              store.setShowErrors(true);
+              store.setActiveRow(i);
+              return Promise.reject();
+            }
+          }
+        }
+
+        // if(items.length === 0){
+        //   const {intl,} = this.context;
+        //   NotifyActions.add({
+        //     type: 'danger',
+        //     slug: styles['payment-form--error-message'],
+        //     data: () => (
+        //           <span>
+        //             {intl.formatMessage(messages['at_least_one_entry_required'])}
+        //           </span>
+        //     ),
+        //   });
+        //
+        //   return Promise.reject();
+        // }
+
+        return new Promise((resolve, reject) => {
+          LoadingActions.show();
+          this.props.save({ ...decorateData(data), id: this.props.payment ? this.props.payment.objectId : getFieldValue(this.props.fields.id), payment: this.props.payment, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
+                .then(result => {
+                  LoadingActions.hide();
+
+                  if (result && typeof result.error === 'object') {
+                    return reject(); // messages['error']
+                  }
+
+                  const {
+                    company,
+                    initializeForm,
+                    fields: {
+                      id,
+                    }
+                  } = this.props;
+
+                  function decoratePayment({ objectId, __dataID__, id, customer, paymentRef, amountReceived, depositToAccountCode, paymentMethod, date, paymentItemsConnection : itemsConnection, memo, files, }) {
+                    const balanceDue = amountReceived - itemsConnection.totalAmountReceived;
+                    return {
+                      __dataID__,
+                      id,
+                      customer: customer ? {
+                        ...customer,
+                        className: `People_${company.objectId}`,
+                      } : undefined,
+                      date,
+                      paymentMethod,
+                      paymentRef,
+                      depositToAccountCode,
+                      type: 'Payment',
+                      refNo: '',
+                      amountReceived,
+                      balanceDue,
+                      total: amountReceived,
+                      totalAmountReceived: itemsConnection.totalAmountReceived,
+                      status: balanceDue === 0.0
+                        ? 'Closed'
+                        : (balanceDue > 0.0 ? 'Partial' : 'Open'),
+                      memo, files,
+                      itemsConnection,
+                      objectId,
+                      dueDate: date,
+                    };
+                  }
+
+                  const payment = decoratePayment(result.result);
+
+                  this._payment = payment;
+
+                  function decoratePaymentItem({ id, amount, invoice: { id: invoiceId, objectId, date, dueDate, memo, refNo, invoiceItemsConnection : itemsConnection, invoicePaymentsConnection : paymentsConnection, }, }){
+                    const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
+                    const obj = {
+                      __selected: true,
+                      __existed: true,
+                      __originalAmount: amount,
+                      id,
+                      amount: amount,
+                      invoice: {
+                        id,
+                        objectId,
+                        refNo,
+                        total: itemsConnection.totalAmount,
+                        balanceDue,
+                        amountReceived: paymentsConnection.totalAmountReceived,
+                        date,
+                        dueDate,
+                        memo,
+                      },
+                    };
+
+                    return obj;
+                  }
+
+                  store.reInit(
+                    payment.itemsConnection.edges.map(({node}) => decoratePaymentItem(node)), { id: payment.objectId, company, });
+
+                  const customer = payment.customer ? {
+                    type: 'Customer',
+                    className: `People_${this.props.company.objectId}`,
+                    id: payment.customer.objectId,
+                    objectId: payment.customer.objectId,
+                  } : undefined;
+
+                  initializeForm({
+                    ...payment,
+                    id: payment.objectId,
+                    date: normalizeMoment(moment(payment.date)).format(),
+                    customer,
+                  });
+
+
+                 resolve();
+               });
+        });
+      });
     }
 
   render() {
@@ -631,6 +784,10 @@ export default class extends Component {
     //
     // console.log('=====================================');
 
+    const isSaved = payment || typeof getFieldValue(id) !== 'undefined';
+
+    const _dirty = dirty || store.isDirty;
+
     return (
       <Modal dialogClassName={`${this.props.styles['modal']} payment-form`}
              dialogComponentClass={Dialog}
@@ -646,7 +803,7 @@ export default class extends Component {
             </div>
 
             <div styleName='icon'>
-              <i style={{verticalAlign: 'middle'}} className='material-icons md-light' style={{}}>settings</i>
+              <i style={{verticalAlign: 'middle'}} className='material-icons md-light'>settings</i>
             </div>
 
           </div>
@@ -864,7 +1021,10 @@ export default class extends Component {
               styleName='btn  dark'
               onClick={() => this._handleCancel()}
               disabled={submitting}
-              className='unselectable'>{intl.formatMessage(messages['cancel'])}
+              className='unselectable'>{function () {
+              // const _dirty = dirty || store.isDirty;
+              return intl.formatMessage(messages[isSaved && !_dirty ? 'close' : 'cancel']);
+            }()}
             </button>
 
           </div>
@@ -872,7 +1032,7 @@ export default class extends Component {
           <div styleName='tableCell' style={{textAlign: 'center'}}>
 
             <div>
-              {payment && <PaymentActions onDelete={this._del()} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
+              {isSaved && <PaymentActions onDelete={this._del()} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
             </div>
 
           </div>
@@ -915,7 +1075,7 @@ export default class extends Component {
             </button>*/}
 
             {function(){
-              const _dirty = dirty || store.isDirty;
+              {/*const _dirty = dirty || store.isDirty;*/}
               return (
                 <MySplitButton
                   className={'unselectable' + (valid && _dirty ? ' green valid' : (invalid || submitting || !_dirty ? ' disabled' : ''))}
@@ -924,6 +1084,7 @@ export default class extends Component {
                   valid={valid}
                   onSave={self._onSave.bind(self)}
                   onSaveClose={self._onSaveClose.bind(self)}
+                  onSaveOnly={self._onSaveOnly.bind(self)}
                   disabled={invalid || submitting || !_dirty}
                   submitting={submitting}
                 />
@@ -935,7 +1096,7 @@ export default class extends Component {
         </Footer>
 
         {this.journalEntriesModal()}
-        
+
         <Title title={intl.formatMessage(messages['Title'])}/>
 
       </Modal>
@@ -948,7 +1109,15 @@ export default class extends Component {
       return Actions.show(intl.formatMessage(messages['ConfirmDelete']))
         .then(() => {
           return new Promise((resolve, reject) => {
-            this.props.del({ payment: this.props.payment, company: this.props.company, viewer: this.props.viewer, })
+            const getObj = () => {
+              const id = getFieldValue(this.props.fields.id);
+              return {
+                __dataID__: id,
+                id,
+                objectId: id,
+              };
+            };
+            this.props.del({ payment: this.props.payment || getObj(), company: this.props.company, viewer: this.props.viewer, })
                   .then(result => {
                     if (result && typeof result.error === 'object') {
                       return reject(); // messages['error']
@@ -956,10 +1125,7 @@ export default class extends Component {
 
                     this._handleClose();
                    resolve();
-                 })/*.catch((error) => {
-                    if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                    reject(messages['error']);
-                  })*/;
+                 });
           });
         })
         .catch(() => {});
@@ -982,13 +1148,24 @@ export default class extends Component {
 
   journalEntriesModal = () => {
     if(this.state.modalOpen){
+      const self = this;
+      const obj = this.props.payment || function () {
+          const id = getFieldValue(self.props.fields.id);
+          const customer = getFieldValue(self.props.fields.customer);
+          return {
+            __dataID__: id,
+            id,
+            objectId: id,
+            customer,
+          };
+        }();
       return (
         <JournalEntries
           type={'PaymentOfInvoices'}
           company={this.props.company}
           viewer={this.props.viewer}
-          person={this.props.payment.customer}
-          id={this.props.payment.objectId}
+          person={obj.customer}
+          id={obj.objectId}
           onCancel={this._close}
         />
       );
@@ -997,10 +1174,13 @@ export default class extends Component {
 
 }
 
-class MySplitButton extends Component{
+class MySplitButton extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
+  shouldComponentUpdate(nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
+  }
   _onClick = (close, e) => {
     stopEvent(e);
     const {onSaveClose, } = this.props;
@@ -1009,13 +1189,23 @@ class MySplitButton extends Component{
   };
   render(){
     const {intl} = this.context;
-    const {onSave, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
-    const title = (
-      <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
-    );
+    const {onSave, onSaveOnly, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
+    // const title = (
+    //   <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
+    // );
+    const title = intl.formatMessage(messages['saveAndClose']);
     return (
       <div className={styles['dropdown']}>
         <ButtonToolbar>
+
+          <button
+            // styleName='btn primary'
+            onClick={onSaveOnly()}
+            style={{marginLeft: 12,}}
+            disabled={disabled}
+            className={`${disabled ? 'disabled' : ''} ${className} btn btn-default ${styles['btn']} ${styles['dark']}`}>
+            {' '}{intl.formatMessage(messages['save'])}
+          </button>
 
           <SplitButton className={className} disabled={disabled} onClick={this._onClick.bind(this, true)} title={title} dropup pullRight id={'payment-form'}>
 
@@ -1025,22 +1215,13 @@ class MySplitButton extends Component{
 
           </SplitButton>
 
-          <button
-            // styleName='btn primary'
-            onClick={onSave()}
-            style={{marginLeft: 12,}}
-            disabled={disabled}
-            className={`hidden ${disabled ? 'disabled' : ''} ${styles['btn']} ${styles['dark']}`}>
-            {' '}{intl.formatMessage(messages['save'])}
-          </button>
-
         </ButtonToolbar>
       </div>
     );
   }
 }
 
-class PaymentActions extends Component{
+class PaymentActions extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -1111,8 +1292,9 @@ function decorateData({
 }
 
 function decorateInvoiceItem(store, __original, { objectId : selectedInvoiceId, balanceDue: selectedInvoiceIdBalanceDue, } = {}){
- const { id, objectId, date, dueDate, memo, refNo, itemsConnection, paymentsConnection, } = __original;
-  const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
+ const { id, objectId, date, dueDate, memo, refNo, invoiceItemsConnection, itemsConnection, invoicePaymentsConnection, paymentsConnection, } = __original;
+  // const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
+  const balanceDue = (itemsConnection || invoiceItemsConnection).totalAmount - (paymentsConnection || invoicePaymentsConnection).totalAmountReceived;
   const obj = {
     __existed: false,
     __originalAmount: undefined,
@@ -1121,9 +1303,9 @@ function decorateInvoiceItem(store, __original, { objectId : selectedInvoiceId, 
       id,
       objectId,
       refNo,
-      total: itemsConnection.totalAmount,
+      total: (itemsConnection || invoiceItemsConnection).totalAmount,
       balanceDue,
-      amountReceived: paymentsConnection.totalAmountReceived,
+      amountReceived: (paymentsConnection || invoicePaymentsConnection).totalAmountReceived,
       date,
       dueDate,
       memo,
@@ -1147,8 +1329,8 @@ function decorateInvoiceItem(store, __original, { objectId : selectedInvoiceId, 
 }
 
 function decoratePaymentItem(store, { id, amount, invoice : __original, }){
-  const { id: invoiceId, objectId, date, dueDate, memo, refNo, itemsConnection, paymentsConnection, } = __original;
-  const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
+  const { id: invoiceId, objectId, date, dueDate, memo, refNo, invoiceItemsConnection, itemsConnection, invoicePaymentsConnection, paymentsConnection, } = __original;
+  const balanceDue = (itemsConnection || invoiceItemsConnection).totalAmount - (paymentsConnection || invoicePaymentsConnection).totalAmountReceived;
   const hasKey = store.hasKey(id);
   const obj = {
     __existed: true,
@@ -1159,9 +1341,9 @@ function decoratePaymentItem(store, { id, amount, invoice : __original, }){
       id: invoiceId,
       objectId,
       refNo,
-      total: itemsConnection.totalAmount,
+      total: (itemsConnection || invoiceItemsConnection).totalAmount,
       balanceDue,
-      amountReceived: paymentsConnection.totalAmountReceived,
+      amountReceived: (paymentsConnection || invoicePaymentsConnection).totalAmountReceived,
       date,
       dueDate,
       memo,

@@ -7,7 +7,7 @@ import {
   intlShape,
 } from 'react-intl';
 
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'Title';
 
   static contextTypes = {

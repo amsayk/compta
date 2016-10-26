@@ -2,7 +2,7 @@ import Parse from 'parse';
 
 import Relay from 'react-relay';
 
-import {Schema as schema,} from '../../data/schema/index';
+import {Schema as schema,} from '../../data/schema/v2';
 
 import RelayNetworkLayer from './RelayNetworkLayer';
 
@@ -14,10 +14,12 @@ Relay.injectNetworkLayer(
     schema,
     onError(errors, request) {
       errors.forEach(error => {
-        console.log(error.toString());
-        console.log('Source', error.source);
-        console.log('Positions', error.positions);
-        console.log('Locations', error.locations);
+        if(process.env.NODE_ENV !== 'production'){
+          console.log(error.toString());
+          console.log('Source', error.source);
+          console.log('Positions', error.positions);
+          console.log('Locations', error.locations);
+        }
       });
     },
   })
@@ -33,7 +35,10 @@ const auth = {
       email,
       password,
     }), {
-      onSuccess: function ({logIn: { user, }}) {
+      onSuccess: function ({logIn: { viewer: user, }}) {
+
+        ga('set', 'dimension1', user.id);
+
         cb(null, {user});
       },
       onFailure: function (transaction) {
@@ -42,7 +47,7 @@ const auth = {
     });
   },
 
-  logOut(user, cb) {
+  logOut(user) {
 
     Relay.Store.commitUpdate(new LogOutMutation({
       viewer: user,
@@ -50,24 +55,31 @@ const auth = {
       onSuccess: function () {
 
         const login = localStorage.getItem('app.login');
+        const NoVATWarningHidden = localStorage.getItem('VATSettings.warning.no-VAT.hidden');
 
         localStorage.clear();
 
-        if(login){
+        if(login !== null){
           localStorage.setItem('app.login', login);
         }
 
-        cb(null);
+        if(NoVATWarningHidden !== null){
+          localStorage.setItem('VATSettings.warning.no-VAT.hidden', NoVATWarningHidden);
+        }
+
+        setImmediate(() => {
+          document.location = '/';
+        });
       },
       onFailure: function (transaction) {
-        cb(transaction.getError());
+        console.error(transaction.getError());
       },
     });
   },
 
   get isLoggedIn() {
     return !!Parse.User.current();
-  },
+  }
 
 };
 

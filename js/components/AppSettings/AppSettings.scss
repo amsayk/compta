@@ -1,3 +1,51 @@
+.logoContainer {
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.inlineBlock {
+  display: inline-block;
+}
+.logoPlaceHolder {
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #c7c7c7;
+  border: 1px dotted #c7c7c7;
+  border-radius: 3px;
+  // width: 128px;
+  // height: 128px;
+  height: 150px;
+  vertical-align: top;
+  text-align: center;
+  line-height: 150px;
+  font-size: 1.1rem;
+  padding: 1px;
+
+  max-width: 512px;
+  min-width: 128px;
+}
+.avatar-edit {
+  text-align: center;
+}
+.avatar-edit i {
+  text-align: center;
+  transition: all 0.3s ease;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 40px;
+  opacity: 0.2;
+}
+.logoContainer:hover {
+  cursor: pointer;
+}
+.logoContainer:hover .avatar-edit i {
+  opacity: 0.8;
+  font-size: 50px;
+}
+
 .page {
   padding: 0;
 }
@@ -12,7 +60,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  left: 225px;
+  left: 165px; // --sidebar-width
   height: 96px;
   transition: left .5s ease-in;
 

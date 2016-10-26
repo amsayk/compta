@@ -15,8 +15,9 @@ import auth from '../../utils/auth';
 import {getBodyHeight, getBodyWidth, } from '../../utils/dimensions';
 
 import AccountForm from '../AccountForm/AccountForm';
+import PasswordForm from '../PasswordForm/PasswordForm';
 
-import {editStart,} from '../../redux/modules/account';
+import {editStart, editStop,} from '../../redux/modules/account';
 
 import {
   intlShape,
@@ -25,7 +26,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-class AccountSettings extends Component {
+class AccountSettings extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
     store: PropTypes.object.isRequired,
@@ -38,18 +39,17 @@ class AccountSettings extends Component {
 
   _onAddClicked = (e) => {
     e.preventDefault();
-    this.context.store.dispatch(editStart(this.props.viewer.id));
+    this.context.store.dispatch(editStart(this.props.viewer.objectId));
     this.setState({
-      modalOpen: true
+      modalOpen: true,
+      modalType: 'account',
     });
   };
 
   _onLogOut = (e) => {
     e.preventDefault();
 
-    auth.logOut(this.props.viewer, () => {
-      this.context.router.replace('/');
-    })
+    auth.logOut(this.props.viewer);
   };
 
   _onDelClicked = (e) => {
@@ -57,19 +57,45 @@ class AccountSettings extends Component {
   };
 
   _close = () => {
-    this.setState({modalOpen: false});
+    this.context.store.dispatch(editStop(this.props.viewer.objectId));
+    this.setState({modalOpen: false, modalType: undefined,});
   };
 
   _renderForm = () => {
-    const form = this.state.modalOpen ? (
-      <AccountForm
-        onCancel={this._close}
-        formKey={this.props.viewer.id}
-        viewer={this.props.viewer}
-      />
-    ) : null;
+    if(this.state.modalType === 'account'){
+      const form = this.state.modalOpen ? (
+        <AccountForm
+          onCancel={this._close}
+          formKey={this.props.viewer.id}
+          viewer={this.props.viewer}
+        />
+      ) : null;
 
-    return form;
+      return form;
+    }
+
+    if(this.state.modalType === 'password'){
+      const form = this.state.modalOpen ? (
+        <PasswordForm
+          onCancel={this._close}
+          formKey={this.props.viewer.id}
+          viewer={this.props.viewer}
+        />
+      ) : null;
+
+      return form;
+    }
+
+    return null;
+  };
+
+  _onChangePasswordClicked = (e) => {
+    e.preventDefault();
+    this.context.store.dispatch(editStart(this.props.viewer.objectId));
+    this.setState({
+      modalOpen: true,
+      modalType: 'password',
+    });
   };
 
   render() {
@@ -98,7 +124,7 @@ class AccountSettings extends Component {
 
             </div>
 
-            <div styleName='settings-page-body' className='scrollable-shadow scrollable' style={{zIndex: 0, top: 96, position: 'absolute', height: getBodyHeight() - 96, width: getBodyWidth() - 225, }}>
+            <div styleName='settings-page-body' className='scrollable-shadow scrollable' style={{zIndex: 0, top: 96, position: 'absolute', height: getBodyHeight() - 96, width: getBodyWidth() - 165, }}>
 
               <div styleName='fieldset'>
 
@@ -132,6 +158,30 @@ class AccountSettings extends Component {
 
                   </div>
 
+                  <div styleName='field'>
+
+                    <div styleName='left' style={{width:'56%'}}>
+                      <div styleName='label centered' style={{padding:'0 20px'}}>
+                        <div styleName='text'>{'Modifier votre mot de passe'}</div>
+                        <div styleName='description-2'>{'Voici où vous pouvez modifier votre mot de passe.'}</div>
+                      </div>
+                    </div>
+
+                    <div styleName='right' style={{marginLeft:'56%'}}>
+
+                      <div styleName='input'>
+
+                        <a href='javascript:;' onClick={this._onChangePasswordClicked} role='button' style={{width:'80%',minWidth:'80%'}}
+                           styleName='button unselectable primary'>
+                          <span>{'Modifier'}</span>
+                        </a>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
                 </div>
 
               </div>
@@ -140,9 +190,9 @@ class AccountSettings extends Component {
 
               <div styleName='fieldset'>
 
-                <div styleName='legend'>{formatMessage(messages.AppManagementLegend)}</div>
+                {/*<div styleName='legend'>{formatMessage(messages.AppManagementLegend)}</div>*/}
 
-                <div styleName='description-1'>{formatMessage(messages.AppManagementLegendDesc)}</div>
+                {/*<div styleName='description-1'>{formatMessage(messages.AppManagementLegendDesc)}</div>*/}
 
                 <div styleName='fields'>
 

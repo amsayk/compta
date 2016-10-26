@@ -32,7 +32,7 @@
 }
 
 .logoContainer {
-  width: 56px;
+  // width: 56px;
   vertical-align: top;
   margin-right: 10px;
 }
@@ -52,20 +52,21 @@
 
 .logoPlaceHolder {
   box-sizing: border-box;
-  width: 56px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: #c7c7c7;
   border: 1px dotted #c7c7c7;
   border-radius: 3px;
-  width: 56px;
+  // width: 56px;
   height: 56px;
   vertical-align: top;
   text-align: center;
   line-height: 56px;
   font-size: 1.1rem;
   padding: 1px;
+
+  max-width: 250px;
 }
 
 .companyData {

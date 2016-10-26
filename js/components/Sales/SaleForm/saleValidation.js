@@ -12,6 +12,8 @@ const validation = createValidator({
   depositToAccountCode: [required],
 
   discountValue: [discountValue],
+
+  inputType: [required],
 });
 export default validation;
 

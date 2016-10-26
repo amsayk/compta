@@ -78,7 +78,7 @@ const ListItem = React.createClass({
 });
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'BillingDetails';
 
@@ -106,7 +106,7 @@ export default class extends Component {
 
         <div styleName='billing-details'>
 
-          <form>
+          <div>
 
             <div className='row' style={{}}>
 
@@ -116,7 +116,7 @@ export default class extends Component {
                   <label styleName='subsection12TitleText' htmlFor='billingAddress'>{intl.formatMessage(messages['BillingAddress'])}</label>
                   <textarea
                     onChange={billingAddress.onChange}
-                    value={getFieldValue(billingAddress)}
+                    value={getFieldValue(billingAddress, '')}
                     className={classnames('form-control billingAddress', {'has-error': !pristine && billingAddress.invalid,})}
                     id='billingAddress'
                     style={{resize: 'none',}}
@@ -301,7 +301,7 @@ export default class extends Component {
 
             </div>
 
-          </form>
+          </div>
 
         </div>
 

@@ -1,5 +1,7 @@
 import createLogger from 'redux-logger';
 
 export default createLogger({
-  predicate: () => false, // process.env.NODE_ENV !== 'production',
+  predicate: () => process.env.NODE_ENV !== 'production',
+  collapsed: true,
+  duration: true,
 });

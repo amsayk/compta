@@ -20,7 +20,7 @@ import CSSModules from 'react-css-modules';
 import styles from './Income.scss';
 
 @CSSModules(styles, { allowMultiple: true, })
-class Income extends Component{
+class Income extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired
   };
@@ -121,6 +121,16 @@ function wrapWithC(Component, props) {
 
           id,
 
+          VATSettings{
+            enabled,
+            agency,
+            startDate,
+            IF,
+            frequency,
+            regime,
+            percentages{ value, },
+          },
+
           salesStatus{
 
             open{
@@ -152,7 +162,7 @@ function createContainer({ ...props, }){
   const Route = new RelayRoute({ companyId: props.company.id, });
   const MyComponent = wrapWithC(Income, { companyId: props.company.id, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -180,7 +190,7 @@ function createContainer({ ...props, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {

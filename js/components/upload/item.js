@@ -23,7 +23,7 @@ function preloader(intl, styles, maxSize){
 }
 
 @CSSModules(styles, {allowMultiple: true,})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'upload';
   static contextTypes = {
     intl: intlShape.isRequired,

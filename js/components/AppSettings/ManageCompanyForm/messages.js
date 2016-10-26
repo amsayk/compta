@@ -4,6 +4,36 @@ import {
 
 export default defineMessages({
 
+  placeholder_Street: {
+    id: 'app-settings-form.placeholder_Street',
+    defaultMessage: 'Rue',
+  },
+
+  placeholder_cityTown: {
+    id: 'app-settings-form.placeholder_cityTown',
+    defaultMessage: 'Ville',
+  },
+
+  placeholder_stateProvince: {
+    id: 'app-settings-form.placeholder_stateProvince',
+    defaultMessage: 'Province',
+  },
+
+  placeholder_postalCode: {
+    id: 'app-settings-form.placeholder_postalCode',
+    defaultMessage: 'Code postal',
+  },
+
+  placeholder_country: {
+    id: 'app-settings-form.placeholder_country',
+    defaultMessage: 'Pays',
+  },
+
+  Logo: {
+    id: 'app-settings-form.title.logo',
+    defaultMessage: 'Logo',
+  },
+
   Company: {
     id: 'app-settings-form.title.company',
     defaultMessage: 'Entreprise',
@@ -16,7 +46,7 @@ export default defineMessages({
 
   CompanyName: {
     id: 'app-settings-form.title.company-name',
-    defaultMessage: 'Nom société',
+    defaultMessage: 'Société',
   },
 
   ContactInfo: {
@@ -71,7 +101,7 @@ export default defineMessages({
 
   MoreInfo: {
     id: 'app-settings-form.title.more-info',
-    defaultMessage: 'Plus d\informations',
+    defaultMessage: 'Plus d\'informations',
   },
 
   IF: {
@@ -173,7 +203,7 @@ export default defineMessages({
   },
   Advanced: {
     id: 'app-settings-form.title.advanced',
-    defaultMessage: 'Options avancées',
+    defaultMessage: 'Avancés',
   },
 
   SalesFormTitle: {
@@ -283,7 +313,7 @@ export default defineMessages({
 
   preferredPaymentMethod_1: {
     id: 'app-settings-form.title.preferred-payment-method-1',
-    defaultMessage: 'En espèces',
+    defaultMessage: 'Espèces',
   },
 
   preferredPaymentMethod_2: {
@@ -293,12 +323,12 @@ export default defineMessages({
 
   preferredPaymentMethod_3: {
     id: 'app-settings-form.title.preferred-payment-method-3',
-    defaultMessage: 'Carte de crédit',
+    defaultMessage: 'Carte bancaire',
   },
 
   preferredPaymentMethod_Cash: {
     id: 'app-settings-form.title.preferred-payment-method-cash',
-    defaultMessage: 'En espèces',
+    defaultMessage: 'Espèces',
   },
 
   preferredPaymentMethod_Check: {
@@ -308,7 +338,7 @@ export default defineMessages({
 
   preferredPaymentMethod_Creditcard: {
     id: 'app-settings-form.title.preferred-payment-method-credit-card',
-    defaultMessage: 'Carte de crédit',
+    defaultMessage: 'Carte bancaire',
   },
 
   PreferredPaymentMethod: {
@@ -334,6 +364,10 @@ export default defineMessages({
   EnableClosure: {
     id: 'app-settings-form.title.enable-close-books',
     defaultMessage: 'Fermer les compte',
+  },
+  Capital: {
+    id: 'app-settings-form.title.capital',
+    defaultMessage: 'Capital social',
   },
 
   ClosureFormTitle: {

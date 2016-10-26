@@ -50,6 +50,8 @@ function asyncValidate({ type, displayName, id, companyId}) {
     const query = new Parse.Query(`${type}_${companyId}`);
     query.equalTo('displayNameLowerCase', makeAlias(displayName));
 
+    query.equalTo('kind', type);
+
     if(id){
       const {id: localId} = fromGlobalId(id);
 
@@ -105,7 +107,7 @@ function asyncValidate({ type, displayName, id, companyId}) {
   },
 }), dispatch => bindActionCreators(vendorActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'VendorMiniForm';
 
@@ -152,6 +154,8 @@ export default class extends Component {
 
   componentDidMount() {
     events.on(document, 'click', this._handleClickoutside, true);
+
+    ga('send', 'pageview', '/modal/app/vendor-mini-form');
   }
 
   componentWillUnmount() {
@@ -201,7 +205,7 @@ export default class extends Component {
 
     const {intl,} = this.context;
 
-    const displayNameValue = getFieldValue(displayName);
+    const displayNameValue = getFieldValue(displayName, '');
     const typeValue = getFieldValue(type);
 
     const doSave = handleSubmit((data) => {
@@ -260,7 +264,7 @@ export default class extends Component {
 
                   <div style={{}}>
 
-                  <form onSubmit={doSave}>
+                  <div onSubmit={doSave}>
 
                     <fieldset className={classnames('form-group', {'has-danger': touched && displayName.invalid,})}>
 
@@ -272,11 +276,11 @@ export default class extends Component {
                         value={displayNameValue}
                         disabled={submitting}
                         type='text'
-                        className={classnames('form-control', { 'form-control-danger': touched && displayName.invalid, })}
+                        className={classnames('form-control', { 'form-control-danger': displayName.touched && displayName.invalid, })}
                       />
 
                       <small className="text-muted" style={{ marginTop: 3, display: 'block', height: 15, }}>
-                        {displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
+                        {displayName.touched && displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
                       </small>
 
                     </fieldset>
@@ -310,7 +314,7 @@ export default class extends Component {
                       );
                     }()}
 
-                  </form>
+                  </div>
 
                   </div>
 

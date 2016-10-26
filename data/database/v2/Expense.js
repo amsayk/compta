@@ -1,12 +1,10 @@
-import Parse from 'parse';
+const Parse = require('parse');
 
-export default company => {
+module.exports = company => {
 
   const name = `Expense_${company.id}`;
 
   class Expense extends Parse.Object {
-    __type = 'Expense';
-
     constructor() {
       super(name);
     }

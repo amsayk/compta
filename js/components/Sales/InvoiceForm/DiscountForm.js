@@ -11,6 +11,8 @@ const MONEY_VALUE_REGEX = /^\d+((,|\.)\d{3})*((\.|,)\d*)?$/;
 
 import parseNumber from '../../../utils/number/parse';
 
+import { StoreProto, } from '../../../redux/modules/v2/invoices';
+
 import {
   intlShape,
 } from 'react-intl';
@@ -26,7 +28,7 @@ const discountTypesByIndex = { 1: 'Value', 2: 'Percent', };
 const discountTypesById = { 'Value': 1, 'Percent': 2, };
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -91,7 +93,7 @@ export default class extends Component{
 
             <div styleName={'width_x'} className='row'>
 
-              <div className='col-sm-8' style={{textAlign: 'right'}}>
+              <div className='col-sm-8' style={{paddingRight: 3, textAlign: 'right'}}>
 
                 <div className="input-group">
 
@@ -192,6 +194,7 @@ function getTotalDiscount(store, {discountType, discountValue}, type, value){
 
   switch (type) {
     case 1: return value || 0.0;
-    case 2: return (store.subtotal - store.itemsTotalDiscount) * ((value||0.0)/100);
+    // case 2: return (store.subtotal - store.itemsTotalDiscount) * ((value||0.0)/100);
+    case 2: return (StoreProto.fnSubtotal.call(store) - StoreProto.fnItemsTotalDiscount.call(store)) * ((value||0.0)/100);
   }
 }

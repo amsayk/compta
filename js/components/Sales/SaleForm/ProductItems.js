@@ -22,7 +22,7 @@ import LineEditor from './SaleLineEditor';
 import enhanceWithClickOutside from '../../../utils/react-click-outside';
 
 @enhanceWithClickOutside
-class ClickOutsideWrapper extends Component {
+class ClickOutsideWrapper extends React.Component {
   handleClickOutside = (e) => {
     // e.preventDefault();
     // e.stopPropagation();
@@ -43,6 +43,7 @@ import {
 } from 'react-intl';
 
 import messages from './messages';
+import getFieldValue from "../../utils/getFieldValue";
 
 function clamp(value, min, max){
   return Math.min(Math.max(value, min), max);
@@ -99,7 +100,7 @@ const saleTarget = {
   connectDragSource: connect.dragSource(),
   isDragging: monitor.isDragging()
 }))
-class DragHandle extends Component {
+class DragHandle extends React.Component {
 
   static propTypes = {
     connectDragSource: PropTypes.func.isRequired,
@@ -133,7 +134,7 @@ class DragHandle extends Component {
   connectDropTarget: connect.dropTarget()
 }))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'SaleProductItems';
 
@@ -229,7 +230,7 @@ export default class extends Component {
       height,
       connectDropTarget,
       bodyWidth : width,
-      fields: {dirty, valid, invalid, pristine, save, resetLines, submitting, values,},
+      fields: { inputType, dirty, valid, invalid, pristine, save, resetLines, submitting, values,},
 
     } = this.props;
 
@@ -251,6 +252,30 @@ export default class extends Component {
     const showDate = salesSettings.enableServiceDate;
     const showProducts = salesSettings.showProducts;
     const showRates = salesSettings.showRates;
+
+    const VTEnabled = this.props.company.VATSettings.enabled;
+
+    const inputTypeValue = getFieldValue(inputType);
+
+    const hasVAT = inputTypeValue !== 'NO_VAT' && inputTypeValue !== 3;
+
+    function getAmountLabel() {
+      switch (inputTypeValue){
+        case 1:
+        case 'HT':
+
+          return intl.formatMessage(messages.AmountHT);
+
+        case 2:
+        case 'TTC':
+
+          return intl.formatMessage(messages.AmountTTC);
+
+        default:
+
+          return intl.formatMessage(messages.Amount);
+      }
+    }
 
     return (
       <div styleName='product-items-wrapper'>
@@ -286,6 +311,9 @@ export default class extends Component {
                           styles={this.props.styles}
                           store={store}
                           rowIndex={activeRow}
+                          hasVAT={hasVAT}
+                          VTEnabled={VTEnabled}
+                          inputTypeValue={inputTypeValue}
                           tableWidth={tableWidth}
                           company={this.props.company}
                           items={this.props.company.companyProducts.edges.map(({node: {...props}}) => ({...props}))}
@@ -396,7 +424,7 @@ export default class extends Component {
                         </div>
                       );
                     }}
-                    width={(0.28 * tableWidth) + (showDate ? 0 : 0.08 * tableWidth) + (showProducts ? 0 : 0.145 * tableWidth) + (showRates ? 0 : (0.07 + 0.09)*tableWidth)}
+                    width={(hasVAT ? 0.25 * tableWidth : 0.28 * tableWidth) + (showDate ? 0 : 0.08 * tableWidth) + (showProducts ? 0 : 0.145 * tableWidth) + (showRates ? 0 : (0.07 + 0.09)*tableWidth)}
                     flexGrow={1}
                   />
 
@@ -420,7 +448,7 @@ export default class extends Component {
                        </div>
                       );
                     }}
-                    width={0.07 * tableWidth}
+                    width={hasVAT ? 0.05 * tableWidth : 0.07 * tableWidth}
                   />}
 
                   {/* rate */}
@@ -442,14 +470,14 @@ export default class extends Component {
                         </div>
                       );
                     }}
-                    width={0.09 * tableWidth}
+                    width={hasVAT ? 0.08 * tableWidth : 0.09 * tableWidth}
                   />}
 
                   {/* amount */}
                   <Column
                     columnKey={'amount'}
                     align={'right'}
-                    header={<Cell>{intl.formatMessage(messages.Amount)}</Cell>}
+                    header={<Cell>{VTEnabled ? getAmountLabel() : intl.formatMessage(messages.Amount)}</Cell>}
                     cell={(props) => {
 
                       return (
@@ -466,9 +494,34 @@ export default class extends Component {
 
                       );
                     }}
-                    width={0.10 * tableWidth}
+                    width={hasVAT ? 0.08 * tableWidth : 0.10 * tableWidth}
                     flexGrow={1}
                   />
+
+                  {/* VATPart */}
+                  {hasVAT && <Column
+                    columnKey={'VATPart'}
+                    align={'right'}
+                    header={<Cell>{intl.formatMessage(messages.VATPart)}</Cell>}
+                    cell={(props) => {
+
+                      return (
+
+                        <div onClick={(e) => self._setActiveRow({rowIndex: props.rowIndex, cell: 'VATPart'}, e)}>
+
+                           <VATPartValueCell
+                              {...props}
+                              styles={styles}
+                              store={store}
+                           />
+
+                        </div>
+
+                      );
+                    }}
+                    width={0.09 * tableWidth}
+                    flexGrow={1}
+                  />}
 
                   {/* discountPart */}
                   <Column
@@ -541,13 +594,13 @@ export default class extends Component {
 
               <div styleName='floatRight' style={{}}>
 
-                <div styleName={'width_x'} className='row'>
+                <div styleName={'width_x'} className='row' style={{paddingRight: 5}}>
 
-                  <div styleName='subsection12TitleText' className='col-sm-8' style={{textAlign: 'right'}}>
+                  <div styleName='subsection12TitleText' className='col-sm-8' style={{paddingRight: 3, textAlign: 'right'}}>
                     {intl.formatMessage(messages['Subtotal'])}
                   </div>
 
-                  <div style={{display: 'inline-block'}} className='col-sm-4 last-col' style={{textAlign: 'right'}}>
+                  <div className='col-sm-4 last-col' style={{textAlign: 'right',display: 'inline-block'}}>
                     <div styleName='amount'>{intl.formatNumber(store.subtotal, {format: 'MAD'})}</div>
                   </div>
 
@@ -585,6 +638,7 @@ export default class extends Component {
           onNew={this._onAddNewProduct.bind(this, {rowIndex,})}
           onDone={this._onProductFormDone.bind(null, this)}
           salesAccounts={this.props.salesAccounts}
+          expensesAccounts={this.props.expensesAccounts}
         />
       );
     }
@@ -601,6 +655,9 @@ export default class extends Component {
     const {
       company,
       store,
+      fields: {
+        inputType : _inputType,
+      },
     } = self.props;
     const {pendingRowIndex: rowIndex} = self.state;
 
@@ -610,10 +667,107 @@ export default class extends Component {
       className: `Product_${company.objectId}`,
       objectId: product.id,
       id: product.id,
+      salesVATPart: product['salesVATPart'],
+      salesPrice: product['salesPrice'],
     });
 
-    typeof product.salesPrice !== 'undefined' && !!product.salesPrice && store.setRate(rowIndex, product.salesPrice);
+
+    const inputType = getFieldValue(_inputType);
+
+    store.setActiveRow({ rowIndex, cell: 'item', });
+
+    const itemInputType = product['salesVATPart'] ? product['salesVATPart'].inputType : 1 /* HT */;
+
+    const VAT_ID_TO_VALUE = {
+      Value_20: 0.20,
+      Value_14: 0.14,
+      Value_10: 0.1,
+      Value_Exempt: 0.0,
+      Value_7: 0.07,
+
+      1: 0.20,
+      2: 0.14,
+      3: 0.1,
+      4: 0.0,
+      5: 0.07,
+    };
+
+    function getItemPrice() {
+      switch (inputType){
+        case 1:
+        case 'HT':
+        case 3:
+        case 'NO_VAT':
+
+          return function () {
+            switch (itemInputType){
+              case 1:
+              case 'HT':
+              case 3:
+              case 'NO_VAT':
+
+                return product.salesPrice;
+
+              case 2:
+              case 'TTC':
+
+                // `item.salesPrice` is TTC, convert `item.salesPrice` to HT
+                return function() {
+                  const itemVATValuePercent = product.salesVATPart
+                    ? VAT_ID_TO_VALUE[product['salesVATPart'].value] || 0.0
+                    : 0.0;
+
+                  return product.salesPrice / (1 + itemVATValuePercent);
+                }();
+
+              default:
+
+                throw new Error(`getItemPrice: Invalid item inputType`, itemInputType);
+            }
+
+          }();
+
+        case 2:
+        case 'TTC':
+
+          return function () {
+            switch (itemInputType){
+              case 1:
+              case 'HT':
+              case 3:
+              case 'NO_VAT':
+
+                // `item.salesPrice` is HT, convert `item.salesPrice` to TTC
+                return function() {
+                  const itemVATValuePercent = product.salesVATPart
+                    ? VAT_ID_TO_VALUE[product['salesVATPart'].value] || 0.0
+                    : 0.0;
+
+                  return product.salesPrice * (1 + itemVATValuePercent);
+                }();
+
+              case 2:
+              case 'TTC':
+
+                return product.salesPrice;
+
+              default:
+
+                throw new Error(`getItemPrice: Invalid item inputType`, itemInputType);
+            }
+
+          }();
+
+        default:
+
+          throw new Error(`getItemPrice: Invalid inputType`, inputType);
+      }
+    }
+
+    typeof product.salesPrice !== 'undefined' && !!product.salesPrice && store.setRate(rowIndex, getItemPrice());
     typeof product.salesDesc !== 'undefined' && !!product.salesDesc && store.setDescription(rowIndex, product.salesDesc);
+
+    store.setVATPart(rowIndex, product.salesVATPart ? { inputType, ...(product.salesVATPart.value !== undefined && product.salesVATPart.value !== null ? {value: product.salesVATPart.value,} : {}), } : undefined);
   };
 
   _onClearRow = (rowIndex, e) => {
@@ -660,7 +814,7 @@ export default class extends Component {
   };
 }
 
-class ProductCell extends Component {
+class ProductCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -720,7 +874,7 @@ class ProductCell extends Component {
   }
 }
 
-class TextValueCell extends Component {
+class TextValueCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -762,7 +916,7 @@ class TextValueCell extends Component {
   }
 }
 
-class RateValueCell extends Component {
+class RateValueCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -786,7 +940,7 @@ class RateValueCell extends Component {
   }
 }
 
-class AmountValueCell extends Component {
+class AmountValueCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -810,7 +964,7 @@ class AmountValueCell extends Component {
   }
 }
 
-class DiscountPartValueCell extends Component {
+class DiscountPartValueCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -835,7 +989,49 @@ class DiscountPartValueCell extends Component {
   }
 }
 
-// class TaxableCell extends Component {
+const VAT_ID_TO_TEXT = {
+  1: `20%`,
+  2: `14%`,
+  3: `10%`,
+  4: `Exonéré`,
+  5: `7%`,
+};
+
+const VAT_NAME_TO_ID = {
+  Value_20: 1,
+  Value_14: 2,
+  Value_10: 3,
+  Value_Exempt: 4,
+  Value_7: 5,
+};
+
+class VATPartValueCell extends React.Component {
+
+  static contextTypes = {
+    intl: intlShape.isRequired,
+  };
+
+  static propTypes = {
+    styles: PropTypes.object.isRequired,
+    store: PropTypes.object.isRequired,
+    rowIndex: PropTypes.number.isRequired,
+  };
+
+  render() {
+    const { store, rowIndex, } = this.props;
+    const {intl,} = this.context;
+
+    const { VATPart: value, } = store.getObjectAt(rowIndex);
+
+    return (
+      <Cell {...this.props}>
+        <div>{value && VAT_ID_TO_TEXT[VAT_NAME_TO_ID[value.value]]}</div>
+      </Cell>
+    );
+  }
+}
+
+// class TaxableCell extends React.Component {
 //
 //   static propTypes = {
 //     styles: PropTypes.object.isRequired,
@@ -866,7 +1062,7 @@ class DiscountPartValueCell extends Component {
 //   }
 // }
 
-class IntegerValueCell extends Component {
+class IntegerValueCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -910,7 +1106,7 @@ class IntegerValueCell extends Component {
   }
 }
 
-class DateCell extends Component {
+class DateCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,

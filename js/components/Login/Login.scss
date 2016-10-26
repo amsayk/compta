@@ -1,6 +1,17 @@
+.busy{
+  vertical-align: middle;
+  display: inline-block;
+  -webkit-animation: spin 2s infinite linear;
+          animation: spin 2s infinite linear;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(359deg); }
+}
+
 .login {
   position: absolute;
-  top: 50%;
+  // top: 50%;
   left: 50%;
   margin-left: -175px;
   text-align: center;
@@ -112,7 +123,7 @@ body.fonts_loaded .swap {
 .input input {
   display: block;
   border: none;
-  outline: none;
+  outline: 0;
   background: transparent;
   height: 49px;
   line-height: 49px;

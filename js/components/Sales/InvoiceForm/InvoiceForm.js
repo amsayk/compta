@@ -1,18 +1,21 @@
 import React, {Component, PropTypes} from 'react';
-import ReactDOM from 'react-dom';
 import Relay from 'react-relay';
 
 import {bindActionCreators} from 'redux';
 import {reduxForm} from 'redux-form';
 
+import shallowCompare from 'react-addons-shallow-compare';
+
 import stopEvent from '../../../utils/stopEvent';
 
 import invoiceValidation, {} from './invoiceValidation';
-import * as invoiceActions from '../../../redux/modules/invoices';
+import * as invoiceActions from '../../../redux/modules/v2/invoices';
 
 import JournalEntries from '../../JournalEntries/JournalEntries';
 
 import Title from '../../Title/Title';
+
+import LoadingActions from '../../Loading/actions';
 
 import { setBeforeUnloadMessage, unsetBeforeUnloadMessage, } from '../../../utils/unbeforeunload';
 
@@ -59,10 +62,27 @@ import BalanceDue from './BalanceDue';
 import BillingDetails from './BillingDetails';
 import ProductItems from './ProductItems';
 import TotalLine from './TotalLine';
-// import TaxForm from './TaxForm';
+
 import DiscountForm from './DiscountForm';
 import Memo from './Memo';
 import Files from './Files';
+
+import VATInputType from './VATInputType';
+
+import NoVATWarning from '../../TVA/utils/NoVATWarning';
+import VATPeriodWarning from '../../TVA/utils/VATPeriodWarning';
+
+import PrintDialog from '../../PrintDialog/PrintDialog';
+
+function dateIsCurrentDeclaration(company, date) {
+  if(company.VATSettings.enabled){
+    const { periodStart, periodEnd, } = company.VATDeclaration;
+    return unNormalizeMoment(date).isBetween(
+      periodStart, periodEnd, null, '[]');
+  }
+
+  return true;
+}
 
 function getMinHeight() {
   return getBodyHeight() - 45 /* HEADER */ - 50 /* FOOTER */;
@@ -89,6 +109,8 @@ const discountTypesById = { 'Value': 1, 'Percent': 2, };
 
 import formatAddress from '../../../utils/formatAddress';
 
+import GenPdfMutation from '../../../mutations/GenPdfMutation';
+
 function getBillingAddress({
   displayName,
   billing_streetAddress,
@@ -108,6 +130,16 @@ function getBillingAddress({
   return addr.length === 0 ? undefined : [displayName, ...addr].join('\n');
 }
 
+const VAT_NAME_TO_ID = {
+  Value_20: 1,
+  Value_14: 2,
+  Value_10: 3,
+  Value_Exempt: 4,
+  Value_7: 5,
+};
+
+const StoreProto = invoiceActions.StoreProto;
+
 @reduxForm({
   form: 'invoice',
   fields: [
@@ -119,6 +151,9 @@ function getBillingAddress({
     'dueDate',
     'discountType',
     'discountValue',
+
+    'inputType',
+
     'memo',
     'files',
   ],
@@ -126,34 +161,40 @@ function getBillingAddress({
   asyncBlurFields: [],
   destroyOnUnmount: true,
 }, (state, ownProps) => ({
+  StoreProto,
   customer: ownProps.customer,
   filterArgs: ownProps.filterArgs,
   editing: state.invoices.editing,
   saveError: state.invoices.saveError,
   initialValues: ownProps.invoice ? {
     ...ownProps.invoice,
+    id: ownProps.invoice.objectId,
     date: normalizeMoment(moment(ownProps.invoice.date)).format(),
     dueDate: normalizeMoment(moment(ownProps.invoice.dueDate)).format(),
     discountType: discountTypesById[ownProps.invoice.discountType],
+    inputType: VATInputType_ID_BY_NAME[ownProps.invoice.inputType],
+
   } : function(){
     const customer = ownProps.customer ? {
-      className: `Customer_${ownProps.company.objectId}`,
+      className: `People_${ownProps.company.objectId}`,
       id: ownProps.customer.objectId,
       objectId: ownProps.customer.objectId,
     } : undefined;
     return {
+      id: null,
       terms: ownProps.company.salesSettings.preferredInvoiceTerms,
       date: normalizeMoment(moment()).format(),
       dueDate: normalizeMoment(moment().add(
         getTermsNumberOfDays(ownProps.company.salesSettings.preferredInvoiceTerms), 'days')).format(),
       discountType: 2,
+      inputType: ownProps.company.VATSettings.enabled ? 1 /* HT */ : 3 /* NO_VAT */,
       customer,
       billingAddress: (customer ? getBillingAddress(customer) : undefined),
     };
   }(),
 }), dispatch => bindActionCreators(invoiceActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'InvoiceForm';
 
@@ -206,6 +247,8 @@ export default class extends Component {
     // this._showHelp();
 
     this.refs.client && this.refs.client.focus();
+
+    ga('send', 'pageview', '/modal/app/invoice');
   }
 
   _showHelp(){
@@ -274,7 +317,8 @@ export default class extends Component {
       },
     } = this.props;
 
-    if(dirty || store.isDirty){
+    // if(dirty || store.isDirty){
+    if(dirty || StoreProto.fnIsDirty.call(store)){
       setBeforeUnloadMessage(
         intl.formatMessage(messages['Confirm'])
       );
@@ -307,7 +351,8 @@ export default class extends Component {
       },
     } = this.props;
 
-    if(dirty || store.isDirty){
+    // if(dirty || store.isDirty){
+    if(dirty || StoreProto.fnIsDirty.call(store)){
       Actions.show(intl.formatMessage(messages['Confirm']))
         .then(this.props.onCancel)
         .catch(() => {});
@@ -329,18 +374,23 @@ export default class extends Component {
 
       const items = [];
 
-      for(let i = 0, _len = store.getSize(); i < _len; i++){
-        const line = store.getObjectAt(i);
+      // for(let i = 0, _len = store.getSize(); i < _len; i++){
+      for(let i = 0, _len = StoreProto.getSize.call(store); i < _len; i++){
+        // const line = store.getObjectAt(i);
+        const line = StoreProto.getObjectAt.call(store, i);
 
         if(line.dirty){
-          const {field, valid} = store.isValid(line);
+          // const {field, valid} = store.isValid(line);
+          const {field, valid} = StoreProto.isValid.call(store, line);
 
           if(valid){
             items.push(decorateItem(i, line));
             continue;
           }else{
-            store.setShowErrors(true);
-            store.setActiveRow({rowIndex: i, cell: field});
+            // store.setShowErrors(true);
+            // store.setActiveRow({rowIndex: i, cell: field});
+            StoreProto.setShowErrors.call(store, true);
+            StoreProto.setActiveRow.call(store, {rowIndex: i, cell: field});
             return Promise.reject();
           }
         }
@@ -366,8 +416,13 @@ export default class extends Component {
       }
 
       return new Promise((resolve, reject) => {
-        this.props.save({ ...decorateData(data), id: this.props.invoice && this.props.invoice.objectId, invoice: this.props.invoice, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
+        LoadingActions.show();
+
+        this.props.save({ ...decorateData(data), id: this.props.invoice ? this.props.invoice.objectId : getFieldValue(this.props.fields.id), invoice: this.props.invoice, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
               .then(result => {
+
+                LoadingActions.hide();
+
                 if (result && typeof result.error === 'object') {
                   // return reject(); // messages['error']
                   return resolve();
@@ -379,11 +434,7 @@ export default class extends Component {
                 //   this._handleSaveAndNew();
                 // }
                resolve();
-             })/*.catch((error) => {
-                if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                // reject(messages['error']);
-                resolve();
-              })*/;
+             });
       });
     });
   }
@@ -400,18 +451,23 @@ export default class extends Component {
 
       const items = [];
 
-      for(let i = 0, _len = store.getSize(); i < _len; i++){
-        const line = store.getObjectAt(i);
+      // for(let i = 0, _len = store.getSize(); i < _len; i++){
+      for(let i = 0, _len = StoreProto.getSize.call(store); i < _len; i++){
+        // const line = store.getObjectAt(i);
+        const line = StoreProto.getObjectAt.call(store, i);
 
         if(line.dirty){
-          const {field, valid} = store.isValid(line);
+          // const {field, valid} = store.isValid(line);
+          const {field, valid} = StoreProto.isValid.call(store, line);
 
           if(valid){
             items.push(decorateItem(i, line));
             continue;
           }else{
-            store.setShowErrors(true);
-            store.setActiveRow({rowIndex: i, cell: field});
+            // store.setShowErrors(true);
+            // store.setActiveRow({rowIndex: i, cell: field});
+            StoreProto.setShowErrors.call(store, true);
+            StoreProto.setActiveRow.call(store, {rowIndex: i, cell: field});
             return Promise.reject();
           }
         }
@@ -437,8 +493,13 @@ export default class extends Component {
       }
 
       return new Promise((resolve, reject) => {
-        this.props.save({ ...decorateData(data), id: this.props.invoice && this.props.invoice.objectId, invoice: this.props.invoice, items, _customer: this.props.customer, company: this.props.company, viewer: this.props.viewer, })
+        LoadingActions.show();
+
+        this.props.save({ ...decorateData(data), id: this.props.invoice ? this.props.invoice.objectId : getFieldValue(this.props.fields.id), invoice: this.props.invoice, items, _customer: this.props.customer, company: this.props.company, viewer: this.props.viewer, })
               .then(result => {
+
+                LoadingActions.hide();
+
                 if (result && typeof result.error === 'object') {
                   return reject(); // messages['error']
                 }
@@ -449,10 +510,188 @@ export default class extends Component {
                   this._handleSaveAndNew();
                 }
                resolve();
-             })/*.catch((error) => {
-                if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                reject(messages['error']);
-              })*/;
+             });
+      });
+    });
+  }
+
+  _onSaveOnly(){
+    return this.props.handleSubmit((data) => {
+
+      const {
+        styles,
+        formKey,
+        editing: {
+          [formKey]: store,
+        },
+      } = this.props;
+
+      const items = [];
+
+      // for(let i = 0, _len = store.getSize(); i < _len; i++){
+      for(let i = 0, _len = StoreProto.getSize.call(store); i < _len; i++){
+        // const line = store.getObjectAt(i);
+        const line = StoreProto.getObjectAt.call(store, i);
+
+        if(line.dirty){
+          // const {field, valid} = store.isValid(line);
+          const {field, valid} = StoreProto.isValid.call(store, line);
+
+          if(valid){
+            items.push(decorateItem(i, {...line, }));
+            continue;
+          }else{
+            // store.setShowErrors(true);
+            // store.setActiveRow({rowIndex: i, cell: field});
+            StoreProto.setShowErrors.call(store, true);
+            StoreProto.setActiveRow.call(store, {rowIndex: i, cell: field});
+            return Promise.reject();
+          }
+        }
+
+        if(line.objectId || line.id || line.__dataID__){
+          items.push(decorateItem(i, line));
+        }
+      }
+
+      if(items.length === 0){
+        const {intl,} = this.context;
+        NotifyActions.add({
+          type: 'danger',
+          slug: styles['invoice-form--error-message'],
+          data: () => (
+                <span>
+                  {intl.formatMessage(messages['at_least_one_entry_required'])}
+                </span>
+          ),
+        });
+
+        return Promise.reject();
+      }
+
+      return new Promise((resolve, reject) => {
+        LoadingActions.show();
+
+        const serverData = {
+          ...decorateData({ ...data, }),
+          id: this.props.invoice ? this.props.invoice.objectId : getFieldValue(this.props.fields.id),
+          invoice: this.props.invoice, items, _customer: this.props.customer, company: this.props.company,
+          viewer: this.props.viewer, };
+
+        this.props.save(serverData)
+              .then(result => {
+
+                LoadingActions.hide();
+
+                if (result && typeof result.error === 'object') {
+                  return reject(); // messages['error']
+                }
+
+                const {
+                  company,
+                  initializeForm,
+                  fields: {
+                    id,
+                  }
+                } = this.props;
+
+                function decorateInvoice({ objectId, __dataID__, totalHT, VAT, id, refNo, customer, inputType, billingAddress, terms, date, dueDate, discountType, discountValue, invoiceItemsConnection : itemsConnection, invoicePaymentsConnection: paymentsConnection, memo, files, }) {
+                  const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
+
+                  function calcInvoiceStatus() {
+                    // const _date = moment(date);
+                    const _dueDate = moment(dueDate);
+                    const now = moment();
+
+                    const isPaidInFull = balanceDue === 0.0;
+
+                    if(isPaidInFull){
+                      return 'Closed';
+                    }
+
+                    if(_dueDate.isBefore(now)){
+                      return 'Overdue';
+                    }
+
+                    // const hasPayment = paymentsConnection.totalAmountReceived !== 0;
+                    //
+                    // if(hasPayment){
+                    //   return 'Partial';
+                    // }
+
+                    return 'Open';
+                  }
+
+                  return {
+                    __dataID__,
+                    id,
+                    terms,
+                    date,
+                    billingAddress,
+                    type: 'Invoice',
+                    refNo: parseInt(refNo),
+                    customer,
+                    dueDate,
+                    discountType, discountValue,
+                    totalAmount: itemsConnection.totalAmount,
+                    balanceDue,
+                    total: itemsConnection.totalAmount,
+                    totalAmountReceived: paymentsConnection.totalAmountReceived,
+                    status: calcInvoiceStatus(),
+                    memo, files,
+                    totalHT, VAT,
+                    inputType,
+                    itemsConnection,
+                    paymentsConnection,
+                    objectId,
+                  };
+                }
+
+                const invoice = decorateInvoice(result.result);
+
+                this._invoice = invoice;
+
+                function p__decorateItem(index, { ...props, item, VATPart,}){
+                  return {
+                    index,
+                    ...props,
+                    item: item ? {
+                      ...item,
+                      className: `Product_${company.objectId}`,
+                    } : undefined,
+                    VATPart: VATPart ? {
+                      inputType: VATInputType_ID_BY_NAME[VATPart.inputType],
+                      ...(VATPart.value !== undefined && VATPart.value !== null ? {value: VATPart.value,} : {}),
+                    } : undefined,
+                  };
+                }
+
+                // store.reInit(
+                //   invoice.itemsConnection.edges.map(({node}) => p__decorateItem(node.index, {...node,})), { id: invoice.objectId, company, });
+
+                StoreProto.reInit.call(
+                  store,
+                  invoice.itemsConnection.edges.map(({node}) => p__decorateItem(node.index, {...node,})), { id: invoice.objectId, company, });
+
+                const customer = invoice.customer ? {
+                  type: 'Customer',
+                  className: `People_${this.props.company.objectId}`,
+                  id: invoice.customer.objectId,
+                  objectId: invoice.customer.objectId,
+                } : undefined;
+
+                initializeForm({
+                  ...invoice,
+                  id: invoice.objectId,
+                  date: normalizeMoment(moment(invoice.date)).format(),
+                  dueDate: normalizeMoment(moment(invoice.dueDate)).format(),
+                  discountType: discountTypesById[invoice.discountType],
+                  inputType: VATInputType_ID_BY_NAME[invoice.inputType],
+                  customer,
+                });
+
+               resolve();
+             });
       });
     });
   }
@@ -478,6 +717,9 @@ export default class extends Component {
         dueDate,
         discountType,
         discountValue,
+
+        inputType,
+
         memo,
         files,
       },
@@ -508,18 +750,19 @@ export default class extends Component {
       refresh,
 
       invoice,
+      company,
 
     } = this.props;
 
     // console.log('=====================================');
-    //
+
     // console.log('Valid', valid);
     // console.log('Invalid', invalid);
     // console.log('initialValues', [id, customer, billingAddress, terms, date, dueDate, discountType, discountValue, memo, files].map(({initialValue}) => initialValue));
     // console.log('Values', values);
     // console.log('Values 2', [id, customer, billingAddress, terms, date, dueDate, discountType, discountValue, memo, files].map(({value}) => value));
     // console.log('Invalids', [id, customer, billingAddress, terms, date, dueDate, discountType, discountValue, memo, files].filter(({invalid}) => invalid));
-    //
+
     // console.log('=====================================');
 
     const {intl,} = this.context;
@@ -527,6 +770,13 @@ export default class extends Component {
     const bodyWidth = getBodyWidth();
 
     const minHeight = getMinHeight();
+
+    const isSaved = invoice || typeof getFieldValue(id) !== 'undefined';
+
+    const VATEnabled = this.props.company.VATSettings.enabled;
+
+    // const _dirty = dirty || store.isDirty;
+    const _dirty = dirty || StoreProto.fnIsDirty.call(store);
 
     return (
       <Modal dialogClassName={`${styles['modal']} invoice-form`}
@@ -543,7 +793,7 @@ export default class extends Component {
             </div>
 
             <div styleName='icon'>
-              <i style={{verticalAlign: 'middle'}} className='material-icons md-light' style={{}}>settings</i>
+              <i style={{verticalAlign: 'middle'}} className='material-icons md-light'>settings</i>
             </div>
 
           </div>
@@ -562,7 +812,7 @@ export default class extends Component {
 
                   <div style={{}}>
 
-                    <div styleName='invoiceTop ' style={getTopStyle(this.props.invoice)}>
+                    <div styleName='invoiceTop ' style={this.props.invoice ? getTopStyle(this.props.invoice) : (isSaved ? {height: 155, minHeight: 155,} : {height: 100, minHeight: 100,})}>
 
                       <div styleName='innerRow' style={{position: 'relative',}}>
 
@@ -573,6 +823,7 @@ export default class extends Component {
                             viewer={this.props.viewer}
                             formKey={formKey}
                             fields={{customer, dirty, valid, invalid, pristine, submitting, values,}}
+                            StoreProto={this.props.StoreProto}
                           />
                         </div>
 
@@ -581,14 +832,15 @@ export default class extends Component {
                             store={store}
                             company={this.props.company}
                             invoice={this.props.invoice}
+                            _invoice={this._invoice}
                             formKey={formKey}
                             fields={{
+                              id,
                               dirty,
                               date,
                               dueDate,
                               discountType,
                               discountValue,
-                              dirty,
                               valid,
                               invalid,
                               pristine,
@@ -596,6 +848,7 @@ export default class extends Component {
                               values,
                             }}
                             onReceivePayment={this._onReceivePayment}
+                            StoreProto={this.props.StoreProto}
                           />
                         </div>
 
@@ -605,6 +858,18 @@ export default class extends Component {
 
                     {saveError && <Alert title={intl.formatMessage(messages['ErrorTitle'])} type={'error'}>{intl.formatMessage({ ...saveError, id: saveError._id, })}</Alert>}
 
+                    {function () {
+                      return VATEnabled ? null : <div style={{ padding: '15px 25px 30px 30px', }}>
+                        <NoVATWarning company={company}/>
+                      </div>;
+                    }()}
+
+                    {isSaved ? null : function () {
+                      return dateIsCurrentDeclaration(company, getFieldValue(date)) ? null : <div style={{ padding: '15px 25px 30px 30px', }}>
+                        <VATPeriodWarning/>
+                      </div>;
+                    }()}
+
                     <div styleName='billingDetailsRow'>
 
                       <div styleName='innerRow'>
@@ -613,11 +878,21 @@ export default class extends Component {
                           company={this.props.company}
                           formKey={formKey}
                           fields={{billingAddress, terms, date, dueDate, dirty, valid, invalid, pristine, submitting, values,}}
+                          StoreProto={this.props.StoreProto}
                         />
 
                       </div>
 
                     </div>
+
+                    {function () {
+                      return VATEnabled && <div style={{ padding: '15px 25px 30px 30px', }}>
+                        <VATInputType
+                          fields={{ id, dirty, valid, invalid, inputType, pristine, submitting, values,}}
+                          formKey={formKey}
+                          store={store}/>
+                      </div>;
+                    }()}
 
                     <div styleName='itemsContainerRow '>
 
@@ -627,15 +902,17 @@ export default class extends Component {
 
                           <ProductItems
                             salesAccounts={this.props.salesAccounts}
+                            expensesAccounts={this.props.expensesAccounts}
                             refresh={refresh}
                             company={this.props.company}
                             invoice={this.props.invoice}
                             viewer={this.props.viewer}
                             formKey={formKey}
                             store={store}
-                            fields={{dirty, valid, invalid, setActiveRow, resetLines, addMoreRows, clearAllRows, clearRow, moveOp, pristine, submitting, values,}}
+                            fields={{ inputType, dirty, valid, invalid, setActiveRow, resetLines, addMoreRows, clearAllRows, clearRow, moveOp, pristine, submitting, values, }}
                             height={minHeight}
                             bodyWidth={bodyWidth}
+                            StoreProto={this.props.StoreProto}
                           />
 
                         </div>
@@ -670,20 +947,6 @@ export default class extends Component {
 
                           <div className='col-sm-6 last-col'>
 
-                            {/*<div styleName='taxableSubtotalLineRow'>
-
-                              <div styleName='innerRow'>
-
-                                <TaxableSubtotalLine
-                                  formKey={formKey}
-                                  store={store}
-                                  fields={{dirty, valid, invalid, pristine, submitting, values,}}
-                                />
-
-                              </div>
-
-                            </div>*/}
-
                             {this.props.company.salesSettings.discountEnabled && <div styleName='discountFormRow'>
 
                               <div styleName='innerRow'>
@@ -692,35 +955,24 @@ export default class extends Component {
                                   formKey={formKey}
                                   store={store}
                                   fields={{dirty, discountType, discountValue, valid, invalid, pristine, submitting, values,}}
+                                  StoreProto={this.props.StoreProto}
                                 />
 
                               </div>
 
                             </div>}
 
-                            {/*<div styleName='taxFormRow'>
-
-                              <div styleName='innerRow'>
-
-                                <TaxForm
-                                  formKey={formKey}
-                                  store={store}
-                                  fields={{dirty, discountType, discountValue, taxPercent, valid, invalid, pristine, submitting, values,}}
-                                />
-
-                              </div>
-
-                            </div>*/}
-
                             <div styleName='totalRow'>
 
                               <div styleName='innerRow'>
 
                                 <TotalLine
+                                  company={this.props.company}
                                   formKey={formKey}
                                   store={store}
                                   invoice={this.props.invoice}
                                   fields={{
+                                    id,
                                     dirty,
                                     discountType,
                                     discountValue,
@@ -730,6 +982,7 @@ export default class extends Component {
                                     submitting,
                                     values,
                                   }}
+                                  StoreProto={this.props.StoreProto}
                                 />
 
                               </div>
@@ -754,13 +1007,14 @@ export default class extends Component {
 
                             <div styleName='filesRow'>
 
-                              <hr styleName="sectionDivider"/>
+                              <hr styleName='sectionDivider'/>
 
                               <div styleName='innerRow' style={{width: '40%', minWidth: 492,}}>
 
                                 <Files
                                   formKey={formKey}
                                   fields={{files, dirty, valid, invalid, pristine, submitting, values,}}
+                                  StoreProto={this.props.StoreProto}
                                 />
 
                               </div>
@@ -797,7 +1051,10 @@ export default class extends Component {
               styleName='btn dark'
               onClick={() => this._handleCancel()}
               disabled={submitting}
-              className='unselectable'>{intl.formatMessage(messages['cancel'])}
+              className='unselectable'>{function () {
+              // const _dirty = dirty || store.isDirty;
+              return intl.formatMessage(messages[isSaved && !_dirty ? 'close' : 'cancel']);
+            }()}
             </button>
 
           </div>
@@ -805,32 +1062,15 @@ export default class extends Component {
           <div styleName='tableCell' style={{textAlign: 'center'}}>
 
             <div>
-              {invoice && <InvoiceActions onDelete={this._del()} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
+              {isSaved && <InvoiceActions onPreview={this._preview} onDelete={this._del} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
             </div>
 
           </div>
 
           <div styleName='tableCell' style={{textAlign: 'right'}}>
 
-            {/*<button
-              styleName='btn primary'
-              onClick={this._onSave()}
-              disabled={invalid || submitting || !_dirty}
-              className={'unselectable' + (valid && _dirty ? ' green valid' : (invalid || submitting || !_dirty ? ' disabled' : ''))}>
-              {' '}{intl.formatMessage(messages['save'])}
-            </button>*/}
-
-            {/*<button
-              styleName='btn primary'
-              style={{marginLeft: 12}}
-              onClick={this._onSave()}
-              disabled={invalid || submitting}
-              className={'unselectable' + (valid ? ' green valid' : (invalid || submitting ? ' disabled' : ''))}>
-              {' '}{intl.formatMessage(messages['saveAndNew'])}
-            </button>*/}
-
             {function(){
-              const _dirty = dirty || store.isDirty;
+              // const _dirty = dirty || store.isDirty;
               return (
                 <MySplitButton
                   className={'unselectable' + (valid && _dirty ? ' green valid' : (invalid || submitting || !_dirty ? ' disabled' : ''))}
@@ -839,6 +1079,7 @@ export default class extends Component {
                   valid={valid}
                   onSave={self._onSave.bind(self)}
                   onSaveClose={self._onSaveClose.bind(self)}
+                  onSaveOnly={self._onSaveOnly.bind(self)}
                   disabled={invalid || submitting || !_dirty}
                   submitting={submitting}
                 />
@@ -850,6 +1091,7 @@ export default class extends Component {
         </Footer>
 
         {this.journalEntriesModal()}
+        {this.previewModal()}
 
         <Title title={intl.formatMessage(messages['Title'])}/>
 
@@ -860,47 +1102,62 @@ export default class extends Component {
   _del = () => {
     const {intl,} = this.context;
 
-    return this.props.handleSubmit(() => {
+    if(this.props.invoice ? this.props.invoice.paymentsConnection.edges.length > 0 : false){
+      NotifyActions.add({
+        type: 'danger',
+        slug: this.props.styles['invoice-form--error-message'],
+        data: () => (
+              <span>
+                {intl.formatMessage(messages['error_has_payments'])}
+              </span>
+        ),
+      });
 
-      if(this.props.invoice.paymentsConnection.edges.length > 0){
-        NotifyActions.add({
-          type: 'danger',
-          slug: this.props.styles['invoice-form--error-message'],
-          data: () => (
-                <span>
-                  {intl.formatMessage(messages['error_has_payments'])}
-                </span>
-          ),
+      return Promise.reject();
+    }
+
+    Actions.show(intl.formatMessage(messages['ConfirmDelete']))
+      .then(() => {
+        LoadingActions.show();
+
+        return new Promise((resolve, reject) => {
+          const getObj = () => {
+            const id = getFieldValue(this.props.fields.id);
+            return {
+              __dataID__: id,
+              id,
+              objectId: id,
+            };
+          };
+          this.props.del({ invoice: this.props.invoice || getObj(), company: this.props.company, viewer: this.props.viewer, })
+                .then(result => {
+                  LoadingActions.hide();
+
+                  if (result && typeof result.error === 'object') {
+                    return reject(); // messages['error']
+                  }
+
+                  this._handleClose();
+                 resolve();
+               });
         });
+      })
+      .catch(() => {});
+  };
 
-        return Promise.reject();
-      }
-
-      return Actions.show(intl.formatMessage(messages['ConfirmDelete']))
-        .then(() => {
-          return new Promise((resolve, reject) => {
-            this.props.del({ invoice: this.props.invoice, company: this.props.company, viewer: this.props.viewer, })
-                  .then(result => {
-                    if (result && typeof result.error === 'object') {
-                      return reject(); // messages['error']
-                    }
-
-                    this._handleClose();
-                   resolve();
-                 })/*.catch((error) => {
-                    if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                    reject(messages['error']);
-                  })*/;
-          });
-        })
-        .catch(() => {});
-    });
+  _preview = (e) => {
+    stopEvent(e);
+    this.setState({
+      modalOpen: true,
+      modalType: 'preview',
+    })
   };
 
   _showJournal = (e) => {
     stopEvent(e);
     this.setState({
       modalOpen: true,
+      modalType: 'journal',
     })
   };
 
@@ -908,22 +1165,133 @@ export default class extends Component {
     stopEvent(e);
     this.setState({
       modalOpen: false,
+      modalType: 'preview',
     })
   };
 
   journalEntriesModal = () => {
-    if(this.state.modalOpen){
+    if(this.state.modalOpen && this.state.modalType === 'journal'){
+      const self = this;
+      const obj = this.props.invoice || function () {
+          const id = getFieldValue(self.props.fields.id);
+          const customer = getFieldValue(self.props.fields.customer);
+          return {
+            __dataID__: id,
+            id,
+            objectId: id,
+            customer,
+          };
+        }();
       return (
         <JournalEntries
           type={'Invoice'}
           company={this.props.company}
           viewer={this.props.viewer}
-          person={this.props.invoice.customer}
-          id={this.props.invoice.objectId}
+          person={obj.customer}
+          id={obj.objectId}
           onCancel={this._close}
         />
       );
     }
+
+    return null;
+  };
+
+  previewModal = () => {
+
+    if(this.state.modalOpen && this.state.modalType === 'preview'){
+      const self = this;
+
+      const obj = this.props.invoice || function () {
+          const id = getFieldValue(self.props.fields.id);
+          return {
+            objectId: id,
+          };
+        }();
+
+      return (
+        <PrintDialogWrapper
+          obj={obj}
+          company={this.props.company}
+          viewer={this.props.viewer}
+          onCancel={this._close}
+        />
+      );
+    }
+
+    return null;
+  };
+
+}
+
+class PrintDialogWrapper extends React.Component{
+  state = {
+    loading: true,
+    url: undefined,
+    error: undefined,
+  };
+
+  constructor(props, context) {
+    super(props, context);
+
+    const self = this;
+
+    Relay.Store.commitUpdate(new GenPdfMutation({
+      type: 'Invoice',
+      objectId: self.props.obj.objectId,
+      company: self.props.company,
+      viewer: self.props.viewer,
+
+    }), {
+      onSuccess: function ({genPdf: {pdf}}) {
+        self.setState({ loading: false, url: pdf, error: undefined, });
+      },
+      onFailure: function (transaction) {
+        const error = transaction.getError();
+        self.setState({ loading: false, error, url: undefined, });
+      },
+    });
+  }
+
+  _print = () => {
+    const self = this;
+
+    self.setState({
+      loading: true,
+      url: undefined,
+      error: undefined,
+    }, function(){
+
+      Relay.Store.commitUpdate(new GenPdfMutation({
+        type: 'Invoice',
+        objectId: self.props.obj.objectId,
+        company: self.props.company,
+        viewer: self.props.viewer,
+
+      }), {
+        onSuccess: function ({genPdf: {pdf}}) {
+          self.setState({ loading: false, url: pdf, error: undefined, });
+        },
+        onFailure: function (transaction) {
+          const error = transaction.getError();
+          self.setState({ loading: false, error, url: undefined, });
+        },
+      });
+    });
+
+  };
+
+  render(){
+    const { url, error, loading, } = this.state;
+    return (
+      <PrintDialog
+        url={url}
+        onRefresh={this._print}
+        error={error}
+        loading={loading}
+        onCancel={this.props.onCancel}
+      />
+    );
   }
 
 }
@@ -941,8 +1309,21 @@ const discountTypeValueByIndex = {
   1: 'Value',
 };
 
+const VATInputType_NAME_BY_ID = {
+  1: 'HT',
+  2: 'TTC',
+  3: 'NO_VAT',
+};
+
+const VATInputType_ID_BY_NAME = {
+  HT: 1,
+  TTC: 2,
+  NO_VAT: 3,
+};
+
+
 function decorateData({
-  billingAddress, customer, discountType, discountValue, date, dueDate, memo, files, terms}){
+  billingAddress, customer, inputType, discountType, discountValue, date, dueDate, memo, files, terms}){
   return {
     billingAddress,
     customer: {
@@ -951,6 +1332,7 @@ function decorateData({
     },
     discountType: discountTypeValueByIndex[discountType],
     discountValue,
+    inputType: VATInputType_NAME_BY_ID[inputType],
     date: unNormalizeMoment(moment(date)).format(),
     dueDate: moment(dueDate).endOf('day').format(),
     memo,
@@ -974,6 +1356,7 @@ function decorateItem(index, {
   qty,
   rate,
   discountPart,
+  VATPart,
 }){
   return {
     index,
@@ -989,6 +1372,10 @@ function decorateItem(index, {
       type: getDiscountType(discountPart.type),
       value: discountPart.value,
     },
+    VATPart: VATPart ? {
+      inputType: VATInputType_NAME_BY_ID[VATPart.inputType],
+      ...(VATPart.value !== undefined && VATPart.value !== null ? {value: VATPart.value,} : {}),
+    } : undefined
   };
 }
 
@@ -1018,19 +1405,32 @@ function getTopStyle(invoice){
   }
 }
 
-class MySplitButton extends Component{
+class MySplitButton extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
+  shouldComponentUpdate(nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
+  }
   render(){
     const {intl} = this.context;
-    const {onSave, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
-    const title = (
-      <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
-    );
+    const {onSave, onSaveOnly, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
+    // const title = (
+    //   <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
+    // );
+    const title = intl.formatMessage(messages['saveAndClose']);
     return (
       <div className={styles['dropdown']}>
         <ButtonToolbar>
+
+          <button
+            // styleName='btn primary'
+            onClick={onSaveOnly()}
+            style={{marginLeft: 12,}}
+            disabled={disabled}
+            className={`${disabled ? 'disabled' : ''} ${className} btn btn-default ${styles['btn']} ${styles['dark']}`}>
+            {' '}{intl.formatMessage(messages['save'])}
+          </button>
 
           <SplitButton className={className} disabled={disabled} onClick={onSaveClose()} title={title} dropup pullRight id={'invoice-form'}>
 
@@ -1040,22 +1440,13 @@ class MySplitButton extends Component{
 
           </SplitButton>
 
-          <button
-            // styleName='btn primary'
-            onClick={onSave()}
-            style={{marginLeft: 12,}}
-            disabled={disabled}
-            className={`hidden ${disabled ? 'disabled' : ''} ${styles['btn']} ${styles['dark']}`}>
-            {' '}{intl.formatMessage(messages['save'])}
-          </button>
-
         </ButtonToolbar>
       </div>
     );
   }
 }
 
-class InvoiceActions extends Component{
+class InvoiceActions extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -1066,6 +1457,10 @@ class InvoiceActions extends Component{
   _onShowJournalEntries = (e) =>{
     stopEvent(e);
     this.props.onShowJournalEntries();
+  };
+  _onPreview = (e) =>{
+    stopEvent(e);
+    this.props.onPreview();
   };
   render(){
     const {intl} = this.context;
@@ -1082,6 +1477,10 @@ class InvoiceActions extends Component{
 
             <MenuItem onClick={this._onShowJournalEntries} eventKey={'journalEntries'}>
               {intl.formatMessage(messages['JournalEntries'])}
+            </MenuItem>
+
+            <MenuItem onClick={this._onPreview} eventKey={'print'}>
+              {intl.formatMessage(messages['Preview'])}
             </MenuItem>
 
           </DropdownButton>

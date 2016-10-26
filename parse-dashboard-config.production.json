@@ -1,0 +1,10 @@
+{
+  "apps": [
+    {
+      "serverURL": "https://compta-enterprise.herokuapp.com/parse",
+      "appId": "xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT",
+      "masterKey": "bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb",
+      "appName": "compta-enterprise"
+    }
+  ]
+}

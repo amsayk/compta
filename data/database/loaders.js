@@ -1,12 +1,12 @@
-import Parse from 'parse';
-import DataLoader from 'dataloader';
+const Parse = require('parse');
+const DataLoader = require('dataloader');
 
-import { DEFAULT_LIMIT, } from '../constants';
+const { DEFAULT_LIMIT, } = require('../constants');
 
-export const parseIDLoader = fieldLoader('objectId', false, (obj) => obj.id);
+module.exports.parseIDLoader = fieldLoader('objectId', false, (obj) => obj.id);
 
 // Perform only one load for several queries per type!
-export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => {
+module.exports.parseTableLoader = new DataLoader(keys => new Promise((resolve) => {
 
   function fetch(Type, cb) {
 
@@ -15,6 +15,7 @@ export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => 
     }
 
     const query = new Parse.Query(Queries[Type]);
+    query.notEqualTo('deleted', true);
     query.descending('updatedAt,createdAt');
     query.limit(DEFAULT_LIMIT);
     query.find().then(
@@ -71,7 +72,7 @@ export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => 
             //   result.push(new Error(`Error fetching ${Type.name}`));
             // }
 
-            result.push(new Error(`Error fetching ${Type.name}`));
+            result.push(new Error(`parseTableLoader: Error fetching ${Type.name}`));
           }
 
           return result;
@@ -86,7 +87,7 @@ export const parseTableLoader = new DataLoader(keys => new Promise((resolve) => 
 });
 
 // Perform only one load for several queries per type!
-export const parseTableCountLoader = new DataLoader(keys => new Promise((resolve) => {
+module.exports.parseTableCountLoader = new DataLoader(keys => new Promise((resolve) => {
 
   function count(Type, cb) {
 
@@ -149,7 +150,7 @@ export const parseTableCountLoader = new DataLoader(keys => new Promise((resolve
             //   result.push(new Error(`Error counting ${Type.name}`));
             // }
 
-            result.push(new Error(`Error counting ${Type.name}`));
+            result.push(new Error(`parseTableCountLoader: Error counting ${Type.name}`));
           }
 
           return result;
@@ -253,7 +254,7 @@ function fieldLoader(field, isPlural, fieldGetter) {
                   if (found) {
                     result.push(found);
                   } else {
-                    result.push(new Error(`${Type}: Error fetching ${id}`));
+                    result.push(new Error(`fieldLoader-${Type}: Error fetching ${id}`));
                   }
                 }
 
@@ -263,7 +264,7 @@ function fieldLoader(field, isPlural, fieldGetter) {
             } else {
 
               // props.forEach(function (key) {
-                result.push(isPlural ? [] : new Error(`${Type}: Error fetching ${key}`));
+                result.push(isPlural ? [] : new Error(`fieldLoader-${Type}: Error fetching ${key}`));
               // });
 
             }
@@ -280,7 +281,7 @@ function fieldLoader(field, isPlural, fieldGetter) {
   });
 }
 
-export const parseSeqLoader = function () {
+module.exports.parseSeqLoader = function () {
 
   // const Seq = Parse.Object.extend('Seq');
 
@@ -295,7 +296,10 @@ export const parseSeqLoader = function () {
     _promise;
 
   function getKey(key){
-    return () => _seq.get(key);
+    return () => _seq.has(key) ? _seq.get(key) : function(){
+      // console.warn('Key is null `', key, '`');
+      return key.startsWith('transaction_sequence_') ? 1000 : 0;
+    }();
   }
 
   function doLoad(key) {
@@ -308,8 +312,8 @@ export const parseSeqLoader = function () {
         _promise = undefined;
 
         return _seq.has(key) ? _seq.get(key) : function(){
-          console.warn('Key is null `', key, '`');
-          return 1000;
+          // console.warn('Key is null `', key, '`');
+          return key.startsWith('transaction_sequence_') ? 1000 : 0;
         }();
       }
     );
@@ -318,7 +322,7 @@ export const parseSeqLoader = function () {
   return {
     load(key){
 
-      if (_seq && _seq.has(key)) {
+      if (_seq && _seq.has(key) && _seq.get(key) !== null) {
         return Parse.Promise.as(_seq.get(key));
       }
 

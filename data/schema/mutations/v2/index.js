@@ -1,4 +1,4 @@
-import {
+const {
   GraphQLInterfaceType,
   GraphQLList,
   GraphQLFloat,
@@ -12,9 +12,22 @@ import {
   GraphQLEnumType,
   GraphQLBoolean,
   GraphQLUnionType,
-} from 'graphql';
+} = require('graphql');
 
-import {
+const {
+  SetPasswordMutation,
+  ChangePasswordMutation,
+  UpdateAccountMutation,
+} = require('./account');
+
+const {
+  GraphQLCreateOrUpdateCompanyMutation,
+
+  GraphQLGenExcelMutation,
+  GraphQLGenPdfMutation,
+
+  GraphQLSetupVATMutation,
+
   GraphQLAddCompanyMutation,
   GraphQLUpdateCompanyMutation,
   GraphQLUpdateCompanySettingsMutation,
@@ -37,20 +50,20 @@ import {
   GraphQLRemoveVendorMutation,
 
   GraphQLLogInMutation,
-  GraphQLLogOutMutation
-} from './company';
+  GraphQLLogOutMutation,
+} = require('./company');
 
-import {
+const {
   GraphQLAddBillMutation,
   GraphQLAddExpenseMutation,
-  GraphQLReceivePaymentOfBillsMutation,
+  GraphQLMakePaymentOfBillsMutation,
 
   GraphQLRemoveBillMutation,
   GraphQLRemoveExpenseMutation,
   GraphQLRemovePaymentOfBillsMutation,
-} from './expenses';
+} = require('./expenses');
 
-import {
+const {
   GraphQLAddInvoiceMutation,
   GraphQLAddSaleMutation,
   GraphQLReceivePaymentOfInvoicesMutation,
@@ -58,16 +71,27 @@ import {
   GraphQLRemoveInvoiceMutation,
   GraphQLRemoveSaleMutation,
   GraphQLRemovePaymentOfInvoicesMutation,
-} from './sales';
+} = require('./sales');
+
+const {
+  GraphQLRemoveFileMutation,
+} = require('./files');
 
 /**
  * This is the type that will be the root of our mutations,
  * and the entry point into performing writes in our schema.
  */
-export default new GraphQLObjectType({
+module.exports = new GraphQLObjectType({
   name: 'Mutation',
   fields: () => ({
     // Add your own mutations here
+    genPdf: GraphQLGenPdfMutation,
+    genExcel: GraphQLGenExcelMutation,
+
+    setupVAT: GraphQLSetupVATMutation,
+
+    createOrUpdateCompany: GraphQLCreateOrUpdateCompanyMutation,
+
     addCompany: GraphQLAddCompanyMutation,
     updateCompany: GraphQLUpdateCompanyMutation,
     updateCompanySettings: GraphQLUpdateCompanySettingsMutation,
@@ -82,12 +106,14 @@ export default new GraphQLObjectType({
     addProduct: GraphQLAddProductMutation,
     delProduct: GraphQLRemoveProductMutation,
 
+    delFile: GraphQLRemoveFileMutation,
+
     addBill: GraphQLAddBillMutation,
     addInvoice: GraphQLAddInvoiceMutation,
     addSale: GraphQLAddSaleMutation,
     addExpense: GraphQLAddExpenseMutation,
     receivePaymentOfInvoices: GraphQLReceivePaymentOfInvoicesMutation,
-    receivePaymentOfBills: GraphQLReceivePaymentOfBillsMutation,
+    makePaymentOfBills: GraphQLMakePaymentOfBillsMutation,
 
     removeInvoice: GraphQLRemoveInvoiceMutation,
     removeBill: GraphQLRemoveBillMutation,
@@ -105,5 +131,10 @@ export default new GraphQLObjectType({
 
     logIn: GraphQLLogInMutation,
     logOut: GraphQLLogOutMutation,
+
+    setPassword: SetPasswordMutation,
+    changePassword: ChangePasswordMutation,
+
+    updateAccount: UpdateAccountMutation,
   })
 });

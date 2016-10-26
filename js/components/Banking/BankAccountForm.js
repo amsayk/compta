@@ -81,7 +81,7 @@
 //   }),
 //   dispatch => bindActionCreators(bankActions, dispatch))
 // @CSSModules(styles, {})
-// export default class BankAccountForm extends Component {
+// export default class BankAccountForm extends React.Component {
 //   static contextTypes = {
 //     intl: intlShape.isRequired,
 //     router: PropTypes.object.isRequired,

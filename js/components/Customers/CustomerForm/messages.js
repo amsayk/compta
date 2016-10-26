@@ -44,6 +44,10 @@ export default defineMessages({
     defaultMessage: 'Ce nom de client a déjà été utilisé',
   },
 
+  label_if: {
+    id: 'customer-form-page.if',
+    defaultMessage: 'Numéro d\'identification fiscale',
+  },
   label_prefix: {
     id: 'customer-form-page.prefix',
     defaultMessage: 'Titre',
@@ -105,6 +109,11 @@ export default defineMessages({
   tab_title_notes: {
     id: 'customer-form-page.tab_title_notes',
     defaultMessage: 'Notes',
+  },
+
+  tab_title_if: {
+    id: 'customer-form-page.tab_title_if',
+    defaultMessage: 'Info de TVA',
   },
 
   tab_title_preferences: {

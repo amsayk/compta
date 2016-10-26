@@ -2,7 +2,8 @@ import React, {Component, PropTypes} from 'react';
 import Relay from 'react-relay';
 
 import Sidebar from '../Sidebar/AppSidebar';
-import Loading from '../Loading/Loading';
+
+import LazyCache from 'react-lazy-cache';
 
 import moment from 'moment';
 
@@ -10,91 +11,75 @@ import CSSModules from 'react-css-modules';
 
 import styles from './TVA.scss';
 
-import messages from './messages';
-
 import RelayRoute from '../../routes/TVARoute';
 
-import {
-  intlShape,
-} from 'react-intl';
+import { getBodyWidth, } from '../../utils/dimensions';
 
-const Title = (company) => company.displayName;
+import Revision from '../../utils/revision';
+
+import Header from './Header';
+
+import NoVAT from './NoVAT';
+import VATSummary from './VATSummary';
 
 @CSSModules(styles, {allowMultiple: true})
-class TVA extends Component {
+class TVA extends React.Component {
+
+  static propTypes = {
+    loading: PropTypes.bool.isRequired,
+  };
+
   static contextTypes = {
-    intl: intlShape.isRequired,
-    store: PropTypes.object.isRequired,
   };
 
   state = {
-    modalOpen: false
+
   };
 
-  _onAddClicked = (e) => {
-    e.preventDefault();
-    // this.context.store.dispatch(accountEditStart('NEW'));
-    this.setState({
-      modalOpen: true
-    })
-  };
+  componentWillUnmount() {
+  }
 
-  _close = () => {
-    this.setState({modalOpen: false});
-  };
-
-  _renderForm = () => {
-    //this.context.store.dispatch(transactionEditStart('NEW', []));
-    //
-    //const form = this.state.modalOpen ? (
-    //  <TransactionForm
-    //    onCancel={this._close}
-    //    formKey={'NEW'}
-    //    company={this.props.company}
-    //  />
-    //) : null;
-    //
-    //return form;
-  };
+  componentDidMount(){
+  }
 
   render() {
-    const { route, company, viewer, companies, } = this.props;
-    const {formatMessage,} = this.context.intl;
+    const { route, stale, loading, viewer, root, company, companies, } = this.props;
+
+    const bodyWidth = getBodyWidth();
+
     return (
-      <div className=''>
+      <div className={'height100Percent'} styleName={''}>
 
         <Sidebar
           route={route}
+          bodyWidth={bodyWidth}
           viewer={viewer}
           company={company}
           companies={companies.edges.map(({ node: company, }) => company)}
-          viewer={viewer}
-          page='/tax'
+          root={root}
+          page='/vat'
         />
 
         <div className='content'>
 
           <div styleName='page'>
 
-            <div styleName='toolbar'>
+            <Header
+              bodyWidth={bodyWidth}
+              company={company}
+              viewer={viewer}
+              topLoading={loading}
+            />
 
-              <div styleName='title'>
-                <div styleName='section'>{Title(company)}</div>
+            <div styleName='index' style={{
+              /*minHeight: 794Math.max(minHeight, 794, minHeight),*/
+              background: '#fff',
+              position: 'absolute',
+              top: 97,
+              paddingBottom: 50,
+            }}>
 
-                <div>
-                  <span styleName='subsection'>{formatMessage(messages.Subtitle)}</span>
-                  <span styleName='details'></span>
-                </div>
-
-              </div>
-
-              <div styleName='actions'></div>
-
-            </div>
-
-            <div>
-
-              TVA
+              {loading || stale ? null : (company.VATSettings.enabled ? <VATSummary viewer={viewer} company={company}/> : <NoVAT viewer={viewer} company={company}/>)}
 
             </div>
 
@@ -102,130 +87,219 @@ class TVA extends Component {
 
         </div>
 
-        {this._renderForm()}
-
       </div>
     );
   }
+
 }
 
-function wrapWithC(Component, props) {
+function wrapWithC(MyComponent, props) {
+
   class CWrapper extends React.Component {
+
+    static propTypes = {
+      loading: PropTypes.bool.isRequired,
+    };
+
+    static defaultProps = {
+      loading: false,
+      stale: false,
+    };
+
     render() {
+      const { stale, loading, viewer : root, relay, children, } = this.props;
       return React.createElement(
-        Component, {
+        MyComponent, {
           ...props,
-          companies: this.props.viewer.companies,
-          company: this.props.viewer.company,
-          viewer: this.props.viewer,
+          stale: stale,
+          loading: loading,
+          companies: root.companies,
+          company: root.company,
+          root: root,
+          viewer: root,
+          relay: relay,
         },
-        this.props.children
+        children
       );
     }
   }
 
   return Relay.createContainer(CWrapper, {
-    initialVariables: {companyId: props.params.app},
+    initialVariables: {
+      companyId: props.params.app,
+    },
 
     fragments: {
       viewer: () => Relay.QL`
-        fragment on User {
-          id,
-          objectId,
-          displayName,
-          username,
-          email,
-          createdAt,
-          updatedAt,
-          sessionToken,
+          fragment on User {
 
-          company(id: $companyId){
             objectId,
-
             id,
             displayName,
-            periodType,
-            lastTransactionIndex, lastPaymentsTransactionIndex,
-
+            username,
+            email,
             createdAt,
             updatedAt,
+            sessionToken,
 
-            settings {
+            company(id: $companyId) {
+
+              VATSettings{
+                enabled,
+                agency,
+                startDate,
+                IF,
+                frequency,
+                regime,
+                percentages{ value, },
+              },
+
+              objectId,
+
+              id,
+              displayName,
               periodType,
-              closureEnabled,
-              closureDate,
-            },
-            salesSettings {
-              defaultDepositToAccountCode,
-              preferredInvoiceTerms,
-              enableCustomTransactionNumbers,
-              enableServiceDate,
-              discountEnabled,
+              lastTransactionIndex, lastPaymentsTransactionIndex,
 
-              showProducts,
-              showRates,
-              trackInventory,
-              defaultIncomeAccountCode,
-            },
-            expensesSettings {
-              defaultExpenseAccountCode,
-              preferredPaymentMethod,
-            },
-            paymentsSettings {
-              defaultDepositToAccountCode,
-              preferredPaymentMethod,
-            },
+              createdAt,
+              updatedAt,
 
-          },
-
-          companies(first: 100000){
-            edges{
-              node{
-                objectId,
+              VATDeclaration{
                 id,
-                displayName,
-                periodType,
-                lastTransactionIndex, lastPaymentsTransactionIndex,
-                createdAt,
-                updatedAt,
-              }
-            }
-          },
+                objectId,
+                periodStart,
+                periodEnd,
 
-        }
+                report{
+                  sales { totalVAT, },
+                  expenses { totalVAT, },
+                },
+
+              },
+
+              VATDeclarationHistory(first: 100000){
+                edges{
+                  node{
+                    id,
+                    objectId,
+                    periodStart,
+                    periodEnd,
+                  }
+                }
+              },
+
+              settings {
+                periodType,
+                closureEnabled,
+                closureDate,
+              },
+              salesSettings {
+                defaultDepositToAccountCode,
+                preferredInvoiceTerms,
+                enableCustomTransactionNumbers,
+                enableServiceDate,
+                discountEnabled,
+
+                showProducts,
+                showRates,
+                trackInventory,
+                defaultIncomeAccountCode,
+              },
+              expensesSettings {
+                defaultExpenseAccountCode,
+                preferredPaymentMethod,
+              },
+              paymentsSettings {
+                defaultDepositToAccountCode,
+                preferredPaymentMethod,
+              },
+
+            },
+
+            companies(first: 100000){
+              edges{
+                node{
+                  objectId,
+                  id,
+                  displayName,
+                  periodType,
+                  lastTransactionIndex, lastPaymentsTransactionIndex,
+                  createdAt,
+                  updatedAt,
+                }
+              }
+            },
+
+          }
       `,
     },
   });
 }
 
-module.exports = (props) => {
-  const route = new RelayRoute({companyId: props.params.app});
-  return (
-    <Relay.RootContainer
-      forceFetch={true}
-      Component={wrapWithC(TVA, { ...props, route, })}
-      route={route}
-      renderLoading={function() {
-        return (
-          <div className='loading'>
+function createContainer({ viewer, params, company, companies, }){
+  const Route = new RelayRoute({companyId: params.app});
+  const MyComponent = wrapWithC(TVA, { params, route: Route, });
 
-            <Sidebar
-              route={route}
-              viewer={props.viewer}
-              company={props.company}
-              companies={props.companies || { edges: [], }}
-              page='/tax'
-            />
+  class Container extends React.Component{
+    shouldComponentUpdate(){
+      return false;
+    }
+    render(){
+      return (
+        <Relay.RootContainer
+          Component={MyComponent}
+          forceFetch={true}
+          route={Route}
+          renderFetched={function(data, readyState){
+            return (
+              <MyComponent
+                {...data}
+                stale={readyState.stale}
+              />
+            );
+          }}
+          renderLoading={function() {
+            return (
+              <MyComponent
+                {...{viewer: {
+                  ...viewer,
+                  company: company,
+                  companies: companies || { edges: [], },
+                }}}
+                loading={true}
+              />
+            );
+          }}
+        />
+      );
+    }
+  }
 
-            <div className='content'>
+  return () => Container;
+}
 
-                <Loading/>
+class S extends React.Component{
+  constructor(props) {
+    super(props);
+    this.cache = new LazyCache(this, {
+      Component: {
+        params: [
+          // props that effect how redux-form connects to the redux store
+        ],
+        fn: createContainer(props),
+      }
+    });
+  }
+  shouldComponentUpdate(){
+    return false;
+  }
+  componentWillReceiveProps(nextProps) {
+    this.cache.componentWillReceiveProps(nextProps);
+  }
+  render() {
+    const {Component} = this.cache;
+    return <Component {...this.props}/>;
+  }
+}
 
-            </div>
-
-          </div>
-        );
-      }}
-    />
-  );
-};
+module.exports = S;

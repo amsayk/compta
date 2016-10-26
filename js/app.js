@@ -4,12 +4,21 @@ import ReactDOM from 'react-dom';
 import Parse from 'parse';
 
 import {
+  // applyRouterMiddleware,
   Router,
 } from 'react-router';
 
+import doSetupVisibilityChangeObserver from './utils/visibilityChangeObserver';
+
+// import useScroll from 'react-router-scroll';
+
 import history from './history';
 
+import getPage from './utils/getPage';
+
 import routes from './config/routes';
+
+import Loading from './components/Loading/component';
 
 import Confirm from './components/confirm/component';
 import NotificationDrawer from './components/notification/Drawer';
@@ -28,7 +37,6 @@ import momentLocalizer from 'react-widgets/lib/localizers/moment';
 // import {setAnimate} from 'react-widgets/lib/configure';
 
 require('react-widgets/lib/less/react-widgets.less');
-// require('react-select/dist/react-select.css');
 
 import {IntlProvider, intlShape, defineMessages,} from 'react-intl';
 
@@ -38,17 +46,31 @@ import intlLoader from './utils/intl-loader';
 
   Parse.initialize(
     process.env.APPLICATION_ID,
-    process.env.JAVASCRIPT_KEY
+    process.env.JAVASCRIPT_KEY,
+    process.env.MASTER_KEY
   );
 
   Parse.CoreManager.set(
     'REQUEST_ATTEMPT_LIMIT', 0
   );
 
-  if (process.env.NODE_ENV !== 'production') {
-    Parse.serverURL = 'http://localhost:1337/parse';
-  } else {
-    Parse.serverURL = 'https://compta-parse-server.herokuapp.com/parse';
+  Parse.serverURL = process.env.SERVER_URL;
+
+  const gaTrackingID = process.env.GA_TRACKING_CODE;
+
+  const currentUserId = function () {
+    const user = Parse.User.current();
+    return user ? user.id : undefined;
+  }();
+
+  ga('create', gaTrackingID, 'auto', {
+    userId: currentUserId,
+  });
+
+  ga('set', 'dimension1', currentUserId);
+
+  function logPageView() {
+    ga('send', 'pageview', getPage(window.location.pathname));
   }
 
   const locale = window.__locale;
@@ -99,10 +121,19 @@ import intlLoader from './utils/intl-loader';
   class Application extends React.Component {
     render() {
       return (
-        <IntlProvider locale={locale} messages={messages} formats={formats}>
+        <IntlProvider defaultLocale={'fr'} locale={locale} messages={messages} formats={formats}>
+
           <Provider store={store}>
-            <Router history={history} routes={routes}/>
+
+            <Router
+              history={history}
+              routes={routes}
+              onUpdate={logPageView}
+              // render={applyRouterMiddleware(useScroll())}
+            />
+
           </Provider>
+
         </IntlProvider>
       );
     }
@@ -149,7 +180,7 @@ import intlLoader from './utils/intl-loader';
   }();
 
   ReactDOM.render(
-    <IntlProvider locale={locale}
+    <IntlProvider defaultLocale={'fr'} locale={locale}
                   messages={{'confirmation.title': messages['confirmation.title'], 'confirmation.yes': messages['confirmation.yes'], 'confirmation.cancel': messages['confirmation.cancel'], }}>
       <Confirmation/>
     </IntlProvider>,
@@ -158,20 +189,26 @@ import intlLoader from './utils/intl-loader';
   );
 
   ReactDOM.render(
+    <Loading/>,
+    document.getElementById('loading')
+  );
+
+  ReactDOM.render(
     <NotificationDrawer className={'notification-drawer'} render={(props, index) => {
       const classNames = classnames('alert', 'drawer__item', {
         'alert-success': props.type == 'success',
         'alert-danger': props.type == 'danger',
+        'alert-error': props.type == 'danger',
         'alert-info': props.type == 'info',
         'alert-warning': props.type == 'warning',
         'alert-custom': props.type == 'custom',
       });
       const Component = props.data;
       return (
-        <Clickoutside onClickOutside={e => { props.remove() }}>
+        <Clickoutside onClickOutside={e => { props.remove && props.remove() }}>
           <Modal key={index} className={classnames('drawer-modal', {[props.slug || '']: true})} bsSize='small' animation={false} backdrop={false} onHide={() => { }} show={true} keyboard={false}>
             <div className={classNames}>
-              <button type='button' className='close' onClick={() => { props.remove() }}>
+              <button type='button' className='close' onClick={() => { props.remove && props.remove() }}>
                 <span aria-hidden="true">
                   &times;
                 </span>
@@ -190,4 +227,28 @@ import intlLoader from './utils/intl-loader';
 
 if (process.env.NODE_ENV !== 'production') {
   window.Parse = require('parse');
+
+  window[`ga-disable-${process.env.GA_TRACKING_CODE}`] = true;
+} else {
+
+  doSetupVisibilityChangeObserver();
+
+  require('offline-plugin/runtime').install({
+    onInstalled: function () {
+      console.log('[SW]: App is ready for offline usage');
+    },
+    onUpdating: function () {
+
+    },
+    onUpdateReady: function () {
+      require('offline-plugin/runtime').applyUpdate();
+    },
+    onUpdateFailed: function () {
+
+    },
+    onUpdated: function () {
+
+    },
+
+  });
 }

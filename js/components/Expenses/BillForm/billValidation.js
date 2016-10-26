@@ -6,8 +6,10 @@ const validation = createValidator({
   date: [required],
   dueDate: [required],
 
-  mailingAddress: [required],  
+  mailingAddress: [required],
 
   payee: [required],
+
+  inputType: [required],
 });
 export default validation;

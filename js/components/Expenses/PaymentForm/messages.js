@@ -3,6 +3,11 @@ import {
 } from 'react-intl';
 
 export default defineMessages({
+  close: {
+    id: 'payment-of-bills-form.close',
+    defaultMessage: 'Fermer'
+  },
+
   ErrorTitle: {
     id: 'payment-of-bills-form.error-title',
     defaultMessage: 'L\'erreur suivante',
@@ -85,7 +90,7 @@ export default defineMessages({
 
   PaymentMethod_Cash: {
     id: 'payment-of-bills-form.paymment-method-cash',
-    defaultMessage: 'En espèces',
+    defaultMessage: 'Espèces',
   },
 
   PaymentMethod_Check: {
@@ -95,7 +100,7 @@ export default defineMessages({
 
   PaymentMethod_Creditcard: {
     id: 'payment-of-bills-form.paymment-method-credit-card',
-    defaultMessage: 'Carte de crédit',
+    defaultMessage: 'Carte bancaire',
   },
 
   ConfirmDelete: {

@@ -7,6 +7,8 @@ import {changeWithKey as change,} from 'redux-form';
 
 import styles from './PaymentForm.scss';
 
+import filter from 'lodash.filter';
+
 import Revision from '../../../utils/revision';
 
 import CSSModules from 'react-css-modules';
@@ -29,7 +31,7 @@ import formatAddress from '../../../utils/formatAddress';
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'PaymentVendorDetails';
 
   static contextTypes = {
@@ -160,7 +162,7 @@ export default class extends Component {
 
     this.context.store.dispatch(batchActions([
       change('paymentOfBills', formKey, 'payee', {
-        className: `Vendor_${company.objectId}`,
+        className: `People_${company.objectId}`,
         objectId: payee.id,
         id: payee.id,
       }),
@@ -189,9 +191,15 @@ export default class extends Component {
     const self = this;
     const payeeValue = !this.state.showVendors ? null : getFieldValue(payee);
 
+    // const data = this.state.showVendors
+    //   ? [NEW_ITEM].concat(company.vendors.edges.map(({node}) => node))
+    //   : [];
+
     const data = this.state.showVendors
-      ? [NEW_ITEM].concat(company.vendors.edges.map(({node}) => node))
-      : [];
+      ? [NEW_ITEM].concat(
+      filter(
+        company.vendors.edges.map(({node}) => node), item => item.active || (payeeValue ? item.objectId === payeeValue.objectId : false)))
+      : [];    
 
     return (
       <div styleName='customer-details-wrapper'>
@@ -235,7 +243,7 @@ export default class extends Component {
 
                   const actions = [
                     change('paymentOfBills', formKey, 'payee', {
-                      className: `Vendor_${company.objectId}`,
+                      className: `People_${company.objectId}`,
                       objectId: item['objectId'],
                       id: item['objectId'],
                     }),

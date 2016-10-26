@@ -16,6 +16,11 @@ export default defineMessages({
     defaultMessage: 'Sélectionner un compte'
   },
 
+  VATPartPlaceholder: {
+    id: 'product-form.vat-part-placeholder',
+    defaultMessage: 'Choisir le TVA de ce produit/service'
+  },
+
   Confirm: {
     id: 'product-form.confirm',
     defaultMessage: 'Voulez-vous quitter sans enregistrer les modifications ??',
@@ -57,6 +62,9 @@ export default defineMessages({
   title_sales_information: {
     id: 'product-form.title-sales-information',
     defaultMessage: 'Information de ventes',
+  },  title_expenses_information: {
+    id: 'product-form.title-expenses-information',
+    defaultMessage: 'Information d\'achats',
   },
   title_changeType: {
     id: 'product-form.title-change_type',
@@ -68,7 +76,12 @@ export default defineMessages({
   },
   placeholder_description_sales_form: {
     id: 'product-form.desc-sales-form',
-    defaultMessage: 'Description sur les documents commerciaux',
+    defaultMessage: 'Description',
+  },
+
+  placeholder_description_expenses_form: {
+    id: 'product-form.desc-expenses-form',
+    defaultMessage: 'Description',
   },
 
   product_item_noninv_intro: {
@@ -104,6 +117,14 @@ export default defineMessages({
   label_sales_account_code: {
     id: 'product-form.label-sales-account-code',
     defaultMessage: 'Categorie de vente',
+  },
+  label_cost: {
+    id: 'product-form.label-cost',
+    defaultMessage: 'Coût d\'achat',
+  },
+  label_expenses_account_code: {
+    id: 'product-form.label-expenses-account-code',
+    defaultMessage: 'Categorie d\'achat',
   },
   label_taxable: {
     id: 'product-form.label-taxable',

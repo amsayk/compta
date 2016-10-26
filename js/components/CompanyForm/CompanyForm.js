@@ -20,7 +20,10 @@ import {
 
 import Parse from 'parse';
 
-import {Text, Select,} from '../form/form';
+import {
+  Text,
+  // Select,
+} from '../form/form';
 
 import {Company,} from '../../utils/types';
 
@@ -94,7 +97,7 @@ function asyncValidate({displayName, id}) {
   }),
   dispatch => bindActionCreators(companyActions, dispatch))
 @CSSModules(styles, {})
-export default class CompanyForm extends Component {
+export default class CompanyForm extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
     router: PropTypes.object.isRequired,
@@ -115,6 +118,10 @@ export default class CompanyForm extends Component {
     formKey: PropTypes.string.isRequired,
     values: PropTypes.object.isRequired,
   };
+
+  componentDidMount(){
+    ga('send', 'pageview', '/modal/company-form');
+  }
 
   render() {
     const {formatMessage,} = this.context.intl;
@@ -175,11 +182,11 @@ export default class CompanyForm extends Component {
         </Modal.Header>
         <Modal.Body>
 
-          <Select
+          {/*<Select
             name={formatMessage(messages['periodTypeLabel'])}
             values={periodTypes.map(periodType => [periodType, formatMessage(messages[periodType])])}
             props={periodType}
-          />
+          />*/}
 
           <Text
             name={formatMessage(messages['displayNameLabel'])}

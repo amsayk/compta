@@ -6,7 +6,7 @@ import NewItemListItem from './NewItemListItem';
 
 import padEnd from 'lodash.padend';
 
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'AccountListItem';
   static propTypes = {
     item: PropTypes.object.isRequired,

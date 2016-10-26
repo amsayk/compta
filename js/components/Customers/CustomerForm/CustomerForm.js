@@ -42,8 +42,10 @@ function asyncValidate({displayName, id, companyId}) {
     return Promise.resolve({});
   }
   return new Promise((resolve, reject) => {
-    const query = new Parse.Query(`Customer_${companyId}`);
+    const query = new Parse.Query(`People_${companyId}`);
     query.equalTo('displayNameLowerCase', makeAlias(displayName));
+
+    query.equalTo('kind', 'Customer');
 
     if(id){
       const {id: localId} = fromGlobalId(id);
@@ -89,6 +91,7 @@ function asyncValidate({displayName, id, companyId}) {
     'mobile',
     'fax',
     'website',
+    'if',
 
     'billing_streetAddress',
     'billing_cityTown',
@@ -116,7 +119,7 @@ function asyncValidate({displayName, id, companyId}) {
   },
 }), dispatch => bindActionCreators(customerActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'CustomerForm';
 
@@ -148,6 +151,10 @@ export default class extends Component {
     super(props, context);
 
     this.props.editStart(this.props.formKey);
+  }
+
+  componentDidMount() {
+    ga('send', 'pageview', '/modal/app/customer-form');
   }
 
   _handleClose = (e) => {
@@ -191,6 +198,8 @@ export default class extends Component {
         fax,
         website,
 
+        if : _if,
+
         billing_streetAddress,
         billing_cityTown,
         billing_stateProvince,
@@ -229,7 +238,7 @@ export default class extends Component {
 
             this._handleClose();
             return Promise.resolve().then(() => {
-              this.props.onDone({customer: result.result});
+              this.props.onDone && this.props.onDone({customer: result.result});
             });
           };
 
@@ -261,7 +270,7 @@ export default class extends Component {
 
                   <div style={{}}>
 
-                  <form onSubmit={doSave}>
+                  <div onSubmit={doSave}>
 
                     <div className='row'>
 
@@ -274,7 +283,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_prefix'])}</label>
                               <input
                                 onChange={title.onChange}
-                                value={getFieldValue(title)}
+                                value={getFieldValue(title, '')}
                                 type='text'
                                 className='form-control'/>
                             </fieldset>
@@ -300,7 +309,7 @@ export default class extends Component {
                                   displayName.onChange(
                                     `${givenNameValue || ''}${hasFamilyName ? `${hasGivenName ? ' ' : ''}${familyNameValue}` : ''}`);
                                 }}
-                                value={getFieldValue(givenName)}
+                                value={getFieldValue(givenName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -310,7 +319,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_middle_name'])}</label>
                               <input
                                 onChange={middleName.onChange}
-                                value={getFieldValue(middleName)}
+                                value={getFieldValue(middleName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -320,7 +329,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_last_name'])}</label>
                               <input
                                 onChange={familyName.onChange}
-                                value={getFieldValue(familyName)}
+                                value={getFieldValue(familyName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -333,7 +342,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_company'])}</label>
                               <input
                                 onChange={affiliation.onChange}
-                                value={getFieldValue(affiliation)}
+                                value={getFieldValue(affiliation, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -349,12 +358,12 @@ export default class extends Component {
                                 onBlur={e => {
                                   this._displayNameSet = !!e.target.value;
                                 }}
-                                value={getFieldValue(displayName)}
+                                value={getFieldValue(displayName, '')}
                                 autoFocus type='text'
-                                className={classnames('form-control', {'form-control-danger': !pristine && displayName.invalid,})}
+                                className={classnames('form-control', {'form-control-danger': displayName.touched && displayName.invalid,})}
                                 />
                               <small className="text-muted" style={{ marginTop: 3, display: 'block', height: 15, }}>
-                                {displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
+                                {displayName.touched && displayName.error ? <div className='text-danger'>{intl.formatMessage(displayName.error)}</div> : ''}
                               </small>
                             </fieldset>
                           </div>
@@ -370,7 +379,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_emails'])}</label>
                               <input
                                 onChange={emails.onChange}
-                                value={getFieldValue(emails)}
+                                value={getFieldValue(emails, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -383,7 +392,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_phone'])}</label>
                               <input
                               onChange={phone.onChange}
-                              value={getFieldValue(phone)}
+                              value={getFieldValue(phone, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -393,7 +402,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_mobile'])}</label>
                               <input
                               onChange={mobile.onChange}
-                              value={getFieldValue(mobile)}
+                              value={getFieldValue(mobile, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -403,7 +412,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_fax'])}</label>
                               <input
                               onChange={fax.onChange}
-                              value={getFieldValue(fax)}
+                              value={getFieldValue(fax, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -416,7 +425,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_website'])}</label>
                               <input
                               onChange={website.onChange}
-                              value={getFieldValue(website)}
+                              value={getFieldValue(website, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -442,6 +451,11 @@ export default class extends Component {
 
                               <li className='nav-item'>
                                 <a onClick={e => { stopEvent(e); this._setActiveTab(2); }} className={classnames('nav-link', {active: activeTab === 2,})} role='tab'>
+                                {intl.formatMessage(messages['tab_title_if'])}</a>
+                              </li>
+
+                              <li className='nav-item'>
+                                <a onClick={e => { stopEvent(e); this._setActiveTab(3); }} className={classnames('nav-link', {active: activeTab === 3,})} role='tab'>
                                 {intl.formatMessage(messages['tab_title_notes'])}</a>
                               </li>
 
@@ -464,7 +478,7 @@ export default class extends Component {
                                       style={{resize: 'none'}}
                                       disabled={submitting}
                                       onChange={billing_streetAddress.onChange}
-                                      value={getFieldValue(billing_streetAddress)}
+                                      value={getFieldValue(billing_streetAddress, '')}
                                       placeholder={intl.formatMessage(messages['placeholder_Street'])}
                                       className='form-control'/>
                                   </div>
@@ -476,7 +490,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={billing_cityTown.onChange}
-                                    value={getFieldValue(billing_cityTown)}
+                                    value={getFieldValue(billing_cityTown, '')}
                                     disabled={submitting} type='text' className='form-control'
                                     placeholder={intl.formatMessage(messages['placeholder_cityTown'])}/>
                                   </div>
@@ -484,7 +498,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={billing_stateProvince.onChange}
-                                    value={getFieldValue(billing_stateProvince)}
+                                    value={getFieldValue(billing_stateProvince, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_stateProvince'])}/>
                                   </div>
@@ -496,7 +510,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={billing_postalCode.onChange}
-                                    value={getFieldValue(billing_postalCode)}
+                                    value={getFieldValue(billing_postalCode, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_postalCode'])}/>
                                   </div>
@@ -504,7 +518,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={billing_country.onChange}
-                                    value={getFieldValue(billing_country)}
+                                    value={getFieldValue(billing_country, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_country'])}/>
                                   </div>
@@ -514,6 +528,34 @@ export default class extends Component {
                               </div>
 
                               <div className={classnames('tab-pane fade', {'active in': activeTab === 2,})} role='tabpanel'>
+
+                                <div className='form-group row' style={{paddingTop: 5}}>
+
+{/*
+                                  <label style={{textAlign: 'left'}} className='col-sm-12'>{intl.formatMessage(messages['label_if'])}</label>
+
+*/}
+                                </div>
+
+                                <div className='form-group row'>
+
+                                  <label style={{textAlign: 'left'}} className='col-sm-12'>{intl.formatMessage(messages['label_if'])}</label>
+
+                                  <div className='col-sm-6'>
+                                    <input
+                                      style={{}}
+                                      disabled={submitting}
+                                      onChange={_if.onChange}
+                                      value={getFieldValue(_if, '')}
+                                      rows={6}
+                                      className='form-control'/>
+                                  </div>
+
+                                </div>
+
+                              </div>
+
+                              <div className={classnames('tab-pane fade', {'active in': activeTab === 3,})} role='tabpanel'>
 
                                 <div className='form-group row' style={{paddingTop: 5}}>
 
@@ -528,7 +570,7 @@ export default class extends Component {
                                       style={{resize: 'none'}}
                                       disabled={submitting}
                                       onChange={notes.onChange}
-                                      value={getFieldValue(notes)}
+                                      value={getFieldValue(notes, '')}
                                       rows={6}
                                       className='form-control'/>
                                   </div>
@@ -547,7 +589,7 @@ export default class extends Component {
 
                     </div>
 
-                  </form>
+                  </div>
 
                   </div>
 

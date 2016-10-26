@@ -3,9 +3,33 @@ import {
 } from 'react-intl';
 
 export default defineMessages({
+  close: {
+    id: 'expense-form.close',
+    defaultMessage: 'Fermer'
+  },
+
+  AmountHT: {
+    id: 'expense-form.amount-ht',
+    defaultMessage: 'Montant HT'
+  },
+  AmountTTC: {
+    id: 'expense-form.amount-ttc',
+    defaultMessage: 'Montant TTC'
+  },
+
+  VATPart: {
+    id: 'expense-form.vat-part',
+    defaultMessage: 'TVA'
+  },
+
+  VATPartPlaceholder: {
+    id: 'expense-form.action.vat-part-placeholder',
+    defaultMessage: 'TVA…'
+  },
+
   PaymentMethod_Cash: {
     id: 'expense-form.paymment-method-cash',
-    defaultMessage: 'En espèces',
+    defaultMessage: 'Espèces',
   },
 
   PaymentMethod_Check: {
@@ -15,7 +39,7 @@ export default defineMessages({
 
   PaymentMethod_Creditcard: {
     id: 'expense-form.paymment-method-credit-card',
-    defaultMessage: 'Carte de crédit',
+    defaultMessage: 'Carte bancaire',
   },
 
   Popover_Date: {
@@ -42,12 +66,12 @@ export default defineMessages({
 
   x_payments_made_since: {
     id: 'expense-form.message-x-payments-made-since',
-    defaultMessage: 'Crée depuis {lastPaymentDate, date, medium}.',
+    defaultMessage: 'Crée depuis {lastPaymentDate}.',
   },
 
   x_payments_made_on: {
     id: 'expense-form.message-x-payments-made-on',
-    defaultMessage: 'Crée le {lastPaymentDate, date, medium}.',
+    defaultMessage: 'Crée le {lastPaymentDate}.',
   },
 
   ErrorTitle: {

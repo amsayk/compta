@@ -7,6 +7,8 @@ import {changeWithKey as change,} from 'redux-form';
 
 import styles from './PaymentForm.scss';
 
+import filter from 'lodash.filter';
+
 import Revision from '../../../utils/revision';
 
 import CSSModules from 'react-css-modules';
@@ -27,7 +29,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'PaymentCustomerDetails';
 
   static contextTypes = {
@@ -157,7 +159,7 @@ export default class extends Component {
 
     this.context.store.dispatch(batchActions([
       change('paymentOfInvoices', formKey, 'customer', {
-        className: `Customer_${company.objectId}`,
+        className: `People_${company.objectId}`,
         objectId: customer.id,
         id: customer.id,
       }),
@@ -205,7 +207,12 @@ export default class extends Component {
               open={this.state.open}
               onToggle={this._onToggle}
               className={styles['choose-customer-combo']}
-              data={this.state.showCustomers ? [NEW_ITEM].concat(company.customers.edges.map(({node}) => node)) : []}
+              // data={this.state.showCustomers ? [NEW_ITEM].concat(company.customers.edges.map(({node}) => node)) : []}
+              data={this.state.showCustomers
+                ? [NEW_ITEM].concat(
+                    filter(
+                    company.customers.edges.map(({node}) => node), item => item.active || (customerValue ? item.objectId === customerValue.objectId : false)))
+                : []}
               value={customerValue && customerValue.objectId}
               textField={'displayName'}
               valueField='objectId'
@@ -228,7 +235,7 @@ export default class extends Component {
 
                   const actions = [
                     change('paymentOfInvoices', formKey, 'customer', {
-                      className: `Customer_${company.objectId}`,
+                      className: `People_${company.objectId}`,
                       objectId: item['objectId'],
                       id: item['objectId'],
                     }),

@@ -58,7 +58,7 @@ export default defineMessages({
     defaultMessage: 'Reports',
   },
 
-  '/tax': {
+  '/vat': {
     id: 'tax-menu-item-title',
     defaultMessage: 'TVA',
   },

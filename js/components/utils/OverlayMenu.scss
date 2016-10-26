@@ -6,19 +6,27 @@
     user-select: none;
 }
 
+.action{
+  text-align: justify!important;
+}
+
+.action.has-menu .link-combo-button .combo-button-main{
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .action:not(.has-menu), .action.has-menu{
   display: inherit;
   padding-right: 12px;
+  padding-left: 5px;
 }
 
 .link-combo-button [type=button] {
   font-size: 0.9rem;
 }
 .link-combo-button .combo-button-main {
-  max-width: 70%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  // text-align: left;
+  max-width: 100%;
 }
 .link-combo-button button {
   background-image: none;

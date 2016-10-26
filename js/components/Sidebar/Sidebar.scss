@@ -1,16 +1,23 @@
 .sidebar {
   position: fixed;
-  width: 225px;
+  width: 165px; // --sidebar-width
   top: 0;
   left: 0;
   bottom: 0;
-  background: #0c5582;
+  //background: #0c5582;
   color: #fff;
   transition: left .5s ease-in;
+
+  background: #05283c;
 }
 
 .sidebar a:hover,
 .sidebar a:focus {
+  color: #fff!important;
+}
+
+.sidebar a:hover :global .sidebar-link-icon,
+.sidebar a:hover :global .sidebar-link-text{
   color: #fff!important;
 }
 
@@ -75,13 +82,15 @@
 }
 
 .createApp:hover, .section {
-  background: #0c5582;
+  //background: #0c5582;
+  position: relative;
 }
 
 .section_header {
   display: block;
   // height: 48px;
-  font-size: 17px;
+  // font-size: 17px;
+  font-size: 14px;
   line-height: 28px;
   padding: 12px 14px;
   color: #fff;
@@ -99,16 +108,18 @@
 }
 
 .section:not(.active) .section_header:hover {
-  background-color: #0d5e91;
+  //background-color: #0d5e91;
 }
 
 .section_contents {
-  background: #0e69a0;
-  padding: 16px 14px 16px 50px;
+  // background: #0e69a0;
+  // padding: 16px 14px 16px 50px;
+  padding: 0 14px 0 50px;
 }
 
 a.subitem {
-  color: #8fb9cf;
+  color: #c0d0e4;
+  // color: #8fb9cf;
   font-weight: 400;
   display: inline-block;
   width: 100%;
@@ -118,7 +129,8 @@ a.subitem {
   position: relative;
   height: 28px;
   line-height: 28px;
-  font-size: 16px;
+  //font-size: 16px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
 }
@@ -198,7 +210,7 @@ body.fonts_loaded .badge {
 .appsMenu {
   //overflow: auto;
   background: #094162;
-  width: 225px;
+  width: 165px; // --sidebar-width
 
   height: 100%;
 }
@@ -279,7 +291,7 @@ body.fonts_loaded .menuSection {
   // bottom: 36px;
   left: 0;
   // height: 100%;
-  background: #0c5582;
+  //background: #0c5582;
 }
 
 .apps {
@@ -288,11 +300,11 @@ body.fonts_loaded .menuSection {
 }
 
 .apps + .sections {
-  top: 96px;
+  //top: 96px;
 }
 
 .active {
-  background: #159cee;
+  //background: #159cee;
 }
 
 .createApp:hover {
@@ -341,4 +353,6 @@ body.fonts_loaded .action {
   background: #fff;
   transition: top .2s cubic-bezier(1,0,0,1);
   left: 32px;
+
+  display: none;
 }

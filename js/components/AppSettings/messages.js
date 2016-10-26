@@ -48,6 +48,11 @@ export default defineMessages({
     defaultMessage: 'Supprimer la société',
   },
 
+  Confirm: {
+    id: 'app-settings.confirm',
+    defaultMessage: 'Êtes-vous sur de vouloir supprimer cette société ??',
+  },
+
   AppManagementLegendLeftDesc: {
     id: 'app-settings.app-management-description',
     defaultMessage: 'Complètement éliminer toute trace de l\'existence de cette société.',

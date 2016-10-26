@@ -17,7 +17,7 @@ import requiredPropType from 'react-prop-types/lib/all';
 
 import { Modes as SelectionModes, } from '../../redux/modules/selection';
 
-export default class ExpensesTotals extends Component{
+export default class ExpensesTotals extends React.Component{
 
   static displayName = 'ExpensesTotals';
 
@@ -60,20 +60,22 @@ export default class ExpensesTotals extends Component{
       sortKey, sortDir,
     } = this.props.filterArgs;
 
+    const VATEnabled = this.props.topLoading ? false : this.props.company.VATSettings.enabled;
+
     const isOnlyPayments =  type === 'recent' || type === 'money' || type === 'payments' || type === 'expenses';
     if(isOnlyPayments){
-      return this._renderMoneyOnly();
+      return this._renderMoneyOnly(VATEnabled);
     }
 
     const isOnlyBills = type === 'bills';
     if(isOnlyBills){
-      return this._renderBillsOnly();
+      return this._renderBillsOnly(VATEnabled);
     }
 
     return null;
   }
 
-  _renderMoneyOnly(){
+  _renderMoneyOnly(VATEnabled){
     const self = this;
     const { styles, company, page, selection, } = this.props;
     const sel = selection[page] || { mode: SelectionModes.None, keys: {}, };
@@ -82,10 +84,10 @@ export default class ExpensesTotals extends Component{
     const rowsCount = 1;
     const tableHeight = 0 + (rowsCount * 30) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -99,23 +101,97 @@ export default class ExpensesTotals extends Component{
 
     const isSelected = (key) => sel.mode === SelectionModes.All || sel.keys[key];
 
+    // const calcSumOfTotals = () => {
+    //   const paymentsResl = sel.mode === SelectionModes.None
+    //     ? company.payments.sumOfTotals
+    //     : company.payments.edges.reduce((result, {node : { id, amountReceived, }}) => {
+    //       return result + (isSelected(id)
+    //         ? amountReceived
+    //         : 0.0);
+    //     }, 0.0);
+    //   const expensesResl = sel.mode === SelectionModes.None
+    //     ? company.expenses.sumOfTotals
+    //     : company.expenses.edges.reduce((result, {node : { id, itemsConnection, }}) => {
+    //       return result + (isSelected(id)
+    //         ? getTotal(itemsConnection)
+    //         : 0.0);
+    //     }, 0.0);
+
+    //   return intl.formatNumber(expensesResl + paymentsResl, { format: 'MAD', });
+    // };
+
+    // const calcSumOfBalances = () => {
+    //   const resl = sel.mode === SelectionModes.None
+    //     ? company.expenses.paymentsSumOfCredits + company.expenses.billsSumOfBalances
+    //     : company.expenses.edges.reduce((result, {node : { id, __opType : type, billItemsConnection, discountType, discountValue, billPaymentsConnection, amountReceived, paymentItemsConnection, }}) => {
+
+    //       switch(type){
+    //         case 'Bill':
+
+    //           return result + (isSelected(id)
+    //             ? getTotal(billItemsConnection)  - billPaymentsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0)
+    //             : 0.0);
+
+    //         case 'PaymentOfBills':
+
+    //           return result + (isSelected(id)
+    //             ?  amountReceived - paymentItemsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0)
+    //             : 0.0);
+
+    //         default: return result;
+    //       }
+
+    //       // return result + ((type === 'PaymentOfBills' || type === 'Bill') && isSelected(id)
+    //       //   ? amountReceived - itemsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0)
+    //       //   : 0.0);
+    //     }, 0.0);
+
+    //   return intl.formatNumber(resl, { format: 'MONEY', });
+    // };
     const calcSumOfTotals = () => {
-      const paymentsResl = sel.mode === SelectionModes.None
-        ? company.payments.sumOfTotals
-        : company.payments.edges.reduce((result, {node : { id, amountReceived, }}) => {
-          return result + (isSelected(id)
-            ? amountReceived
-            : 0.0);
-        }, 0.0);
-      const expensesResl = sel.mode === SelectionModes.None
-        ? company.expenses.sumOfTotals
-        : company.expenses.edges.reduce((result, {node : { id, itemsConnection, }}) => {
-          return result + (isSelected(id)
-            ? getTotal(itemsConnection)
-            : 0.0);
+      // const paymentsResl = sel.mode === SelectionModes.None
+      //   ? company.expenses.paymentsSumOfTotals
+      //   : company.expenses.edges.reduce((result, {node : { id, __opType : type, amountReceived, }}) => {
+      //     return result + (type === 'PaymentOfBills' && isSelected(id)
+      //       ? amountReceived
+      //       : 0.0);
+      //   }, 0.0);
+      // const expensesResl = sel.mode === SelectionModes.None
+      //   ? company.expenses.expensesSumOfTotals
+      //   : company.expenses.edges.reduce((result, {node : { id, __opType : type, itemsConnection, discountType, discountValue, }}) => {
+      //     return result + (type === 'Expense' && isSelected(id)
+      //       ? getTotal(itemsConnection)
+      //       : 0.0);
+      //   }, 0.0);
+      //
+      // return intl.formatNumber(expensesResl + paymentsResl, { format: 'MONEY', });
+
+      const res = sel.mode === SelectionModes.None
+        ? company.expenses.expensesSumOfTotals + company.expenses.paymentsSumOfTotals
+        : company.expenses.edges.reduce((result, {node : { id, __opType : type, billItemsConnection, expenseItemsConnection, discountType, discountValue, }}) => {
+
+          switch(type){
+            case 'Expense':
+
+              return result + (isSelected(id)
+                ? getTotal(expenseItemsConnection)
+                : 0.0);
+
+            case 'PaymentOfBills':
+
+              return result + (isSelected(id)
+                ?  amountReceived
+                : 0.0);
+
+            default: return result;
+          }
+
+          // return result + (type === 'Expense' && isSelected(id)
+          //   ? getTotal(itemsConnection)
+          //   : 0.0);
         }, 0.0);
 
-      return intl.formatNumber(expensesResl + paymentsResl, { format: 'MAD', });
+        return intl.formatNumber(res, { format: 'MONEY', });
     };
 
     return (
@@ -301,6 +377,34 @@ export default class ExpensesTotals extends Component{
               flexGrow={1}
             />*/}
 
+            {/* totalHT */}
+            {VATEnabled && <Column
+              columnKey={'totalHT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
+            {/* VAT */}
+            {VATEnabled && <Column
+              columnKey={'VAT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
             {/* Total */}
             <Column
               columnKey={'total'}
@@ -366,7 +470,7 @@ export default class ExpensesTotals extends Component{
     );
   }
 
-  _renderBillsOnly(){
+  _renderBillsOnly(VATEnabled){
     const self = this;
     const { styles, company, page, selection, } = this.props;
     const sel = selection[page] || { mode: SelectionModes.None, keys: {}, };
@@ -375,10 +479,10 @@ export default class ExpensesTotals extends Component{
     const rowsCount = 1;
     const tableHeight = 0 + (rowsCount * 30) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -392,27 +496,50 @@ export default class ExpensesTotals extends Component{
 
     const isSelected = (key) => sel.mode === SelectionModes.All || sel.keys[key];
 
+    // const calcSumOfBalances = () => {
+    //   const resl = sel.mode === SelectionModes.None
+    //     ? company.bills.sumOfBalances
+    //     : company.bills.edges.reduce((result, {node : { id, itemsConnection, paymentsConnection, }}) => {
+    //       return result + (isSelected(id)
+    //         ? (getTotal(itemsConnection) - paymentsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0))
+    //         : 0.0)
+    //     }, 0.0);
+
+    //   return intl.formatNumber(resl, { format: 'MAD', });
+    // };
+    // const calcSumOfTotals = () => {
+    //   const resl = sel.mode === SelectionModes.None
+    //     ? company.bills.sumOfTotals
+    //     : company.bills.edges.reduce((result, {node : { id, itemsConnection, }}) => {
+    //       return result + (isSelected(id)
+    //         ? getTotal(itemsConnection)
+    //         : 0.0)
+    //     }, 0.0);
+
+    //   return intl.formatNumber(resl, { format: 'MAD', });
+    // };
+
     const calcSumOfBalances = () => {
       const resl = sel.mode === SelectionModes.None
-        ? company.bills.sumOfBalances
-        : company.bills.edges.reduce((result, {node : { id, itemsConnection, paymentsConnection, }}) => {
-          return result + (isSelected(id)
+        ? company.expenses.billsSumOfBalances
+        : company.expenses.edges.reduce((result, {node : { id, __opType : type, billItemsConnection : itemsConnection, billPaymentsConnection : paymentsConnection, discountType, discountValue, }}) => {
+          return result + (type === 'Bill' && isSelected(id)
             ? (getTotal(itemsConnection) - paymentsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0))
             : 0.0)
         }, 0.0);
 
-      return intl.formatNumber(resl, { format: 'MAD', });
+      return intl.formatNumber(resl, { format: 'MONEY', });
     };
     const calcSumOfTotals = () => {
       const resl = sel.mode === SelectionModes.None
-        ? company.bills.sumOfTotals
-        : company.bills.edges.reduce((result, {node : { id, itemsConnection, }}) => {
-          return result + (isSelected(id)
+        ? company.expenses.billsSumOfTotals
+        : company.expenses.edges.reduce((result, {node : { id, __opType : type, billItemsConnection : itemsConnection, discountType, discountValue, }}) => {
+          return result + (type === 'Bill' && isSelected(id)
             ? getTotal(itemsConnection)
             : 0.0)
         }, 0.0);
 
-      return intl.formatNumber(resl, { format: 'MAD', });
+      return intl.formatNumber(resl, { format: 'MONEY', });
     };
 
     return (
@@ -578,6 +705,34 @@ export default class ExpensesTotals extends Component{
               flexGrow={1}
             />
 
+            {/* totalHT */}
+            {VATEnabled && <Column
+              columnKey={'totalHT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
+            {/* VAT */}
+            {VATEnabled && <Column
+              columnKey={'VAT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
             {/* Total */}
             <Column
               columnKey={'total'}
@@ -644,9 +799,139 @@ export default class ExpensesTotals extends Component{
 
 }
 
+// function getTotal(itemsConnection){
+//   const completedLines = itemsConnection.edges;
+
+//   return completedLines
+//     .reduce((sum, { node: { amount, }, }) => sum + amount, 0.0);
+// }
+
 function getTotal(itemsConnection){
   const completedLines = itemsConnection.edges;
 
-  return completedLines
-    .reduce((sum, { node: { amount, }, }) => sum + amount, 0.0);
+  const subtotalHT = completedLines
+    .reduce((sum, { node: { amount, VATPart : itemVATPart, }, }) => sum + itemGetAmount__HT(amount, itemVATPart), 0.0);
+
+
+  const totalHT = subtotalHT;
+
+  const totalTaxAmount = completedLines
+    .reduce((sum, { node: { amount, VATPart : itemVATPart, }, }) => {
+
+      const entryValue = amount;
+
+      const amountHT = itemGetAmount__HT(entryValue, itemVATPart);
+
+      const taxableAmount = amountHT;
+
+      return sum + itemGeVATPart__Amount(taxableAmount, itemVATPart);
+    }, 0.0);
+
+  return totalHT + totalTaxAmount;
 }
+
+const VAT_ID_TO_VALUE = {
+  Value_20: 0.20,
+  Value_14: 0.14,
+  Value_10: 0.1,
+  Value_Exempt: 0.0,
+  Value_7: 0.07,
+
+  1: 0.20,
+  2: 0.14,
+  3: 0.1,
+  4: 0.0,
+  5: 0.07,
+};
+
+const VAT_NAME_TO_ID = {
+  Value_20: 1,
+  Value_14: 2,
+  Value_10: 3,
+  Value_Exempt: 4,
+  Value_7: 5,
+};
+
+function itemGeVATPart__Amount(taxableAmount /* ALWAYS HT */, itemVATPart) {
+
+  if(itemVATPart){
+    const { inputType, value = 'Value_Exempt', } = itemVATPart;
+
+    // taxableAmount is HT: VAT = %VAT * taxableAmountHT
+    return function () {
+      const VAT_percentage = value ? VAT_ID_TO_VALUE[value] : 0.0;
+
+      const taxableAmountHT = taxableAmount;
+
+      const VAT_amount = VAT_percentage * taxableAmountHT;
+
+      return VAT_amount;
+    }();
+
+  }
+
+  return 0;
+}
+
+function itemGetAmount__TTC(entryValue, itemVATPart) {
+  if(itemVATPart){
+    const { inputType, value = 'Value_Exempt', } = itemVATPart;
+
+    switch (inputType){
+      case 1:
+      case 'HT':
+
+        // entryValue is HT: TTC = (1 + %VAT) * entryValueHT;
+        return (1 + VAT_ID_TO_VALUE[value]) * entryValue;
+
+      case 2:
+      case 'TTC':
+
+        // entryValue is TTC: TTC = entryValueTTC;
+        return entryValue;
+
+      case 3:
+      case 'NO_VAT':
+
+        return entryValue;
+
+      default:
+
+        throw new Error(`itemGetAmount__TTC: Invalid inputType`, inputType);
+    }
+  }
+
+  return entryValue;
+}
+
+function itemGetAmount__HT(entryValue, itemVATPart) {
+  if(itemVATPart){
+    const { inputType, value = 'Value_Exempt', } = itemVATPart;
+
+    switch (inputType){
+      case 1:
+      case 'HT':
+
+        // entryValue is HT: HT = entryValueHT;
+        return entryValue;
+
+      case 2:
+      case 'TTC':
+
+        // entryValue is TTC: HT =  entryValueTTC / (1 + %VAT);
+        return entryValue / (1 + VAT_ID_TO_VALUE[value]);
+
+      case 3:
+      case 'NO_VAT':
+
+        return entryValue;
+
+      default:
+
+        throw new Error(`itemGetAmount__HT: Invalid inputType`, inputType);
+    }
+  }
+
+  return entryValue;
+}
+

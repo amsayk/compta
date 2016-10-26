@@ -4,6 +4,9 @@ export const periodTypes = [ 'MONTHLY', 'TRIMESTERLY', ];
 
 const companyValidation = createValidator({
   displayName: [required],
-  periodType: [required, oneOf(periodTypes)],
+  periodType: [
+    // required, 
+    oneOf(periodTypes)
+  ],
 });
 export default companyValidation;

@@ -26,7 +26,7 @@ import messages from './messages';
 import requiredPropType from 'react-prop-types/lib/all';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'InvoiceBalanceDue';
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -102,22 +102,34 @@ export default class extends Component {
     const {
       formKey,
       invoice,
+      _invoice,
       store,
       fields: {
+        id,
         dirty,
         date,
         dueDate,
         discountType,
         discountValue,
       },
+      StoreProto,
     } = this.props;
 
     const hasInvoice = formKey !== 'NEW';
+    // const hasInvoice = typeof getFieldValue(id) !== 'undefined';
 
-    const _dirty = dirty || store.isDirty;
+    // const _dirty = dirty || store.isDirty;
+
+    // const totalAmount = hasInvoice && ! _dirty
+    //   ? invoice.totalAmount : store.getTotal({
+    //     discountType: getFieldValue(discountType),
+    //     discountValue: discountValue.invalid ? 0.0 : getFieldValue(discountValue),
+    //   });
+
+    const _dirty = dirty || StoreProto.fnIsDirty.call(store);
 
     const totalAmount = hasInvoice && ! _dirty
-      ? invoice.totalAmount : store.getTotal({
+      ? invoice.totalAmount : StoreProto.getTotal.call(store, {
         discountType: getFieldValue(discountType),
         discountValue: discountValue.invalid ? 0.0 : getFieldValue(discountValue),
       });
@@ -136,6 +148,12 @@ export default class extends Component {
 
     const hasSomePayments = hasInvoice ? invoice.paymentsConnection.totalCount > 0 : false;
 
+    const isSaved = hasInvoice || typeof getFieldValue(id) !== 'undefined';
+
+    const onReceivePayment = (e) => {
+      stopEvent(e);
+      this.props.onReceivePayment(invoice || _invoice);
+    };
 
     return (
       <div styleName='balance-due-wrapper'>
@@ -162,9 +180,9 @@ export default class extends Component {
 
                       </div>
 
-                      {hasInvoice && <div styleName='paddingTop10'>
+                      {isSaved && <div styleName='paddingTop10'>
                           <div styleName='stateActionButton inlineBlock'>
-                            <a onClick={e => { stopEvent(e); self.props.onReceivePayment(invoice); }} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
+                            <a onClick={onReceivePayment} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
                           </div>
                       </div>}
 
@@ -215,9 +233,9 @@ export default class extends Component {
 
                       </div>
 
-                      {hasInvoice && <div styleName='paddingTop10'>
+                      {isSaved && <div styleName='paddingTop10'>
                           <div styleName='stateActionButton inlineBlock'>
-                            <a onClick={e => { stopEvent(e); self.props.onReceivePayment(invoice); }} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
+                            <a onClick={onReceivePayment} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
                           </div>
                       </div>}
 

@@ -1,4 +1,4 @@
-import {
+const {
   GraphQLInterfaceType,
   GraphQLList,
   GraphQLFloat,
@@ -12,9 +12,9 @@ import {
   GraphQLEnumType,
   GraphQLBoolean,
   GraphQLUnionType,
-} from 'graphql';
+} = require('graphql');
 
-import {
+const {
   offsetToCursor,
   fromGlobalId,
   globalIdField,
@@ -25,39 +25,39 @@ import {
   connectionFromArray,
   connectionFromArraySlice,
   toGlobalId,
-} from 'graphql-relay';
+} = require('graphql-relay');
 
-import {
-  // GraphQLEmail,
-  // GraphQLURL,
-  // GraphQLDateTime,
-  // GraphQLLimitedString,
-  // GraphQLPassword
-} from 'graphql-custom-types';
+// const {
+//   // GraphQLEmail,
+//   // GraphQLURL,
+//   // GraphQLDateTime,
+//   // GraphQLLimitedString,
+//   // GraphQLPassword
+// } = require('graphql-custom-types');
 
 // const GraphQLDateTime = GraphQLString;
-import GraphQLDateTime from 'graphql-custom-datetype';
+const GraphQLDateTime = require('graphql-custom-datetype');
 const GraphQLEmail = GraphQLString;
 const GraphQLURL = GraphQLString;
 const GraphQLLimitedString = GraphQLString;
 const GraphQLPassword = GraphQLString;
 
-import {
+const {
   parseTableCountLoader,
   parseTableLoader,
   parseIDLoader,
   parseSeqLoader,
-} from '../../database/loaders';
+} = require('../../../database/loaders');
 
-import Company from '../../database/Company';
+const Company = require('../../../database/Company');
 
-import findIndex from 'lodash.findindex';
+const findIndex = require('lodash.findindex');
 
-import { logIn, logOut, } from '../../auth';
+const { logIn, logOut, } = require('../../../auth');
 
-import Parse from 'parse';
+const Parse = require('parse');
 
-import {
+const {
   User,
 
   getChartAccountList,
@@ -143,21 +143,16 @@ import {
   getPaymentOfInvoicesFromPaymentOfInvoicesItem,
   getPaymentOfBillsFromPaymentOfBillsItem,
 
-} from '../../database/index';
+} = require('../../../database/v2');
 
-import Product from '../../database/Product';
+const Product = require('../../../database/Product');
 
-import Expense from '../../database/Expense';
-import Sale from '../../database/Sale';
-import Invoice from '../../database/Invoice';
-import Bill from '../../database/Bill';
-import PaymentOfInvoices from '../../database/PaymentOfInvoices';
-import PaymentOfBills from '../../database/PaymentOfBills';
+const Expense = require('../../../database/v2/Expense');
+const Sale = require('../../../database/v2/Sale');
 
-import Customer from '../../database/Customer';
-import Vendor from '../../database/Vendor';
+const People = require('../../../database/v2/People');
 
-import {
+const {
   userType,
   transactionType,
   operationType,
@@ -191,23 +186,11 @@ import {
   UserCompaniesConnection,
   UserCompaniesEdge,
 
-  CompanyBillsConnection,
-  CompanyBillsEdge,
-
-  CompanyInvoicesConnection,
-  CompanyInvoicesEdge,
-
   CompanySalesConnection,
   CompanySalesEdge,
 
   CompanyExpensesConnection,
   CompanyExpensesEdge,
-
-  CompanyPaymentsOfBillsConnection,
-  CompanyPaymentsOfBillsEdge,
-
-  CompanyPaymentsOfInvoicesConnection,
-  CompanyPaymentsOfInvoicesEdge,
 
   CompanyCustomersConnection,
   CompanyCustomersEdge,
@@ -220,9 +203,9 @@ import {
 
   saleOrPaymentOfInvoicesType,
 
-} from '../types';
+} = require('../../v2/types');
 
-import {
+const {
   objectIdField,
   createdField,
   editedField,
@@ -268,9 +251,29 @@ import {
 
   fieldValueType,
 
-} from '../common';
+  fileItemInputType,
 
-export const GraphQLAddInvoiceMutation = mutationWithClientMutationId({
+} = require('../../v2/common');
+
+const {
+  onExpense,
+
+  onSale,
+
+  onCompany,
+  onItem,
+  onPerson,
+
+} = require('./change');
+
+const {
+  companyVATSettingsType,
+  VATInputType,
+  VATPartType,
+  VATPartInputType,
+} = require('../../v2/common');
+
+module.exports.GraphQLAddInvoiceMutation = mutationWithClientMutationId({
   name: 'AddInvoice',
   inputFields: {
     sessionToken: { type: new GraphQLNonNull(GraphQLString) },
@@ -293,16 +296,20 @@ export const GraphQLAddInvoiceMutation = mutationWithClientMutationId({
           discountType: { type: new GraphQLNonNull(discountValueType), },
           discountValue: { type: GraphQLFloat, defaultValue: 0.0, },
           memo: { type: GraphQLString },
-          files: { type: new GraphQLList(new GraphQLNonNull(GraphQLString)) },
+          files: { type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(fileItemInputType))) },
+
+          inputType: {
+            type: new GraphQLNonNull(VATInputType),
+          },
         }),
       }),
     },
   },
   outputFields: {
     invoiceEdge: {
-      type: CompanyInvoicesEdge,
+      type: CompanySalesEdge,
       async resolve({id, companyId, }) {
-        const invoice = await getObjectByType(Invoice, {companyId, id});
+        const invoice = await getObjectByType(Sale, {companyId, id});
         const offset = 0; // findIndex(await getCompanyInvoices({id: companyId}), ({id}) => id === invoice.id);
 
         return {
@@ -317,7 +324,7 @@ export const GraphQLAddInvoiceMutation = mutationWithClientMutationId({
     },
     customer: {
       type: customerType,
-      resolve: ({ companyId, customer : { id, }, }) => getObjectByType(Customer, {companyId, id}),
+      resolve: ({ companyId, customer : { id, }, }) => getObjectByType(People, {companyId, id}),
     },
     company: {
       type: companyType,
@@ -331,17 +338,27 @@ export const GraphQLAddInvoiceMutation = mutationWithClientMutationId({
   async mutateAndGetPayload({ sessionToken, id, companyId, props, }) {
     const {id: localCompanyId,} = fromGlobalId(companyId);
 
-    const { addedInvoiceId, changedPaymentsIds, } = await Parse.Cloud.run('addInvoice', {id, companyId: localCompanyId, ...props,}, {sessionToken});
+    let _props = {};
 
-    parseTableCountLoader.clear(Invoice({id: localCompanyId}));
-    parseTableLoader.clear(Invoice({id: localCompanyId}));
-    parseIDLoader.clear([Invoice({id: localCompanyId}), addedInvoiceId]);
+    if(!id){ // NEW
+      _props = {
+        kind: 'Invoice',
+      };
+    }
+
+    const { addedInvoiceId, changedPaymentsIds, } = await Parse.Cloud.run('addInvoice', { ..._props, id, companyId: localCompanyId, ...props,}, {sessionToken});
+
+    // parseTableCountLoader.clear(Invoice({id: localCompanyId}));
+    // parseTableLoader.clear(Invoice({id: localCompanyId}));
+    // parseIDLoader.clear([Invoice({id: localCompanyId}), addedInvoiceId]);
+
+    onSale({ id: localCompanyId, }, addedInvoiceId);
 
     return { id: addedInvoiceId, companyId: localCompanyId, changedPaymentsIds, customer: props.customer, };
   },
 });
 
-export const GraphQLAddSaleMutation = mutationWithClientMutationId({
+module.exports.GraphQLAddSaleMutation = mutationWithClientMutationId({
   name: 'AddSale',
   inputFields: {
     sessionToken: { type: new GraphQLNonNull(GraphQLString) },
@@ -362,7 +379,11 @@ export const GraphQLAddSaleMutation = mutationWithClientMutationId({
           discountType: { type: new GraphQLNonNull(discountValueType), },
           discountValue: { type: GraphQLFloat, defaultValue: 0.0, },
           memo: { type: GraphQLString },
-          files: { type: new GraphQLList(new GraphQLNonNull(GraphQLString)) },
+          files: { type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(fileItemInputType))) },
+
+          inputType: {
+            type: new GraphQLNonNull(VATInputType),
+          },
         })
       }),
     },
@@ -382,7 +403,7 @@ export const GraphQLAddSaleMutation = mutationWithClientMutationId({
     },
     customer: {
       type: customerType,
-      resolve: ({ companyId, customer : { id, }, }) => getObjectByType(Customer, {companyId, id}),
+      resolve: ({ companyId, customer : { id, }, }) => getObjectByType(People, {companyId, id}),
     },
     company: {
       type: companyType,
@@ -392,17 +413,27 @@ export const GraphQLAddSaleMutation = mutationWithClientMutationId({
   async mutateAndGetPayload({sessionToken, id, companyId, props, }) {
     const {id: localCompanyId} = fromGlobalId(companyId);
 
-    const {addedSaleId} = await Parse.Cloud.run('addSale', {id, companyId: localCompanyId, ...props,}, {sessionToken});
+    let _props = {};
 
-    parseTableCountLoader.clear(Sale({id: localCompanyId}));
-    parseTableLoader.clear(Sale({id: localCompanyId}));
-    parseIDLoader.clear([Sale({id: localCompanyId}), addedSaleId]);
+    if(!id){ // NEW
+      _props = {
+        kind: 'Sale',
+      };
+    }
 
-    return {id: addedSaleId, companyId: localCompanyId, customer: props.customer, };
+    const {addedSaleId} = await Parse.Cloud.run('addSale', { ..._props, id, companyId: localCompanyId, ...props,}, {sessionToken});
+
+    // parseTableCountLoader.clear(Sale({id: localCompanyId}));
+    // parseTableLoader.clear(Sale({id: localCompanyId}));
+    // parseIDLoader.clear([Sale({id: localCompanyId}), addedSaleId]);
+
+    onSale({ id: localCompanyId, }, addedSaleId);
+
+    return { id: addedSaleId, companyId: localCompanyId, customer: props.customer, };
   },
 });
 
-export const GraphQLReceivePaymentOfInvoicesMutation = mutationWithClientMutationId({
+module.exports.GraphQLReceivePaymentOfInvoicesMutation = mutationWithClientMutationId({
   name: 'ReceivePaymentOfInvoices',
   inputFields: {
     sessionToken: { type: new GraphQLNonNull(GraphQLString) },
@@ -424,16 +455,16 @@ export const GraphQLReceivePaymentOfInvoicesMutation = mutationWithClientMutatio
             type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(paymentOfInvoicesItemInputType))),
           },
           memo: { type: GraphQLString },
-          files: { type: new GraphQLList(new GraphQLNonNull(GraphQLString)) },
+          files: { type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(fileItemInputType))) },
         }),
       }),
     },
   },
   outputFields: {
     paymentEdge: {
-      type: CompanyPaymentsOfInvoicesEdge,
+      type: CompanySalesEdge,
       async resolve({id, companyId, }) {
-        const payment = await getObjectByType(PaymentOfInvoices, {companyId, id});
+        const payment = await getObjectByType(Sale, {companyId, id});
         const offset = 0; // findIndex(await getCompanyPaymentsOfInvoices({id: companyId}), ({id}) => id === payment.id);
 
         return {
@@ -444,7 +475,7 @@ export const GraphQLReceivePaymentOfInvoicesMutation = mutationWithClientMutatio
     },
     changedInvoicesIds: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString))),
-      resolve: ({ companyId, changedInvoicesIds, }) => changedInvoicesIds.map(id => toGlobalId(`Invoice_${companyId}`, id)),
+      resolve: ({ companyId, changedInvoicesIds, }) => changedInvoicesIds.map(id => toGlobalId(`Sale_${companyId}`, id)),
     },
     viewer: {
       type: userType,
@@ -452,7 +483,7 @@ export const GraphQLReceivePaymentOfInvoicesMutation = mutationWithClientMutatio
     },
     customer: {
       type: customerType,
-      resolve: ({ companyId, customer : { id, }, }) => getObjectByType(Customer, {companyId, id}),
+      resolve: ({ companyId, customer : { id, }, }) => getObjectByType(People, {companyId, id}),
     },
     company: {
       type: companyType,
@@ -462,17 +493,27 @@ export const GraphQLReceivePaymentOfInvoicesMutation = mutationWithClientMutatio
   async mutateAndGetPayload({sessionToken, id, companyId, props, }) {
     const {id: localCompanyId} = fromGlobalId(companyId);
 
-    const { addedPaymentId, changedInvoicesIds, } = await Parse.Cloud.run('receivePaymentOfInvoices', {id, companyId: localCompanyId, ...props,}, {sessionToken});
+    let _props = {};
 
-    parseTableCountLoader.clear(PaymentOfInvoices({id: localCompanyId}));
-    parseTableLoader.clear(PaymentOfInvoices({id: localCompanyId}));
-    parseIDLoader.clear([PaymentOfInvoices({id: localCompanyId}), addedPaymentId]);
+    if(!id){ // NEW
+      _props = {
+        kind: 'PaymentOfInvoices',
+      };
+    }
+
+    const { addedPaymentId, changedInvoicesIds, } = await Parse.Cloud.run('receivePaymentOfInvoices', { ..._props, id, companyId: localCompanyId, ...props,}, {sessionToken});
+
+    // parseTableCountLoader.clear(PaymentOfInvoices({id: localCompanyId}));
+    // parseTableLoader.clear(PaymentOfInvoices({id: localCompanyId}));
+    // parseIDLoader.clear([PaymentOfInvoices({id: localCompanyId}), addedPaymentId]);
+
+    onSale({ id: localCompanyId, }, addedPaymentId);
 
     return { id: addedPaymentId, changedInvoicesIds, companyId: localCompanyId, customer: props.customer, };
   },
 });
 
-export const GraphQLRemoveInvoiceMutation = mutationWithClientMutationId({
+module.exports.GraphQLRemoveInvoiceMutation = mutationWithClientMutationId({
   name: 'RemoveInvoice',
   inputFields: {
     sessionToken: { type: new GraphQLNonNull(GraphQLString) },
@@ -494,16 +535,18 @@ export const GraphQLRemoveInvoiceMutation = mutationWithClientMutationId({
 
     const {deletedInvoiceId} = await Parse.Cloud.run('delInvoice', {id, companyId: localCompanyId,}, {sessionToken});
 
-    parseTableCountLoader.clear(Invoice({id: localCompanyId}));
-    parseTableLoader.clear(Invoice({id: localCompanyId}));
-    parseIDLoader.clear([Invoice({id: localCompanyId}), deletedInvoiceId]);
+    // parseTableCountLoader.clear(Invoice({id: localCompanyId}));
+    // parseTableLoader.clear(Invoice({id: localCompanyId}));
+    // parseIDLoader.clear([Invoice({id: localCompanyId}), deletedInvoiceId]);
 
-    return {id: deletedInvoiceId, companyId: localCompanyId};
+    onSale({ id: localCompanyId, }, deletedInvoiceId);
+
+    return { id: deletedInvoiceId, companyId: localCompanyId, };
   },
 });
 
 
-export const GraphQLRemoveSaleMutation = mutationWithClientMutationId({
+module.exports.GraphQLRemoveSaleMutation = mutationWithClientMutationId({
   name: 'RemoveSale',
   inputFields: {
     sessionToken: { type: new GraphQLNonNull(GraphQLString) },
@@ -525,16 +568,18 @@ export const GraphQLRemoveSaleMutation = mutationWithClientMutationId({
 
     const {deletedSaleId} = await Parse.Cloud.run('delSale', {id, companyId: localCompanyId,}, {sessionToken});
 
-    parseTableCountLoader.clear(Sale({id: localCompanyId}));
-    parseTableLoader.clear(Sale({id: localCompanyId}));
-    parseIDLoader.clear([Sale({id: localCompanyId}), deletedSaleId]);
+    // parseTableCountLoader.clear(Sale({id: localCompanyId}));
+    // parseTableLoader.clear(Sale({id: localCompanyId}));
+    // parseIDLoader.clear([Sale({id: localCompanyId}), deletedSaleId]);
 
-    return {id: deletedSaleId, companyId: localCompanyId};
+    onSale({ id: localCompanyId, }, deletedSaleId);
+
+    return { id: deletedSaleId, companyId: localCompanyId, };
   },
 });
 
 
-export const GraphQLRemovePaymentOfInvoicesMutation = mutationWithClientMutationId({
+module.exports.GraphQLRemovePaymentOfInvoicesMutation = mutationWithClientMutationId({
   name: 'RemovePaymentOfInvoices',
   inputFields: {
     sessionToken: { type: new GraphQLNonNull(GraphQLString) },
@@ -556,10 +601,12 @@ export const GraphQLRemovePaymentOfInvoicesMutation = mutationWithClientMutation
 
     const {deletedPaymentId} = await Parse.Cloud.run('delPaymentOfInvoices', {id, companyId: localCompanyId,}, {sessionToken});
 
-    parseTableCountLoader.clear(PaymentOfInvoices({id: localCompanyId}));
-    parseTableLoader.clear(PaymentOfInvoices({id: localCompanyId}));
-    parseIDLoader.clear([PaymentOfInvoices({id: localCompanyId}), deletedPaymentId]);
+    // parseTableCountLoader.clear(PaymentOfInvoices({id: localCompanyId}));
+    // parseTableLoader.clear(PaymentOfInvoices({id: localCompanyId}));
+    // parseIDLoader.clear([PaymentOfInvoices({id: localCompanyId}), deletedPaymentId]);
 
-    return {id: deletedPaymentId, companyId: localCompanyId};
+    onSale({ id: localCompanyId, }, deletedPaymentId);
+
+    return { id: deletedPaymentId, companyId: localCompanyId, };
   },
 });

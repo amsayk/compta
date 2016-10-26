@@ -42,8 +42,10 @@ function asyncValidate({displayName, id, companyId}) {
     return Promise.resolve({});
   }
   return new Promise((resolve, reject) => {
-    const query = new Parse.Query(`Employee_${companyId}`);
+    const query = new Parse.Query(`People_${companyId}`);
     query.equalTo('displayNameLowerCase', makeAlias(displayName));
+
+    query.equalTo('kind', 'Employee');
 
     if(id){
       const {id: localId} = fromGlobalId(id);
@@ -115,7 +117,7 @@ function asyncValidate({displayName, id, companyId}) {
   },
 }), dispatch => bindActionCreators(employeeActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'EmployeeForm';
 
@@ -259,7 +261,7 @@ export default class extends Component {
 
                   <div style={{}}>
 
-                  <form onSubmit={doSave}>
+                  <div onSubmit={doSave}>
 
                     <div className='row'>
 
@@ -272,7 +274,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_prefix'])}</label>
                               <input
                                 onChange={title.onChange}
-                                value={getFieldValue(title)}
+                                value={getFieldValue(title, '')}
                                 type='text'
                                 className='form-control'/>
                             </fieldset>
@@ -298,7 +300,7 @@ export default class extends Component {
                                   displayName.onChange(
                                     `${givenNameValue || ''}${hasFamilyName ? `${hasGivenName ? ' ' : ''}${familyNameValue}` : ''}`);
                                 }}
-                                value={getFieldValue(givenName)}
+                                value={getFieldValue(givenName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -308,7 +310,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_middle_name'])}</label>
                               <input
                                 onChange={middleName.onChange}
-                                value={getFieldValue(middleName)}
+                                value={getFieldValue(middleName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>*/}
@@ -318,7 +320,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_last_name'])}</label>
                               <input
                                 onChange={familyName.onChange}
-                                value={getFieldValue(familyName)}
+                                value={getFieldValue(familyName, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -335,7 +337,7 @@ export default class extends Component {
                                 onBlur={e => {
                                   this._displayNameSet = !!e.target.value;
                                 }}
-                                value={getFieldValue(displayName)}
+                                value={getFieldValue(displayName, '')}
                                 autoFocus type='text'
                                 className={classnames('form-control', {'form-control-danger': !pristine && displayName.invalid,})}
                                 />
@@ -356,7 +358,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_emails'])}</label>
                               <input
                                 onChange={emails.onChange}
-                                value={getFieldValue(emails)}
+                                value={getFieldValue(emails, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -369,7 +371,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_phone'])}</label>
                               <input
                               onChange={phone.onChange}
-                              value={getFieldValue(phone)}
+                              value={getFieldValue(phone, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -379,7 +381,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_mobile'])}</label>
                               <input
                               onChange={mobile.onChange}
-                              value={getFieldValue(mobile)}
+                              value={getFieldValue(mobile, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -389,7 +391,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_fax'])}</label>
                               <input
                               onChange={fax.onChange}
-                              value={getFieldValue(fax)}
+                              value={getFieldValue(fax, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -402,7 +404,7 @@ export default class extends Component {
                               <label>{intl.formatMessage(messages['label_website'])}</label>
                               <input
                               onChange={website.onChange}
-                              value={getFieldValue(website)}
+                              value={getFieldValue(website, '')}
                                 type='text' className='form-control'/>
                             </fieldset>
                           </div>
@@ -450,7 +452,7 @@ export default class extends Component {
                                       style={{resize: 'none'}}
                                       disabled={submitting}
                                       onChange={address_streetAddress.onChange}
-                                      value={getFieldValue(address_streetAddress)}
+                                      value={getFieldValue(address_streetAddress, '')}
                                       placeholder={intl.formatMessage(messages['placeholder_Street'])}
                                       className='form-control'/>
                                   </div>
@@ -462,7 +464,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={address_cityTown.onChange}
-                                    value={getFieldValue(address_cityTown)}
+                                    value={getFieldValue(address_cityTown, '')}
                                     disabled={submitting} type='text' className='form-control'
                                     placeholder={intl.formatMessage(messages['placeholder_cityTown'])}/>
                                   </div>
@@ -470,7 +472,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={address_stateProvince.onChange}
-                                    value={getFieldValue(address_stateProvince)}
+                                    value={getFieldValue(address_stateProvince, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_stateProvince'])}/>
                                   </div>
@@ -482,7 +484,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={address_postalCode.onChange}
-                                    value={getFieldValue(address_postalCode)}
+                                    value={getFieldValue(address_postalCode, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_postalCode'])}/>
                                   </div>
@@ -490,7 +492,7 @@ export default class extends Component {
                                   <div className='col-sm-6'>
                                     <input
                                     onChange={address_country.onChange}
-                                    value={getFieldValue(address_country)}
+                                    value={getFieldValue(address_country, '')}
                                       disabled={submitting} type='text' className='form-control'
                                       placeholder={intl.formatMessage(messages['placeholder_country'])}/>
                                   </div>
@@ -514,7 +516,7 @@ export default class extends Component {
                                       style={{resize: 'none'}}
                                       disabled={submitting}
                                       onChange={notes.onChange}
-                                      value={getFieldValue(notes)}
+                                      value={getFieldValue(notes, '')}
                                       rows={6}
                                       className='form-control'/>
                                   </div>
@@ -533,7 +535,7 @@ export default class extends Component {
 
                     </div>
 
-                  </form>
+                  </div>
 
                   </div>
 

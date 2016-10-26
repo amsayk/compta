@@ -18,7 +18,7 @@ import HeaderReports from './HeaderReports';
 const Title = (company) => company.displayName;
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'CustomerSalesHeader';
 
@@ -60,6 +60,7 @@ export default class extends Component{
               viewer={this.props.viewer}
               styles={this.props.styles}
               onPaymentCustomerSelected={this.props.onPaymentCustomerSelected}
+              onReceivePayment={this.props.onReceivePayment}
               salesAccounts={this.props.salesAccounts}
               depositsAccounts={this.props.depositsAccounts}
               customerOpenInvoices={this.props.customerOpenInvoices}
@@ -80,7 +81,6 @@ export default class extends Component{
             company={this.props.company}
             viewer={this.props.viewer}
             styles={this.props.styles}
-            filterArgs={filterArgs}
             customer={customer}
           />
 

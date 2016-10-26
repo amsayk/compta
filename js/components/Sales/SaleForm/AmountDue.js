@@ -16,7 +16,7 @@ import requiredPropType from 'react-prop-types/lib/all';
 import getFieldValue from '../../utils/getFieldValue';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'SaleAmountDue';
   static contextTypes = {
     intl: intlShape.isRequired,

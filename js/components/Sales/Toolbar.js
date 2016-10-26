@@ -22,7 +22,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'SalesToolbar';
   static propTypes = {
 
@@ -160,7 +160,7 @@ export default class extends Component{
                 <Dropdown.Toggle styleName={'dijitDropDownButton button unselectable'} title={'Batch actions'}>{intl.formatMessage(messages['label_batch_actions'])}</Dropdown.Toggle>
                 <Dropdown.Menu>
                   <MenuItem eventKey={1}>{intl.formatMessage(messages['menuitem_Print'])}</MenuItem>
-                  <MenuItem eventKey={2}>{intl.formatMessage(messages['menuitem_Send'])}</MenuItem>
+                  {/*<MenuItem eventKey={2}>{intl.formatMessage(messages['menuitem_Send'])}</MenuItem>*/}
                 </Dropdown.Menu>
               </Dropdown>
 

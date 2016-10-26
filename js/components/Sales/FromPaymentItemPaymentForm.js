@@ -11,19 +11,50 @@ import moment from 'moment';
 
 import RelayRoute from '../../routes/PaymentOfInvoicesFormPaymentOfInvoicesItemRoute';
 
-import PaymentForm  from './PaymentForm/PaymentForm';
-import InvoiceForm  from './InvoiceForm/InvoiceForm';
+// import PaymentForm  from './PaymentForm/PaymentForm';
+// import InvoiceForm  from './InvoiceForm/InvoiceForm';
+
+import LoadingActions from '../Loading/actions';
+
+let InvoiceForm = null;
+let PaymentForm = null;
+
+function loadComponent(type, cb) {
+  LoadingActions.show();
+
+  switch (type){
+    case 'Invoice':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        InvoiceForm = require('./InvoiceForm/InvoiceForm').default;
+        cb();
+      }, 'InvoiceForm');
+
+      break;
+
+    case 'Payment':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        PaymentForm = require('./PaymentForm/PaymentForm').default;
+        cb();
+      }, 'PaymentOfInvoicesForm');
+
+      break;
+  }
+}
 
 import Revision from '../../utils/revision';
 
 import stopEvent from '../../utils/stopEvent';
 
-import { editStart as editStartPayment, } from '../../redux/modules/paymentsOfInvoices';
-import { editStart as editStartInvoice, } from '../../redux/modules/invoices';
+import { editStart as editStartPayment, } from '../../redux/modules/v2/paymentsOfInvoices';
+import { editStart as editStartInvoice, } from '../../redux/modules/v2/invoices';
 
 import requiredPropType from 'react-prop-types/lib/all';
 
-class FromPaymentItemPaymentForm extends Component {
+class FromPaymentItemPaymentForm extends React.Component {
   static contextTypes = {
     store: PropTypes.object.isRequired,
   };
@@ -81,10 +112,16 @@ class FromPaymentItemPaymentForm extends Component {
             );
 
             requestAnimationFrame(() => {
-              this.setState({
-                modalOpen: true,
-                obj,
+
+              loadComponent('Payment', () => {
+
+                this.setState({
+                  modalOpen: true,
+                  obj,
+                });
+
               });
+
             });
 
           }
@@ -124,11 +161,17 @@ class FromPaymentItemPaymentForm extends Component {
               );
 
               requestAnimationFrame(() => {
-                this.setState({
-                  modalOpen: true,
-                  obj,
-                  topLoading: nextProps.topLoading,
+
+                loadComponent('Payment', () => {
+
+                  this.setState({
+                    modalOpen: true,
+                    obj,
+                    topLoading: nextProps.topLoading,
+                  });
+
                 });
+
               });
 
             }
@@ -182,10 +225,16 @@ class FromPaymentItemPaymentForm extends Component {
         );
 
         setTimeout(() => {
-          this.setState({
-            modalOpen: true,
-            obj,
+
+          loadComponent('Invoice', () => {
+
+            this.setState({
+              modalOpen: true,
+              obj,
+            });
+
           });
+
         }, 150);
       });
     });
@@ -209,11 +258,19 @@ class FromPaymentItemPaymentForm extends Component {
           );
 
           requestAnimationFrame(() => {
-            this.setState({
-              modalOpen: true,
-              obj: undefined,
-              invoice,
+
+
+            loadComponent('Payment', () => {
+
+              this.setState({
+                modalOpen: true,
+                obj: undefined,
+                invoice,
+              });
+
             });
+
+
           });
 
         }
@@ -272,7 +329,7 @@ class FromPaymentItemPaymentForm extends Component {
 
 function wrapWithC(MyComponent, props) {
 
-  class CWrapper extends Component {
+  class CWrapper extends React.Component {
 
     static propTypes = {
       loading: PropTypes.bool.isRequired,
@@ -339,7 +396,13 @@ function wrapWithC(MyComponent, props) {
                 memo,
                 files,
                 refNo,
-                itemsConnection{
+
+                totalHT,
+                VAT,
+
+                inputType,
+
+                itemsConnection : invoiceItemsConnection{
                   totalCount,
                   totalAmount,
                   edges{
@@ -361,10 +424,16 @@ function wrapWithC(MyComponent, props) {
                         type,
                         value,
                       },
+
+                      VATPart{
+                        inputType,
+                        value,
+                      },
+
                     }
                   }
                 },
-                paymentsConnection{
+                paymentsConnection : invoicePaymentsConnection{
                   totalAmountReceived,
                 },
                 discountType,
@@ -399,6 +468,23 @@ function wrapWithC(MyComponent, props) {
           },
 
           company(id: $companyId) {
+
+            VATDeclaration{
+              id,
+              objectId,
+              periodStart,
+              periodEnd,
+            },
+
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
 
             objectId,
 
@@ -439,6 +525,7 @@ function wrapWithC(MyComponent, props) {
             customers(first: 1000){
               edges{
                 node{
+                  active,
                   type: __typename,
                   objectId,
                   id,
@@ -468,17 +555,36 @@ function wrapWithC(MyComponent, props) {
             companyProducts(first: 1000){
               edges{
                 node{
-                  objectId,
-                  id,
-                  type,
-                  displayName,
-                  image,
-                  sku,
-                  salesDesc,
-                  salesPrice,
-                  incomeAccountCode,
-                  updatedAt,
-                  createdAt,
+                  active,
+                    className,
+                    objectId,
+                    id,
+                    type,
+                    displayName,
+                    image,
+                    image{
+                      objectId,
+                      url,
+                    },
+                    sku,
+                    salesEnabled,
+                    salesDesc,
+                    salesPrice,
+                    salesVATPart{
+                      inputType,
+                      value,
+                    },
+                    incomeAccountCode,
+                    purchaseEnabled,
+                    purchaseDesc,
+                    cost,
+                    purchaseVATPart{
+                      inputType,
+                      value,
+                    },
+                    purchaseAccountCode,
+                    updatedAt,
+                    createdAt,
                 }
               }
             },
@@ -505,7 +611,7 @@ function wrapWithC(MyComponent, props) {
             depositToAccountCode,
             memo,
             files,
-            itemsConnection{
+            itemsConnection : paymentItemsConnection{
               totalCount,
               totalAmountReceived,
               edges{
@@ -529,7 +635,10 @@ function wrapWithC(MyComponent, props) {
                     date,
                     dueDate,
                     refNo,
-                    itemsConnection{
+
+                    inputType,
+
+                    itemsConnection : invoiceItemsConnection{
                       totalCount,
                       totalAmount,
                       edges{
@@ -551,10 +660,16 @@ function wrapWithC(MyComponent, props) {
                             type,
                             value,
                           },
+
+                          VATPart{
+                            inputType,
+                            value,
+                          },
+
                         }
                       }
                     },
-                    paymentsConnection{
+                    paymentsConnection : invoicePaymentsConnection{
                       totalAmountReceived,
                       totalCount,
                       edges{
@@ -592,7 +707,7 @@ function createContainer({ viewer, company, payment, onClose, }){
   });
   const Route = new RelayRoute({ companyId: company.id, id: payment.objectId, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -629,7 +744,7 @@ function createContainer({ viewer, company, payment, onClose, }){
   return () => Container;
 }
 
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'FromPaymentItemPaymentForm';
   constructor(props) {
     super(props);
@@ -654,7 +769,7 @@ export default class extends Component{
   }
 }
 
-function decorateInvoice({ objectId, __dataID__, id, refNo, customer, billingAddress, terms, date, dueDate, discountType, discountValue, itemsConnection, paymentsConnection, memo, files, }) {
+function decorateInvoice({ objectId, __dataID__, totalHT, VAT, id, refNo, customer, billingAddress, inputType, terms, date, dueDate, discountType, discountValue, itemsConnection, paymentsConnection, memo, files, }) {
   const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
 
   function calcInvoiceStatus() {
@@ -698,6 +813,8 @@ function decorateInvoice({ objectId, __dataID__, id, refNo, customer, billingAdd
     totalAmountReceived: paymentsConnection.totalAmountReceived,
     status: calcInvoiceStatus(),
     memo, files,
+    totalHT, VAT, 
+    inputType,
     itemsConnection,
     paymentsConnection,
     objectId,

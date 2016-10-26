@@ -65,6 +65,11 @@ export default defineMessages({
     defaultMessage: 'Ce nom du fournisseur était déjà utilisé',
   },
 
+  label_if: {
+    id: 'vendor-form-page.if',
+    defaultMessage: 'Numéro d\'identification fiscale',
+  },
+
   label_prefix: {
     id: 'vendor-form-page.prefix',
     defaultMessage: 'Titre',

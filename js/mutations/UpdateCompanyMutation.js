@@ -15,17 +15,24 @@ export default class UpdateCompanyMutation extends Relay.Mutation {
     return Relay.QL`
       fragment on UpdateCompanyPayload {
         company{
+          company_streetAddress,
+          company_cityTown,
+          company_stateProvince,
+          company_postalCode,
+          company_country,
           id,
           displayName,
           periodType,
           lastTransactionIndex, lastPaymentsTransactionIndex,
           legalForm,
           address,
+          capital,
           activity,
           webSite,
           tel,
           fax,
           email,
+          ice,
           if,
           rc,
           patente,
@@ -78,17 +85,29 @@ export default class UpdateCompanyMutation extends Relay.Mutation {
       children: [Relay.QL`
         fragment on UpdateCompanyPayload {
           company{
+            company_streetAddress,
+            company_cityTown,
+            company_stateProvince,
+            company_postalCode,
+            company_country,
+            objectId,
+            logo{
+              objectId,
+              url,
+            },
             id,
             displayName,
             periodType,
             lastTransactionIndex, lastPaymentsTransactionIndex,
             legalForm,
             address,
+            capital,
             activity,
             webSite,
             tel,
             fax,
             email,
+            ice,
             if,
             rc,
             patente,
@@ -131,6 +150,7 @@ export default class UpdateCompanyMutation extends Relay.Mutation {
       id: this.props.company.id,
       fieldInfos: this.props.fieldInfos,
       sessionToken: this.props.sessionToken,
+      logo: this.props.logo,
     };
   }
   getOptimisticResponse() {
@@ -138,6 +158,12 @@ export default class UpdateCompanyMutation extends Relay.Mutation {
       // FIXME: totalCount gets updated optimistically, but this edge does not
       // get added until the server responds
       company: {
+        logo: this.props.logo ? {
+          ...this.props.logo,
+          url: `data:${this.props.logo.type};base64,${this.props.logo.dataBase64}`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } : null,
         ...this.props.company,
         ...this.props.fieldInfos.reduce(function (props, {fieldName, value}) {
           return {

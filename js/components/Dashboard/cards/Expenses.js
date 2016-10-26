@@ -24,12 +24,43 @@ import {
 import messages from '../messages';
 
 import { Dates, } from './utils';
+import stopEvent from "../../../utils/stopEvent";
+
+const CHART_COLORS = [
+  '#b9e88b',
+  '#fac786',
+  '#80eeef',
+  '#dfb3eb',
+  '#fd9fb0'
+];
+
+const MONOCHROME_COLORS = [
+  '#3b2c48',
+  '#e0e0ea'
+];
 
 @CSSModules(styles, {allowMultiple: true})
-export default class Expenses extends Component {
+export default class Expenses extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
+    router: PropTypes.object.isRequired,
   };
+
+  go = (to) => {
+    const { company, } = this.props;
+    const { router, } = this.context;
+
+    switch (to){
+      case 'expenses':
+
+        router.push({
+          pathname: `/apps/${company.id}/expenses`,
+          state: {},
+        });
+        break;
+    }
+  };
+
   constructor(props, context){
     super(props, context);
 
@@ -95,7 +126,7 @@ export default class Expenses extends Component {
 
         <div styleName='moduleContent'>
 
-          <div styleName='subContainer expenseValues'>
+          <div styleName='subContainer expenseValues' onClick={e => { stopEvent(e); this.go('expenses') }}>
             <div styleName='moneySection' className='paid'>
               {privateMode ? null : <div styleName='fancyMoney'>{intl.formatNumber(total, { format: 'MAD', })}</div>}
               <div styleName='fancyText upperCase'>{name}</div>
@@ -159,12 +190,13 @@ export default class Expenses extends Component {
                           },
                           plotOptions: {
                               pie: {
-                                  allowPointSelect: true,
-                                  cursor: 'pointer',
-                                  dataLabels: {
-                                      enabled: false,
-                                  },
-                                  showInLegend: true,
+                               innerSize: 80,
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: false,
+                                },
+                                showInLegend: true,
                               }
                           },
                           series: [{

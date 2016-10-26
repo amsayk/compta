@@ -21,7 +21,7 @@ import {
 import enhanceWithClickOutside from '../../../utils/react-click-outside';
 
 @enhanceWithClickOutside
-class ClickOutsideWrapper extends Component {
+class ClickOutsideWrapper extends React.Component {
   handleClickOutside = (e) => {
     this.props.onClickOutside(e);
   };
@@ -34,7 +34,7 @@ class ClickOutsideWrapper extends Component {
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'SearchBox';
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -114,7 +114,7 @@ export default class extends Component{
 }
 
 @CSSModules(styles, {allowMultiple: true})
-class SearchResults extends Component{
+class SearchResults extends React.Component{
   static contextTypes = {
     router: PropTypes.object.isRequired,
   }

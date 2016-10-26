@@ -25,8 +25,21 @@ import messages from '../messages';
 
 import moment from 'moment';
 
+const CHART_COLORS = [
+  '#b9e88b',
+  '#fac786',
+  '#80eeef',
+  '#dfb3eb',
+  '#fd9fb0'
+];
+
+const MONOCHROME_COLORS = [
+  '#3b2c48',
+  '#e0e0ea'
+];
+
 @CSSModules(styles, {allowMultiple: true})
-export default class ProfitLoss extends Component {
+export default class ProfitLoss extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -156,6 +169,13 @@ export default class ProfitLoss extends Component {
                                 // categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                                 //     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                 crosshair: [ false, false, true],
+
+                                lineWidth: 0,
+                                minorGridLineWidth: 0,
+                                lineColor: 'transparent',
+
+                                minorTickLength: 0,
+                                tickLength: 0,
                               }],
                               yAxis: [{ // Primary yAxis
                                   labels: {
@@ -171,6 +191,11 @@ export default class ProfitLoss extends Component {
                                   title: {
                                       text: null,
                                   }
+                              }, {
+                              opposite: true,
+                              title: {
+                                      text: null,
+                                  }
                               }],
                               credits: {
                                 enabled: false
@@ -180,6 +205,11 @@ export default class ProfitLoss extends Component {
                               // },
                               legend: {
                                   enabled: false,
+                              },
+                              plotOptions: {
+                                  series: {
+                                      stacking: 'normal'
+                                  }
                               },
                               series: [{
                                   name: 'Chiffres d\'affaires',
@@ -198,6 +228,7 @@ export default class ProfitLoss extends Component {
                               }, {
                                   name: 'Résultat',
                                   type: 'line',
+                                  color: '#000',
                                   data: result, // [7.0, -6.9, 9.5, -14.5, 18.2, -21.5, -25.2, 26.5, -23.3, 18.3, 13.9, -9.6],
                                   tooltip: {
                                     useHTML: true,

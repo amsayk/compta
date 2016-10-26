@@ -7,7 +7,7 @@ import styles from './PrivateModeSwitch.scss';
 import classnames from 'classnames';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class PrivateModeSwitch extends Component{
+export default class PrivateModeSwitch extends React.Component{
   constructor(props, context){
     super(props, context);
     this.state = {

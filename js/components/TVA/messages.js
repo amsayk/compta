@@ -6,7 +6,7 @@ export default defineMessages({
 
   Subtitle: {
     id: 'tva-page.subtitle',
-    defaultMessage: 'TVA',
+    defaultMessage: 'Centre TVA',
   },
 
 });

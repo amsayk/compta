@@ -1,8 +1,8 @@
-import Parse from 'parse';
+const Parse = require('parse');
 
-export default invoice => {
+module.exports = company => {
 
-  const name = `InvoiceItem_${invoice.id}`;
+  const name = `InvoiceItem_${company.id}`;
 
   class InvoiceItem extends Parse.Object {
     __type = 'InvoiceItem';

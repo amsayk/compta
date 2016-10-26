@@ -26,13 +26,14 @@ import ProductForm from '../ProductForm/ProductForm';
 
 import OverlayMenu from '../../utils/OverlayMenu';
 
-const DEFAULT_ACTIONS = {
+const DEFAULT_ACTIONS = obj => ({
   main: 'product',
   actions: [
-    'delete',
-    'report',
+    // 'delete',
+    // 'report',
+    obj.active ? 'inactive' : 'active'
   ],
-};
+});
 
 function getActionsStyle(rowIndex){
   return {
@@ -45,7 +46,7 @@ function getActionsStyle(rowIndex){
   };
 }
 
-class DropdownActions extends Component{
+class DropdownActions extends React.Component{
   state = { open: false, };
   render(){
     const { open, } = this.state;
@@ -59,7 +60,7 @@ class DropdownActions extends Component{
 
 function renderActions(self, { intl, store, rowIndex, }){
   const obj = store.getObjectAt(rowIndex);
-  const { main, actions, } = DEFAULT_ACTIONS;
+  const { main, actions, } = DEFAULT_ACTIONS(obj);
   return (
     typeof main === 'undefined' ? null : <OverlayMenu title={main ? intl.formatMessage(messages[`Action_${main}`]) : undefined} container={self} onMainAction={self._onMainAction.bind(self, obj, main)}>
       {actions.length > 0 && <DropdownActions>
@@ -86,11 +87,16 @@ const SortTypes = {
   DESC: -1,
 };
 
+const typeMap = {
+  2: 'Service',
+  1: 'Produit',
+};
+
 function reverseSortDirection(sortDir) {
   return sortDir === SortTypes.DESC ? SortTypes.ASC : SortTypes.DESC;
 }
 
-class SortHeaderCell extends Component {
+class SortHeaderCell extends React.Component {
   // constructor(props, context){
   //   super(props, context);
   //   this.state = {
@@ -160,48 +166,49 @@ import {Table, Column, Cell,} from '../../../../fixed-data-table';
 
 import {editStart as editStartProduct} from '../../../redux/modules/products';
 
-// import {editStart as editStartBill} from '../../../redux/modules/bills';
-// import {editStart as editStartPayment} from '../../../redux/modules/paymentsOfBills';
-// import {editStart as editStartExpense} from '../../../redux/modules/expenses';
+// import {editStart as editStartBill} from '../../../redux/modules/v2/bills';
+// import {editStart as editStartPayment} from '../../../redux/modules/v2/paymentsOfBills';
+// import {editStart as editStartExpense} from '../../../redux/modules/v2/expenses';
 
 import find from 'lodash.findindex';
 
-function getCategory(code){
-  const index = find(CATEGORIES, obj => obj.code === code);
-  return CATEGORIES[index].name;
+function getCategory(self, code){
+  // const index = find(CATEGORIES, obj => obj.code === code);
+  const index = find(self.props.salesAccounts, obj => obj.code === code);
+  return self.props.salesAccounts[index].name;
 }
 
-const CATEGORIES = [{
-  code: '7.1.1.1',
-  _categoryCode: '7.1',
-  _groupCode: '7.1.1',
-  _classCode: '7',
-  name: 'Ventes de marchandises', // Ventes de marchandises au Maroc
-}, {
-  code: '7.1.2.1.1',
-  _categoryCode: '7.1',
-  _groupCode: '7.1.2',
-  _classCode: '7',
-  name: 'Ventes de produits finis',
-}, {
-    code: '7.1.2.4',
-    _categoryCode: '7.1',
-    _groupCode: '7.1.2',
-    _classCode: '7',
-    name: 'Prestations de services', // 7124 Ventes de services produits au Maroc
-}, {
-  code: '7.1.2.4.1',
-  _categoryCode: '7.1',
-  _groupCode: '7.1.2',
-  _classCode: '7',
-  name: 'Travaux', // 71241 Travaux
-}];
+// const CATEGORIES = [{
+//   code: '7.1.1.1',
+//   _categoryCode: '7.1',
+//   _groupCode: '7.1.1',
+//   _classCode: '7',
+//   name: 'Ventes de marchandises', // Ventes de marchandises au Maroc
+// }, {
+//   code: '7.1.2.1.1',
+//   _categoryCode: '7.1',
+//   _groupCode: '7.1.2',
+//   _classCode: '7',
+//   name: 'Ventes de produits finis',
+// }, {
+//     code: '7.1.2.4.3',
+//     _categoryCode: '7.1',
+//     _groupCode: '7.1.2',
+//     _classCode: '7',
+//     name: 'Prestations de services', // 7124 Ventes de services produits au Maroc
+// }, {
+//   code: '7.1.2.4.1',
+//   _categoryCode: '7.1',
+//   _groupCode: '7.1.2',
+//   _classCode: '7',
+//   name: 'Travaux', // 71241 Travaux
+// }];
 
 import requiredPropType from 'react-prop-types/lib/all';
 
 import { Modes as SelectionModes, } from '../../../redux/modules/selection';
 
-export default class ProductsTable extends Component{
+export default class ProductsTable extends React.Component{
 
   static displayName = 'ProductsTable';
 
@@ -253,6 +260,7 @@ export default class ProductsTable extends Component{
   };
 
   _onAction = (type, obj) => {
+    let showModal = true;
 
     switch (type) {
       case 'product':
@@ -265,12 +273,24 @@ export default class ProductsTable extends Component{
         );
         break;
 
+      case 'active':
+        showModal = false;
+
+        this.props.onActivate(obj);
+        break;
+
+      case 'inactive':
+        showModal = false;
+
+        this.props.onDeactivate(obj);
+        break;
+
       default:
 
         throw 'Invalid Operation';
     }
 
-    this.setState({
+    showModal && this.setState({
       modalOpen: true,
       modalType: type,
       item: obj,
@@ -328,6 +348,8 @@ export default class ProductsTable extends Component{
           company={this.props.company}
           viewer={this.props.viewer}
           formKey={this.state.item.id}
+          salesAccounts={this.props.salesAccounts}
+          expensesAccounts={this.props.expensesAccounts}
           onDone={() => {}}
           onCancel={this._close}
         />
@@ -349,7 +371,7 @@ export default class ProductsTable extends Component{
     const rowsCount = loading ? 0 : store.getSize();
     const tableHeight = 36 + (rowsCount * 59) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
     const bodyWidth = Math.max(this.props.bodyWidth - 60, 956);
@@ -414,7 +436,7 @@ export default class ProductsTable extends Component{
              <div>{loading || function(self){
                const obj = store.getObjectAt(rowIndex);
                return (
-                 <a style={{ fontWeight: 'bolder', color: '#000000', }} className={styles['link']} onClick={e => { stopEvent(e); }}>{obj.displayName}</a>
+                 <a style={{ fontWeight: 'bolder', color: '#000000', ...(obj.active ? {} : { opacity: 0.5, }), }} className={styles['link']} onClick={e => { stopEvent(e); }}>{obj.displayName}</a>
                );
              }(this)}</div>
              </Cell>
@@ -423,6 +445,43 @@ export default class ProductsTable extends Component{
               flexGrow={1}
             />
 
+            {/* Ref */}
+            <Column
+              columnKey={'sku'}
+              align={'left'}
+              header={<Cell>Référence</Cell>}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(self){
+               const obj = store.getObjectAt(rowIndex);
+               return (
+                 obj.sku
+               );
+             }(this)}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />
+
+            {/* type */}
+            <Column
+              columnKey={'type'}
+              align={'left'}
+              header={<Cell>Type</Cell>}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(self){
+               const obj = store.getObjectAt(rowIndex);
+               return (
+                 typeMap[obj.type]
+               );
+             }(this)}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />
 
             {/* Description */}
             <Column
@@ -453,7 +512,7 @@ export default class ProductsTable extends Component{
              <div>{loading || function(self){
                const obj = store.getObjectAt(rowIndex);
                return (
-                 getCategory(obj.incomeAccountCode)
+                 getCategory(self, obj.incomeAccountCode)
                );
              }(this)}</div>
              </Cell>

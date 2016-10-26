@@ -60,7 +60,7 @@ export function email(value) {
 
 export function url(value) {
   // Let's not start a debate on email regex. This is just for an example app!
-  if (!isEmpty(value) && isURL(value)) {
+  if (!isEmpty(value) && !isURL(value)) {
     return messages.url;
   }
 }
@@ -69,6 +69,29 @@ export function required(value) {
   if (isEmpty(value)) {
     return messages.required;
   }
+}
+
+export function requiredIf(cond){
+  return (value, values) => {
+    if (cond(values) && isEmpty(value)) {
+      return messages.required;
+    }
+  };
+}
+
+export function equalToField(field, msg = ''){
+  return (value, values) => {
+    if (!isEmpty(value) && values[field] !== value) {
+      return msg;
+    }
+  };
+}
+export function validIf(cond, msg = ''){
+  return (value, values) => {
+    if (!isEmpty(value) && !cond(values)) {
+      return msg;
+    }
+  };
 }
 
 export function minExclusive(minimum){
@@ -90,7 +113,8 @@ export function maxInclusive(maximum){
 export function minLength(min) {
   return value => {
     if (!isEmpty(value) && value.length < min) {
-      return `Must be at least ${min} characters`;
+      // return `Must be at least ${min} characters`;
+      return `Cela doit être au moins ${min} caractères`;
     }
   };
 }
@@ -98,7 +122,8 @@ export function minLength(min) {
 export function maxLength(max) {
   return value => {
     if (!isEmpty(value) && value.length > max) {
-      return `Must be no more than ${max} characters`;
+      // return `Must be no more than ${max} characters`;
+      return `Cela doit être au plus ${max} caractères`;
     }
   };
 }

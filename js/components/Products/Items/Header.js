@@ -16,7 +16,7 @@ import HeaderActions from './HeaderActions';
 const Title = (company) => company.displayName;
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'ProductsExpensesHeader';
 
@@ -56,6 +56,8 @@ export default class extends Component{
               topLoading={loading}
               company={this.props.company}
               viewer={this.props.viewer}
+              salesAccounts={this.props.salesAccounts}
+              expensesAccounts={this.props.expensesAccounts}
               styles={this.props.styles}
               filterArgs={filterArgs}
             />

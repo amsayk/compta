@@ -1,0 +1,28 @@
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+.setupVAT-link:focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
+.setupVAT-link:hover, .setupVAT-link:focus  {
+  color: #365ebf;
+  text-decoration: underline;
+}
+
+.setupVAT-link {
+  text-decoration: none;
+  color: #365ebf;
+  cursor: pointer;
+}
+
+.text {
+  font-family: 'HelveticaNeue-Roman', 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  position: relative;
+  font-size: 1rem;
+}

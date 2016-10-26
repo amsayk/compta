@@ -1,11 +1,13 @@
-import Parse from 'parse';
+const Parse = require('parse');
 
-export default class Company extends Parse.Object {
+class Company extends Parse.Object {
   __type = 'Company';
 
   constructor() {
     super('Company');
   }
 };
+
+module.exports = Company;
 
 Parse.Object.registerSubclass('Company', Company);

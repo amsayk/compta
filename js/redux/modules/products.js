@@ -81,7 +81,7 @@ export default function reducer(state = initialState, action = {}) {
           [action.id]: {
             _id: 'error.unknown',
             description: '',
-            defaultMessage: 'There was an unknown error. Please try again.',
+            defaultMessage: 'Erreur inconnu. Veuillez essayer de nouveau.',
           }
         }
       };
@@ -90,13 +90,14 @@ export default function reducer(state = initialState, action = {}) {
   }
 }
 
-export function save({id, fieldInfos, viewer, company,}) {
+export function save({id, fieldInfos, image, viewer, company,}) {
   return {
     types: [SAVE, SAVE_SUCCESS, SAVE_FAIL],
     id: id || 'NEW',
     promise: () => new Promise((resolve, reject) => {
       Relay.Store.commitUpdate(new AddProductMutation({
         id,
+        image,
         fieldInfos,
         company,
         viewer,

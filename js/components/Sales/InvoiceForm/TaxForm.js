@@ -1,5 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 
+import { StoreProto, } from '../../../redux/modules/v2/invoices';
+
 import classnames from 'classnames';
 
 import styles from './InvoiceForm.scss';
@@ -21,7 +23,7 @@ import stopEvent from '../../../utils/stopEvent';
 const MAX = 100;
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
     store: PropTypes.object.isRequired,
@@ -72,13 +74,15 @@ export default class extends Component{
     const {value} = this.state;
     const taxableSubtotal = function(){
       if(discountValue.invalid){
-        return store.subtotal;
+        // return store.subtotal;
+        return StoreProto.fnSubtotal.call(store);
       }
 
       const type = getFieldValue(discountType);
       const value = getFieldValue(discountValue);
 
-      return store.getTaxableSubtotal({type, value});
+      // return store.getTaxableSubtotal({type, value});
+      return StoreProto.getTaxableSubtotal.call(store, {type, value});
     }();
     return (
       <div styleName='tax-form-wrapper'>
@@ -103,7 +107,7 @@ export default class extends Component{
                     style={{width: 200, textAlign: 'right',}}
                     className={classnames('form-control', {'has-error': !pristine && taxPercent.invalid,})}
                     placeholder={intl.formatMessage(messages['taxRate'])}
-                    value={value}
+                    value={value ? value : ''}
                     onChange={e => {
                       this.setState({
                         value: e.target.value,
@@ -156,9 +160,13 @@ function getTaxAmount(store, {discountType, discountValue, taxPercent}){
   }
 
   if(discountValue.invalid){
-    return store.subtotal * ((_taxPercent || 0.0) / 100);
+    // return store.subtotal * ((_taxPercent || 0.0) / 100);
+    return StoreProto.fnSubtotal.call(store) * ((_taxPercent || 0.0) / 100);
   }
 
-  return store.getTaxableSubtotal(
+  // return store.getTaxableSubtotal(
+  //   {type: _discountType, value: _discountValue}) * ((_taxPercent || 0.0) / 100);
+  return StoreProto.getTaxableSubtotal.call(
+    store,
     {type: _discountType, value: _discountValue}) * ((_taxPercent || 0.0) / 100);
 }

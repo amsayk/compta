@@ -1,7 +1,5 @@
 import Relay from 'react-relay';
 
-import AddCompanyMutation from '../../mutations/AddCompanyMutation';
-
 const EDIT_START = 'compta/account/EDIT_START';
 const EDIT_STOP = 'compta/account/EDIT_STOP';
 
@@ -10,6 +8,8 @@ const SAVE_SUCCESS = 'compta/account/SAVE_SUCCESS';
 const SAVE_FAIL = 'compta/account/SAVE_FAIL';
 
 import { actionTypes, } from 'redux-form';
+import UpdateAccountMutation from "../../mutations/UpdateAccountMutation";
+import PasswordMutation from "../../mutations/PasswordMutation";
 
 const initialState = {
   editing: {},
@@ -80,7 +80,7 @@ export default function reducer(state = initialState, action = {}) {
           [action.id]: {
             id: 'account-form.error.unknown',
             description: '',
-            defaultMessage: 'There was an unknown error. Please try again.',
+            defaultMessage: 'Erreur inconnu. Veuillez essayer de nouveau.',
           }
         }
       };
@@ -89,14 +89,83 @@ export default function reducer(state = initialState, action = {}) {
   }
 }
 
-export function save({id, displayName, email,}) {
+export function save({displayName, email, viewer,}) {
+  const id = viewer.objectId;
   return {
     types: [SAVE, SAVE_SUCCESS, SAVE_FAIL],
-    id: id || 'NEW',
+    id: id,
     promise: () => new Promise((resolve, reject) => {
 
-      // TODO: update account info
-      resolve({id, displayName, email,});
+      Relay.Store.commitUpdate(new UpdateAccountMutation({
+        id,
+        displayName,
+        email,
+        sessionToken: viewer.sessionToken,
+        viewer,
+      }), {
+        onSuccess: function ({updateAccount: {viewer: {...props}}}) {
+          resolve({...props});
+        },
+        onFailure: function (transaction) {
+          const error = transaction.getError();
+          reject({error});
+        },
+      });
+
+    })
+  };
+}
+
+export function changePassword({currentPassword, newPassword, viewer,}) {
+  const id = viewer.objectId;
+  return {
+    types: [SAVE, SAVE_SUCCESS, SAVE_FAIL],
+    id: id,
+    promise: () => new Promise((resolve, reject) => {
+
+      Relay.Store.commitUpdate(new PasswordMutation({
+        id,
+        type: 'change',
+        currentPassword,
+        password: newPassword,
+        sessionToken: viewer.sessionToken,
+        viewer,
+      }), {
+        onSuccess: function ({changePassword: {viewer: {...props}}}) {
+          resolve({...props});
+        },
+        onFailure: function (transaction) {
+          const error = transaction.getError();
+          reject({error});
+        },
+      });
+
+    })
+  };
+}
+
+export function setPassword({newPassword, viewer,}) {
+  const id = viewer.objectId;
+  return {
+    types: [SAVE, SAVE_SUCCESS, SAVE_FAIL],
+    id: id,
+    promise: () => new Promise((resolve, reject) => {
+
+      Relay.Store.commitUpdate(new PasswordMutation({
+        id,
+        type: 'set',
+        password: newPassword,
+        sessionToken: viewer.sessionToken,
+        viewer,
+      }), {
+        onSuccess: function ({setPassword: {viewer: {...props}}}) {
+          resolve({...props});
+        },
+        onFailure: function (transaction) {
+          const error = transaction.getError();
+          reject({error});
+        },
+      });
 
     })
   };

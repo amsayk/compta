@@ -7,7 +7,7 @@ import CSSModules from 'react-css-modules';
 import styles from '../AppSettings.scss';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'BooleanOption';
   static propTypes = {
     id: PropTypes.string.isRequired,

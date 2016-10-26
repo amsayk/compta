@@ -20,7 +20,7 @@ import LineEditor from './BillLineEditor';
 import enhanceWithClickOutside from '../../../utils/react-click-outside';
 
 @enhanceWithClickOutside
-class ClickOutsideWrapper extends Component {
+class ClickOutsideWrapper extends React.Component {
   handleClickOutside = (e) => {
     // e.preventDefault();
     // e.stopPropagation();
@@ -41,6 +41,8 @@ import {
 } from 'react-intl';
 
 import messages from './messages';
+
+import getFieldValue from "../../utils/getFieldValue";
 
 function clamp(value, min, max){
   return Math.min(Math.max(value, min), max);
@@ -97,7 +99,7 @@ const billTarget = {
   connectDragSource: connect.dragSource(),
   isDragging: monitor.isDragging()
 }))
-class DragHandle extends Component {
+class DragHandle extends React.Component {
 
   static propTypes = {
     connectDragSource: PropTypes.func.isRequired,
@@ -131,7 +133,7 @@ class DragHandle extends Component {
   connectDropTarget: connect.dropTarget()
 }))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'BillAccountItems';
 
@@ -227,7 +229,7 @@ export default class extends Component {
       height,
       connectDropTarget,
       bodyWidth : width,
-      fields: {dirty, valid, invalid, pristine, save, resetLines, submitting, values,},
+      fields: { inputType, dirty, valid, invalid, pristine, save, resetLines, submitting, values,},
 
     } = this.props;
 
@@ -245,6 +247,12 @@ export default class extends Component {
     const tableWidth = bodyWidth;
 
     const {rowIndex: activeRow, cell: activeCell} = store.getActiveRow() || {};
+
+    const VTEnabled = this.props.company.VATSettings.enabled;
+
+    const inputTypeValue = getFieldValue(inputType);
+
+    const hasVAT = inputTypeValue !== 'NO_VAT' && inputTypeValue !== 3;
 
     return (
       <div styleName='product-items-wrapper'>
@@ -281,6 +289,9 @@ export default class extends Component {
                           store={store}
                           rowIndex={activeRow}
                           tableWidth={tableWidth}
+                          hasVAT={hasVAT}
+                          VTEnabled={VTEnabled}
+                          inputTypeValue={inputTypeValue}
                           company={this.props.company}
                           items={this.props.expensesAccounts}
                       />}
@@ -373,7 +384,7 @@ export default class extends Component {
                         </div>
                       );
                     }}
-                    width={0.66 * bodyWidth}
+                    width={hasVAT ? 0.57 * tableWidth : 0.66 * bodyWidth}
                     flexGrow={1}
                   />
 
@@ -400,6 +411,31 @@ export default class extends Component {
                     }}
                     width={0.09 * tableWidth}
                   />
+
+                  {/* VATPart */}
+                  {hasVAT && <Column
+                    columnKey={'VATPart'}
+                    align={'right'}
+                    header={<Cell>{intl.formatMessage(messages.VATPart)}</Cell>}
+                    cell={(props) => {
+
+                      return (
+
+                        <div onClick={(e) => self._setActiveRow({rowIndex: props.rowIndex, cell: 'VATPart'}, e)}>
+
+                           <VATPartValueCell
+                              {...props}
+                              styles={styles}
+                              store={store}
+                           />
+
+                        </div>
+
+                      );
+                    }}
+                    width={0.09 * tableWidth}
+                    flexGrow={1}
+                  />}
 
                   {/* Del Action */}
                   <Column
@@ -499,7 +535,7 @@ export default class extends Component {
   };
 }
 
-class AccountCodeCell extends Component {
+class AccountCodeCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -559,7 +595,7 @@ class AccountCodeCell extends Component {
   }
 }
 
-class TextValueCell extends Component {
+class TextValueCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -601,7 +637,49 @@ class TextValueCell extends Component {
   }
 }
 
-class AmountValueCell extends Component {
+const VAT_ID_TO_TEXT = {
+  1: `20%`,
+  2: `14%`,
+  3: `10%`,
+  4: `Exonéré`,
+  5: `7%`,
+};
+
+const VAT_NAME_TO_ID = {
+  Value_20: 1,
+  Value_14: 2,
+  Value_10: 3,
+  Value_Exempt: 4,
+  Value_7: 5,
+};
+
+class VATPartValueCell extends React.Component {
+
+  static contextTypes = {
+    intl: intlShape.isRequired,
+  };
+
+  static propTypes = {
+    styles: PropTypes.object.isRequired,
+    store: PropTypes.object.isRequired,
+    rowIndex: PropTypes.number.isRequired,
+  };
+
+  render() {
+    const { store, rowIndex, } = this.props;
+    const {intl,} = this.context;
+
+    const { VATPart: value, } = store.getObjectAt(rowIndex);
+
+    return (
+      <Cell {...this.props}>
+        <div>{value && VAT_ID_TO_TEXT[VAT_NAME_TO_ID[value.value]]}</div>
+      </Cell>
+    );
+  }
+}
+
+class AmountValueCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,

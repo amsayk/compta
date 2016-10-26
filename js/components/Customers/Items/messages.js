@@ -5,8 +5,11 @@ import {
 export default defineMessages({
   Open_Invoices: {
     id: 'customers-items-page.label-totals-open-invoices',
-    // defaultMessage: `{count, plural, =0 {No open invoices} =1 {1 open invoice} other {{count} open invoices}}`,
     defaultMessage: `{count, plural, =0 {Aucun encaissements en cours} =1 {1 encaissement en cours} other {{count} encaissements en cours}}`,
+  },  
+  Overdue_Invoices: {
+    id: 'customers-items-page.label-totals-overdue-invoices',
+    defaultMessage: `{count} en retard`,
   },
 
   Table_Title_Open_Invoices: {
@@ -37,6 +40,15 @@ export default defineMessages({
   Action_payment: {
     id: 'customers-items-page.action-payment',
     defaultMessage: 'Recevoir un paiement',
+  },  
+  
+  Action_active: {
+    id: 'customers-items-page.action-active',
+    defaultMessage: 'Rendre actif',
+  },
+  Action_inactive: {
+    id: 'customers-items-page.action-inactive',
+    defaultMessage: 'Rendre inactif',
   },
 
   Subtitle: {
@@ -75,6 +87,15 @@ export default defineMessages({
     id: 'customers-items-page.message.unpaid_last_x_days',
     // defaultMessage: 'Paiements effectueés',
     defaultMessage: 'Paiements au cours des {days, number} derniers jours',
+  },
+  
+  ConfirmDeactivate: {
+    id: 'customers-items-page.message.confirm-deactive',
+    defaultMessage: 'Etes-vous sûr de vouloir rendre {displayName} inactif?'
+  },
+  ConfirmActivate: {
+    id: 'customers-items-page.message.confirm-active',
+    defaultMessage: 'Etes-vous sûr de vouloir rendre {displayName} actif?'
   },
 
   x_overdue: {

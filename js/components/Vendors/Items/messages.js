@@ -3,10 +3,33 @@ import {
 } from 'react-intl';
 
 export default defineMessages({
+  Action_active: {
+    id: 'vendors-items-page.action-active',
+    defaultMessage: 'Rendre actif',
+  },
+  Action_inactive: {
+    id: 'vendors-items-page.action-inactive',
+    defaultMessage: 'Rendre inactif',
+  },
+
+  ConfirmDeactivate: {
+    id: 'vendors-items-page.message.confirm-deactive',
+    defaultMessage: 'Etes-vous sûr de vouloir rendre {displayName} inactif?'
+  },
+  ConfirmActivate: {
+    id: 'vendors-items-page.message.confirm-active',
+    defaultMessage: 'Etes-vous sûr de vouloir rendre {displayName} actif?'
+  },
+
   Open_Bills: {
     id: 'vendors-items-page.label-totals-open-bills',
     // defaultMessage: `{count, plural, =0 {No open bills} =1 {1 open bill} other {{count} open bills}}`,
-    defaultMessage: `En cours`,
+    defaultMessage: `{count, plural, =0 {Aucunes factures en cours} =1 {1 facture en cours} other {{count} facture en cours}}`,
+  },
+  Overdue_Bills: {
+    id: 'vendors-items-page.label-totals-overdue-bills',
+    // defaultMessage: `{count, plural, =0 {No open bills} =1 {1 open bill} other {{count} open bills}}`,
+    defaultMessage: `{count, plural, =0 {Aucunes factures en retard} =1 {1 facture en retard} other {{count} factures en retard}}`,
   },
 
   Table_Title_Open_Bills: {

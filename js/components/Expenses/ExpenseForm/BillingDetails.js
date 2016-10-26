@@ -23,7 +23,7 @@ function normalizeMoment(d){
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'ExpenseBillingDetails';
 
@@ -40,14 +40,14 @@ export default class extends Component {
     const {intl,} = this.context;
 
     const dateValue = getFieldValue(date);
-    const refNoValue = getFieldValue(refNo);
+    const refNoValue = getFieldValue(refNo, '');
 
     return (
       <div styleName='billing-details-wrapper'>
 
         <div styleName='billing-details'>
 
-          <form>
+          <div>
 
             <div className='row'>
 
@@ -57,7 +57,7 @@ export default class extends Component {
                   <label styleName='subsection12TitleText' htmlFor='mailingAddress'>{intl.formatMessage(messages['MailingAddress'])}</label>
                   <textarea
                     onChange={mailingAddress.onChange}
-                    value={getFieldValue(mailingAddress)}
+                    value={getFieldValue(mailingAddress, '')}
                     className={classnames('form-control mailingAddress', {'has-error': !pristine && mailingAddress.invalid,})}
                     id='mailingAddress'
                     style={{resize: 'none',}}
@@ -126,7 +126,7 @@ export default class extends Component {
 
             </div>
 
-          </form>
+          </div>
 
         </div>
 

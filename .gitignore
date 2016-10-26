@@ -4,6 +4,17 @@ npm-debug.log
 data/schema.graphql
 .idea/
 
+logs
+*.log
+
 /*.env
 
 out
+
+graphql.*.json
+
+garbage
+
+graphql.config.json
+
+.parse.*

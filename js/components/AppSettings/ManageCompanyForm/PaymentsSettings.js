@@ -6,6 +6,8 @@ import {reduxForm} from 'redux-form';
 
 import findIndex from 'lodash.findindex';
 
+import LoadingActions from '../../Loading/actions';
+
 import { setBeforeUnloadMessage, unsetBeforeUnloadMessage, } from '../../../utils/unbeforeunload';
 
 const CODES = [
@@ -45,7 +47,7 @@ const preferredPaymentMethodsByIndex = { 1: 'Cash', 2:'Check', 3:'Creditcard', }
 const preferredPaymentMethodsById = { Cash: 1, Check: 2, Creditcard: 3, };
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   state = {
     selected: -1,
@@ -158,7 +160,7 @@ const PaymentsFormSettings = function () {
   }
 
   @CSSModules(styles, {allowMultiple: true})
-  class View extends Component {
+  class View extends React.Component {
 
     static propTypes = {
       company: PropTypes.object.isRequired,
@@ -196,7 +198,7 @@ const PaymentsFormSettings = function () {
 
                 <div>
 
-                  <form onSubmit={e => {e.preventDefault();}}>
+                  <div onSubmit={e => {e.preventDefault();}}>
 
                     <div className='form-group row'>
 
@@ -222,7 +224,7 @@ const PaymentsFormSettings = function () {
 
                     </div>
 
-                  </form>
+                  </div>
 
                 </div>
 
@@ -249,7 +251,7 @@ const PaymentsFormSettings = function () {
       form: 'company',
       validate: validation,
       fields: [
-        'id', 
+        'id',
         'preferredPaymentMethod',
         'account',
       ],
@@ -263,7 +265,7 @@ const PaymentsFormSettings = function () {
     }),
     dispatch => bindActionCreators(companyActions, dispatch))
   @CSSModules(styles, {allowMultiple: true})
-  class Form extends Component {
+  class Form extends React.Component {
 
     constructor(props, context){
       super(props, context);
@@ -386,8 +388,10 @@ const PaymentsFormSettings = function () {
       }
 
       const doUpdate = handleSubmit((data) => {
+        LoadingActions.show();
         return  update({id: this.props.company.id, fieldInfos: Object.keys(data).filter(key => key !== 'id').map(key => ({fieldName: key === 'account' ? 'defaultDepositToAccountCode' : key, value: normalizeServerData(key, data), })), viewer: this.props.viewer, root: this.props.root, company: this.props.company, })
           .then(result => {
+            LoadingActions.hide();
 
             const handleResponse = (result) => {
               if (result && typeof result.error === 'object') {
@@ -416,7 +420,7 @@ const PaymentsFormSettings = function () {
 
                 <div>
 
-                  <form onSubmit={doUpdate}>
+                  <div onSubmit={doUpdate}>
 
                   <div className='form-group row'>
 
@@ -487,7 +491,7 @@ const PaymentsFormSettings = function () {
                   </div>
 
 
-                  </form>
+                  </div>
 
                   {saveError && <div styleName='error'>{intl.formatMessage({ ...saveError, id: saveError._id, })}</div>}
 
@@ -549,6 +553,12 @@ function wrap(Component) {
 
           fragment on Company{
 
+            company_streetAddress,
+            company_cityTown,
+            company_stateProvince,
+            company_postalCode,
+            company_country,            
+
             ${UpdateCompanyPaymentsSettingsMutation.getFragment('company')},
 
             id,
@@ -557,6 +567,7 @@ function wrap(Component) {
             lastTransactionIndex, lastPaymentsTransactionIndex,
             legalForm,
             address,
+            capital,
             activity,
             webSite,
             tel,

@@ -18,7 +18,7 @@ import HeaderReports from './HeaderReports';
 const Title = (company) => company.displayName;
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'SalesHeader';
 
@@ -39,7 +39,7 @@ export default class extends Component{
     const {intl,} = this.context;
 
     return (
-      <div styleName='top' style={{width: Math.max(this.props.bodyWidth - 225, 956),}}>
+      <div styleName='top' style={{width: Math.max(this.props.bodyWidth - 165, 956),}}>
 
         <div styleName='toolbar'>
 
@@ -61,7 +61,9 @@ export default class extends Component{
               viewer={this.props.viewer}
               styles={this.props.styles}
               onPaymentCustomerSelected={this.props.onPaymentCustomerSelected}
+              onReceivePayment={this.props.onReceivePayment}
               salesAccounts={this.props.salesAccounts}
+              expensesAccounts={this.props.expensesAccounts}
               depositsAccounts={this.props.depositsAccounts}
               customerOpenInvoices={this.props.customerOpenInvoices}
               filterArgs={filterArgs}
@@ -75,7 +77,6 @@ export default class extends Component{
 
           <HeaderReports
             salesStatus={this.props.salesStatus}
-            filterArgs={filterArgs}
             onTealChanged={this.props.onTealChanged}
             topLoading={loading}
             company={this.props.company}

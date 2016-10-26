@@ -89,3 +89,8 @@ display: none;
   border-right-style: none;
   border-right-width: 0;
 }
+
+.fixedDataTableLayout_header .public_fixedDataTableCell_cellContent {
+    font-weight: 800;
+    font-size: 0.68rem;
+}

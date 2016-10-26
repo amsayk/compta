@@ -11,19 +11,51 @@ import moment from 'moment';
 
 import RelayRoute from '../../routes/PaymentOfBillsFormPaymentOfBillsItemRoute';
 
-import PaymentForm  from './PaymentForm/PaymentForm';
-import BillForm  from './BillForm/BillForm';
+// import PaymentForm  from './PaymentForm/PaymentForm';
+// import BillForm  from './BillForm/BillForm';
+
+import LoadingActions from '../Loading/actions';
+
+let BillForm = null;
+let PaymentForm = null;
+
+function loadComponent(type, cb) {
+  LoadingActions.show();
+
+  switch (type){
+
+    case 'Payment':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        PaymentForm = require('./PaymentForm/PaymentForm').default;
+        cb();
+      }, 'PaymentOfBillsForm');
+
+      break;
+
+    case 'Bill':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        BillForm = require('./BillForm/BillForm').default;
+        cb();
+      }, 'BillForm');
+
+      break;
+  }
+}
 
 import Revision from '../../utils/revision';
 
 import stopEvent from '../../utils/stopEvent';
 
-import { editStart as editStartPayment, } from '../../redux/modules/paymentsOfBills';
-import { editStart as editStartBill, } from '../../redux/modules/bills';
+import { editStart as editStartPayment, } from '../../redux/modules/v2/paymentsOfBills';
+import { editStart as editStartBill, } from '../../redux/modules/v2/bills';
 
 import requiredPropType from 'react-prop-types/lib/all';
 
-class FromPaymentItemPaymentForm extends Component {
+class FromPaymentItemPaymentForm extends React.Component {
   static contextTypes = {
     store: PropTypes.object.isRequired,
   };
@@ -81,9 +113,11 @@ class FromPaymentItemPaymentForm extends Component {
             );
 
             requestAnimationFrame(() => {
-              this.setState({
-                modalOpen: true,
-                obj,
+              loadComponent('Payment', () => {
+                this.setState({
+                  modalOpen: true,
+                  obj,
+                });
               });
             });
 
@@ -129,10 +163,12 @@ class FromPaymentItemPaymentForm extends Component {
               );
 
               requestAnimationFrame(() => {
-                this.setState({
-                  modalOpen: true,
-                  obj,
-                  topLoading: nextProps.topLoading,
+                loadComponent('Payment', () => {
+                  this.setState({
+                    modalOpen: true,
+                    obj,
+                    topLoading: nextProps.topLoading,
+                  });
                 });
               });
 
@@ -187,9 +223,11 @@ class FromPaymentItemPaymentForm extends Component {
         );
 
         setTimeout(() => {
-          this.setState({
-            modalOpen: true,
-            obj,
+          loadComponent('Bill', () => {
+            this.setState({
+              modalOpen: true,
+              obj,
+            });
           });
         }, 150);
       });
@@ -214,11 +252,13 @@ class FromPaymentItemPaymentForm extends Component {
           );
 
           requestAnimationFrame(() => {
-            this.setState({
-              modalOpen: true,
-              obj: undefined,
-              bill,
-            });
+            loadComponent('Payment', () => {
+              this.setState({
+                modalOpen: true,
+                obj: undefined,
+                bill,
+              });
+            })
           });
 
         }
@@ -277,7 +317,7 @@ class FromPaymentItemPaymentForm extends Component {
 
 function wrapWithC(MyComponent, props) {
 
-  class CWrapper extends Component {
+  class CWrapper extends React.Component {
 
     static propTypes = {
       loading: PropTypes.bool.isRequired,
@@ -344,7 +384,13 @@ function wrapWithC(MyComponent, props) {
                 memo,
                 files,
                 paymentRef,
-                itemsConnection{
+
+                totalHT,
+                VAT,
+
+                inputType,
+
+                itemsConnection : billItemsConnection{
                   totalCount,
                   totalAmount,
                   edges{
@@ -358,7 +404,7 @@ function wrapWithC(MyComponent, props) {
                     }
                   }
                 },
-                paymentsConnection{
+                paymentsConnection : billPaymentsConnection{
                   totalAmountPaid,
                 },
               }
@@ -391,6 +437,23 @@ function wrapWithC(MyComponent, props) {
           },
 
           company(id: $companyId) {
+
+            VATDeclaration{
+              id,
+              objectId,
+              periodStart,
+              periodEnd,
+            },
+
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
 
             objectId,
 
@@ -431,6 +494,7 @@ function wrapWithC(MyComponent, props) {
             vendors(first: 1000){
               edges{
                 node{
+                  active,
                   type: __typename,
                   objectId,
                   id,
@@ -480,7 +544,7 @@ function wrapWithC(MyComponent, props) {
             creditToAccountCode,
             memo,
             files,
-            itemsConnection{
+            itemsConnection : paymentItemsConnection{
               totalCount,
               totalAmountPaid,
               edges{
@@ -504,7 +568,7 @@ function wrapWithC(MyComponent, props) {
                     date,
                     dueDate,
                     paymentRef,
-                    itemsConnection{
+                    itemsConnection : billItemsConnection{
                       totalCount,
                       totalAmount,
                       edges{
@@ -518,7 +582,7 @@ function wrapWithC(MyComponent, props) {
                         }
                       }
                     },
-                    paymentsConnection{
+                    paymentsConnection : billPaymentsConnection{
                       totalAmountPaid,
                       totalCount,
                       edges{
@@ -554,7 +618,7 @@ function createContainer({ viewer, company, payment, onClose, }){
   });
   const Route = new RelayRoute({ companyId: company.id, id: payment.objectId, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -591,7 +655,7 @@ function createContainer({ viewer, company, payment, onClose, }){
   return () => Container;
 }
 
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'FromPaymentItemPaymentForm';
   constructor(props) {
     super(props);
@@ -616,7 +680,7 @@ export default class extends Component{
   }
 }
 
-function decorateBill({ objectId, __dataID__, id, paymentRef, payee, mailingAddress, terms, date, dueDate, itemsConnection, paymentsConnection, memo, files, }) {
+function decorateBill({ objectId, __dataID__, totalHT, VAT, inputType, id, paymentRef, payee, mailingAddress, terms, date, dueDate, itemsConnection, paymentsConnection, memo, files, }) {
   const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountPaid;
 
   function calcBillStatus() {
@@ -660,6 +724,7 @@ function decorateBill({ objectId, __dataID__, id, paymentRef, payee, mailingAddr
     totalAmountPaid: paymentsConnection.totalAmountPaid,
     status: calcBillStatus(),
     memo, files,
+    totalHT, VAT, inputType, 
     itemsConnection,
     paymentsConnection,
     objectId,

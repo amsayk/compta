@@ -17,7 +17,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'PaymentAmountReceived';
   static contextTypes = {
     intl: intlShape.isRequired,

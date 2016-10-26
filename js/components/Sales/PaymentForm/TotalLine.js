@@ -16,7 +16,7 @@ import messages from './messages';
 import getFieldValue from '../../utils/getFieldValue';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'PaymentTotals';
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -62,19 +62,19 @@ export default class extends Component{
                 Montant à appliquer
               </div>
 
-              <div style={{display: 'inline-block'}} className='col-sm-6 last-col' style={{textAlign: 'right'}}>
+              <div className='col-sm-6 last-col' style={{ textAlign: 'right', display: 'inline-block', }}>
                 <div styleName='amount'>{intl.formatNumber(amountToApply && isFinite(amountToApply) ? amountToApply : 0.0, {format: 'MAD'})}</div>
               </div>
 
             </div>
 
-            <div className='row' style={{ paddingTop: 5, paddingBottom: 0, }}>
+            <div className='row hidden' style={{ paddingTop: 5, paddingBottom: 0, }}>
 
               <div styleName='subsection12TitleText' className='col-sm-6 first-col' style={{textAlign: 'right'}}>
                 Montant à créditer
               </div>
 
-              <div style={{display: 'inline-block'}} className='col-sm-6 last-col' style={{textAlign: 'right'}}>
+              <div className='col-sm-6 last-col' style={{ textAlign: 'right', display: 'inline-block', }}>
                 <div styleName='amount'>{intl.formatNumber(amountToCredit, {format: 'MAD'})}</div>
               </div>
 
@@ -85,7 +85,7 @@ export default class extends Component{
               <div styleName='subsection12TitleText' className='col-sm-6 first-col' style={{textAlign: 'right'}}>
               </div>
 
-              <div style={{display: 'inline-block'}} className='col-sm-6 last-col' style={{textAlign: 'right'}}>
+              <div className='col-sm-6 last-col' style={{ textAlign: 'right', display: 'inline-block', }}>
                 <div styleName='paddingTop10'>
                     <div styleName='stateActionButton '>
                       <a onClick={this.props.clearPayment} styleName='bbutton secondary'>{intl.formatMessage(messages['clear_payment'])}</a>

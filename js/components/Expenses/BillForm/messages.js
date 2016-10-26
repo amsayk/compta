@@ -3,6 +3,30 @@ import {
 } from 'react-intl';
 
 export default defineMessages({
+  close: {
+    id: 'bill-form.close',
+    defaultMessage: 'Fermer'
+  },
+
+  AmountHT: {
+    id: 'bill-form.amount-ht',
+    defaultMessage: 'Montant HT'
+  },
+  AmountTTC: {
+    id: 'bill-form.amount-ttc',
+    defaultMessage: 'Montant TTC'
+  },
+
+  VATPart: {
+    id: 'bill-form.vat-part',
+    defaultMessage: 'TVA'
+  },
+
+  VATPartPlaceholder: {
+    id: 'bill-form.action.vat-part-placeholder',
+    defaultMessage: 'TVA…'
+  },
+
   Popover_Date: {
     id: 'bill-form.th-popover-date',
     defaultMessage: 'Date',
@@ -27,12 +51,12 @@ export default defineMessages({
 
   x_payments_made_since: {
     id: 'bill-form.message-x-payments-made-since',
-    defaultMessage: 'effectué(s) depuis {lastPaymentDate, date, medium}.',
+    defaultMessage: 'effectué(s) depuis {lastPaymentDate}.',
   },
 
   x_payments_made_on: {
     id: 'bill-form.message-x-payments-made-on',
-    defaultMessage: 'effectué(s) le {lastPaymentDate, date, medium}.',
+    defaultMessage: 'effectué(s) le {lastPaymentDate}.',
   },
 
   ErrorTitle: {

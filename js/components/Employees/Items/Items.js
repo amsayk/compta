@@ -67,7 +67,7 @@ const StatusTypes = {
     selection: state.selection.editing['employees'],
 }), dispatch => bindActionCreators({ toggle, toggleAll, toggleNone, }, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-class Items extends Component {
+class Items extends React.Component {
 
   static propTypes = {
     loading: PropTypes.bool.isRequired,
@@ -180,7 +180,7 @@ class Items extends Component {
               /*minHeight: 794Math.max(minHeight, 794, minHeight),*/
               background: '#fff',
               position: 'absolute',
-              top: 96,
+              top: 97,
               paddingBottom: 50,
             }}>
 
@@ -270,7 +270,7 @@ class Items extends Component {
 
 function wrapWithC(MyComponent, props) {
 
-  class CWrapper extends Component {
+  class CWrapper extends React.Component {
 
     static propTypes = {
       loading: PropTypes.bool.isRequired,
@@ -325,6 +325,16 @@ function wrapWithC(MyComponent, props) {
             sessionToken,
 
             company(id: $companyId) {
+
+              VATSettings{
+                enabled,
+                agency,
+                startDate,
+                IF,
+                frequency,
+                regime,
+                percentages{ value, },
+              },
 
               ${AddEmployeeMutation.getFragment('company')},
 
@@ -418,7 +428,7 @@ function createContainer({ viewer, params, company, companies, }){
   const Route = new RelayRoute({companyId: params.app});
   const MyComponent = wrapWithC(Items, { params, route: Route, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -456,7 +466,7 @@ function createContainer({ viewer, params, company, companies, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {

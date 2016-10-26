@@ -83,7 +83,7 @@ export default function reducer(state = initialState, action = {}) {
           [action.id]: {
             _id: 'error.unknown',
             description: '',
-            defaultMessage: 'There was an unknown error. Please try again.',
+            defaultMessage: 'Erreur inconnu. Veuillez essayer de nouveau.',
           }
         }
       };

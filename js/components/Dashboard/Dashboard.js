@@ -8,6 +8,39 @@ import CSSModules from 'react-css-modules';
 
 import moment from 'moment';
 
+import { PAYMENTS_OF_INVOICES_ACCOUNTS_CATEGORIES, PAYMENTS_OF_BILLS_ACCOUNTS_CATEGORIES, EXPENSES_ACCOUNTS_CATEGORIES, SALES_ACCOUNTS_CATEGORIES, } from '../../../data/constants';
+
+import LoadingActions from '../Loading/actions';
+
+import {SALES_SETTINGS_COMPANY_COMPONENTS,} from '../AppSettings/ManageCompanyForm/SalesSettings';
+import {EXPENSES_SETTINGS_COMPANY_COMPONENTS,} from '../AppSettings/ManageCompanyForm/ExpensesSettings';
+import {PAYMENTS_SETTINGS_COMPANY_COMPONENTS,} from '../AppSettings/ManageCompanyForm/PaymentsSettings';
+import {ADVANCED_SETTINGS_COMPANY_COMPONENTS,} from '../AppSettings/ManageCompanyForm/AdvancedSettings';
+
+let ManageCompanyForm = null;
+import {COMPANY_COMPONENTS,} from '../AppSettings/ManageCompanyForm/ManageCompanyForm'
+
+function loadComponent(type, cb) {
+  switch (type){
+
+    case 'settings':
+
+      require.ensure([], function (require) {
+        ManageCompanyForm = require('../AppSettings/ManageCompanyForm/ManageCompanyForm').default;
+        cb();
+      }, 'ManageCompanyForm');
+
+      break;
+  }
+}
+
+import RemoveCompanyMutation from '../../mutations/RemoveCompanyMutation';
+import UpdateCompanyMutation from '../../mutations/UpdateCompanyMutation';
+import UpdateCompanySettingsMutation from '../../mutations/UpdateCompanySettingsMutation';
+import UpdateCompanySalesSettingsMutation from '../../mutations/UpdateCompanySalesSettingsMutation';
+import UpdateCompanyExpensesSettingsMutation from '../../mutations/UpdateCompanyExpensesSettingsMutation';
+import UpdateCompanyPaymentsSettingsMutation from '../../mutations/UpdateCompanyPaymentsSettingsMutation';
+
 import { getBodyHeight, } from '../../utils/dimensions';
 
 import LazyCache from 'react-lazy-cache';
@@ -32,7 +65,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-class Dashboard extends Component {
+class Dashboard extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -59,13 +92,29 @@ class Dashboard extends Component {
   };
 
   _close = () => {
-    this.setState({modalOpen: false});
+    this.setState({modalOpen: false, modalType: undefined,});
   };
 
   _renderForm = () => {
-    const form = this.state.modalOpen ? null : null;
+    if(!this.state.modalOpen){
+      return null;
+    }
 
-    return form;
+    switch(this.state.modalType){
+      case 'settings':
+        return (
+          <ManageCompanyForm
+            expensesAccounts={this.props.expensesAccounts}
+            paymentsAccounts={this.props.paymentsAccounts}
+            onCancel={this._close}
+            company={this.props.company}
+            viewer={this.props.viewer}
+            root={this.props.viewer}
+          />
+        );
+
+    }
+
   };
 
   _onExpensesDate = ({ date, from, to, }, onReadyStateChange) => {
@@ -90,6 +139,18 @@ class Dashboard extends Component {
       }
 
       onReadyStateChange && onReadyStateChange({done});;
+    });
+  };
+
+  _onManageSettingsClicked = (e) => {
+    e&&e.preventDefault();
+    e&&e.stopPropagation();
+
+    loadComponent('settings', () => {
+      this.setState({
+        modalOpen: true,
+        modalType: 'settings'
+      });
     });
   };
 
@@ -118,11 +179,12 @@ class Dashboard extends Component {
 
               <header>
 
-                <a styleName='headerLink'>
+                <a styleName='headerLink' onClick={this._onManageSettingsClicked}>
 
                   <div styleName='inlineBlock logoContainer'>
 
-                    <span styleName='logoPlaceHolder inlineBlock'>{formatMessage(messages['Logo'])}</span>
+                    <span styleName='logoPlaceHolder inlineBlock'>{ !loading && company.logo ? <img height='56px' src={company.logo.url} alt=""/> : formatMessage(messages['Logo'])}</span>
+                    {/*<span styleName='logoPlaceHolder inlineBlock'>{ !loading && company.logo ? <img width="56px" height='56px' src={company.logo.url} alt=""/> : formatMessage(messages['Logo'])}</span>*/}
 
                   </div>
 
@@ -210,6 +272,9 @@ function wrapWithC(Component, props) {
           loading: loading,
           companies: root.companies,
           company: root.company,
+          expensesAccounts: root.expensesAccounts,
+          paymentsAccounts: root.paymentsAccounts,
+          salesAccounts: root.salesAccounts,
           root: root,
           viewer: root,
           relay: relay,
@@ -225,6 +290,11 @@ function wrapWithC(Component, props) {
 
       companyId: props.params.app,
 
+      paymentsAccountCategories: PAYMENTS_OF_INVOICES_ACCOUNTS_CATEGORIES,
+      expensesAccountCategories: PAYMENTS_OF_BILLS_ACCOUNTS_CATEGORIES,
+
+      salesAccountCategories: SALES_ACCOUNTS_CATEGORIES,
+
       // expensesDate: 12,
       // expensesFrom: moment().subtract(30, 'days').toDate(),
       // expensesTo: undefined,
@@ -237,7 +307,7 @@ function wrapWithC(Component, props) {
 
       // expenses and bills
       expensesCategories: [
-        '6.1'
+        '6.1',
       ],
 
       // expenses, bills, sales and invoices
@@ -261,8 +331,70 @@ function wrapWithC(Component, props) {
           createdAt,
           updatedAt,
           sessionToken,
+          
+          expensesAccounts: accountsByCategories(categories: $expensesAccountCategories){
+            code,
+            name,
+            _groupCode,
+            _categoryCode,
+            _classCode,
+          },
+
+          id,
+
+          paymentsAccounts: accountsByCategories(categories: $paymentsAccountCategories){
+            code,
+            name,
+            _groupCode,
+            _categoryCode,
+            _classCode,
+          },
+
+          salesAccounts: accountsByCategories(categories: $salesAccountCategories){
+            code,
+            name,
+            _groupCode,
+            _categoryCode,
+            _classCode,
+          },          
 
           company(id: $companyId){
+          
+            ${RemoveCompanyMutation.getFragment('company')},
+            ${UpdateCompanyMutation.getFragment('company')},
+            ${UpdateCompanySettingsMutation.getFragment('company')},
+            ${UpdateCompanySalesSettingsMutation.getFragment('company')},
+            ${UpdateCompanyExpensesSettingsMutation.getFragment('company')},
+            ${UpdateCompanyPaymentsSettingsMutation.getFragment('company')},
+
+            ${SALES_SETTINGS_COMPANY_COMPONENTS[0].View.getFragment('company')},
+            ${SALES_SETTINGS_COMPANY_COMPONENTS[1].Form.getFragment('company')},
+
+            ${EXPENSES_SETTINGS_COMPANY_COMPONENTS[0].Form.getFragment('company')},
+
+            ${PAYMENTS_SETTINGS_COMPANY_COMPONENTS[0].Form.getFragment('company')},
+
+            ${ADVANCED_SETTINGS_COMPANY_COMPONENTS[0].Form.getFragment('company')},
+            ${ADVANCED_SETTINGS_COMPANY_COMPONENTS[1].Form.getFragment('company')},
+
+            ${COMPANY_COMPONENTS[0].View.getFragment('company')},
+            ${COMPANY_COMPONENTS[0].Form.getFragment('company')},
+
+            ${COMPANY_COMPONENTS[1].View.getFragment('company')},
+            ${COMPANY_COMPONENTS[1].Form.getFragment('company')},
+
+            ${COMPANY_COMPONENTS[2].View.getFragment('company')},
+            ${COMPANY_COMPONENTS[2].Form.getFragment('company')},
+
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
 
             dashboard__Expenses: operationsByCategories(first: 100000, categories: $expensesCategories, from: $expensesFrom, to: $expensesTo, _rev: $rev){
               edges{
@@ -308,6 +440,11 @@ function wrapWithC(Component, props) {
                 amount,
               },
 
+            },
+
+            logo {
+              objectId,
+              url,
             },
 
             objectId,
@@ -400,7 +537,7 @@ function createContainer({ viewer, params, company, companies, }){
   const Route = new DashboardRoute({companyId: params.app});
   const MyComponent = wrapWithC(Dashboard, { params, route: Route, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -438,7 +575,7 @@ function createContainer({ viewer, params, company, companies, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {

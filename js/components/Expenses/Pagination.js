@@ -11,7 +11,7 @@ import Paginate from 'react-paginate';
 import shallowEqual from 'shallowEqual';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'SalesPagination';
   static propTypes = {
     offset: PropTypes.number.isRequired,
@@ -42,9 +42,9 @@ export default class extends Component{
     }
   }
 
-  shouldComponentUpdate(nextProps, nextState){
-    return !shallowEqual(this.state, nextState);
-  }
+  // shouldComponentUpdate(nextProps, nextState){
+  //   return !shallowEqual(this.state, nextState);
+  // }
 
   handlePageClick = ({selected}) => {
     const offset = Math.ceil(selected * this.props.limit);
@@ -54,7 +54,8 @@ export default class extends Component{
     });
   };
   render(){
-    const { styles, count, totalCount, limit, offset, } = this.props;
+    const { styles, limit, } = this.props;
+    const { count, totalCount, offset, } = this.state;
     const pageNum = Math.ceil(totalCount / limit);
     const selected = offset / limit;
     return (

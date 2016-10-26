@@ -2,6 +2,12 @@ import Relay from 'react-relay';
 
 export default class AddVendorMutation extends Relay.Mutation {
   static fragments = {
+    vendor: () => Relay.QL`
+      fragment on Vendor {
+        id,
+        objectId,
+      }
+    `,
     company: () => Relay.QL`
       fragment on Company {
         id,
@@ -22,6 +28,20 @@ export default class AddVendorMutation extends Relay.Mutation {
       fragment on AddVendorPayload {
         vendorEdge{
           node{
+          active,
+          expensesStatus{
+
+                      open{
+                        totalCount,
+                        amount,
+                      },
+
+                      overdue{
+                        totalCount,
+                        amount,
+                      },
+
+                    },
             id,
             objectId,
             displayName,
@@ -79,6 +99,20 @@ export default class AddVendorMutation extends Relay.Mutation {
         fragment on AddVendorPayload {
           vendorEdge{
             node{
+            expensesStatus{
+
+                      open{
+                        totalCount,
+                        amount,
+                      },
+
+                      overdue{
+                        totalCount,
+                        amount,
+                      },
+
+                    },
+            active,
               id,
               objectId,
               displayName,
@@ -115,26 +149,28 @@ export default class AddVendorMutation extends Relay.Mutation {
     };
   }
   getOptimisticResponse() {
-    return {
-      // FIXME: totalCount gets updated optimistically, but this edge does not
-      // get added until the server responds
-      vendorEdge: {
-        node: {
-          company: this.props.company,
-          companyId: this.props.company.id,
-          ...this.props.fieldInfos.reduce(function (props, {fieldName, value}) {
-            return {
-              ...props,
-              [fieldName]: value,
-            };
-          }, {}),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      },
-      company: {
-        id: this.props.company.id,
-      },
-    };
+    return null;
+    // return {
+    //   // FIXME: totalCount gets updated optimistically, but this edge does not
+    //   // get added until the server responds
+    //   vendorEdge: {
+    //     node: {
+    //       company: this.props.company,
+    //       companyId: this.props.company.id,
+    //       ...(this.props.vendor ? this.props.vendor : {} ),
+    //       ...this.props.fieldInfos.reduce(function (props, {fieldName, value}) {
+    //         return {
+    //           ...props,
+    //           [fieldName]: value,
+    //         };
+    //       }, {}),
+    //       createdAt: new Date().toISOString(),
+    //       updatedAt: new Date().toISOString(),
+    //     },
+    //   },
+    //   company: {
+    //     id: this.props.company.id,
+    //   },
+    // };
   }
 }

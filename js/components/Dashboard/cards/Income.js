@@ -12,13 +12,60 @@ import {
 
 import messages from '../messages';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+// import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+// import Tooltip from 'react-bootstrap/lib/Tooltip';
+
+import Tooltip from 'react-tooltip';
+import stopEvent from "../../../utils/stopEvent";
 
 @CSSModules(styles, {allowMultiple: true})
-export default class Income extends Component {
+export default class Income extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
+    router: PropTypes.object.isRequired,
+  };
+
+  go = (to) => {
+    const { company, } = this.props;
+    const { router, } = this.context;
+
+    switch (to){
+      case 'open':
+
+        localStorage.setItem('sales.type', 'invoices');
+        localStorage.setItem('sales.status', 'open');
+        localStorage.setItem('sales.date', 1);
+
+        router.push({
+          pathname: `/apps/${company.id}/sales`,
+          state: {},
+        });
+        break;
+
+      case 'overdue':
+
+        localStorage.setItem('sales.type', 'invoices');
+        localStorage.setItem('sales.status', 'overdue');
+        localStorage.setItem('sales.date', 12);
+
+        router.push({
+          pathname: `/apps/${company.id}/sales`,
+          state: {},
+        });
+        break;
+
+      case 'closed':
+
+        localStorage.setItem('sales.type', 'recent');
+        localStorage.setItem('sales.status', 'closed');
+        localStorage.setItem('sales.date', 1);
+
+        router.push({
+          pathname: `/apps/${company.id}/sales`,
+          state: {},
+        });
+        break;
+    }
   };
 
   render() {
@@ -75,42 +122,39 @@ export default class Income extends Component {
 
                   <div styleName='open invoiceBar'>
 
-                    <div id='openInvoices' styleName='insightTooltipDiv'>
+                    <a onClick={e => { stopEvent(e); this.go('open') }} data-for='open' data-tip={`<p style="text-align:left;margin: 20px auto;"><div class="${styles['fancyMoney']}" style="color:#fff;">${openCount}</div><div class="${styles['fancyText']}">${intl.formatMessage(messages['x_open_invoices'], {invoices: openCount})}</div></p>`}>
 
-                      {/*<OverlayTrigger overlay={<Tooltip positionLeft={0} positionTop={0} placement={'top'}><span><div className={styles['moneySection']}>
-                        <div styleName='fancyMoney'>{openCount}</div>
-                        <div styleName='fancyText upperCase'>{intl.formatMessage(messages['x_open_invoices'], {invoices: openCount})}</div>
-                      </div></span></Tooltip>}>*/}
+                      <div id='openInvoices' styleName='insightTooltipDiv'>
 
+                        <div styleName='insightTooltipInnerDiv openInvoicesTooltipDiv'
+                        id='openInvoicesInner'></div>
 
-                          <div styleName='insightTooltipInnerDiv openInvoicesTooltipDiv'
-                          id='openInvoicesInner'></div>
+                      </div>
 
 
-                      {/*</OverlayTrigger>*/}
+                    </a>
 
-                    </div>
+                    {loading || <Tooltip id='open' place={'top'} html={true} type={'dark'} effect={'float'}/>}
+                    {loading || <Tooltip id='overdue' place={'top'} html={true} type={'dark'} effect={'float'}/>}
+                    {loading || <Tooltip id='paid' place={'top'} html={true} type={'dark'} effect={'float'}/>}
+
 
                     <div styleName='moneySection floatLeft'>
                       {privateMode ? <div styleName='fancyMoney'>{openCount}</div> : <div styleName='fancyMoney'>{intl.formatNumber(openAmount, {format: 'MAD'})}</div>}
                       <div styleName='fancyText upperCase'>{intl.formatMessage(messages['x_open_invoices'], {invoices: openCount})}</div>
                     </div>
 
+
                     <div styleName='overdue invoiceBar'>
 
-                      <div styleName='insightTooltipDiv' id='overdueInvoices'>
+                      <a onClick={e => { stopEvent(e); this.go('overdue') }} data-for='overdue' data-tip={`<p style="width:200px;text-align:left;margin: 20px auto;"><div class="${styles['fancyMoney']}" style="color:#fff;">${overdueCount}</div><div class="${styles['fancyText']}">${intl.formatMessage(messages['x_overdue'], {invoices: overdueCount})}</div></p>`}>
 
-                      {/*<OverlayTrigger overlay={<Tooltip positionLeft={0} positionTop={0} placement={'top'}><span><div className={styles['moneySection']}>
-                        <div styleName='fancyMoney'>{overdueCount}</div>
-                        <div styleName='fancyText upperCase'>{intl.formatMessage(messages['x_overdue'], {invoices: overdueCount})}</div>
-                      </div></span></Tooltip>}>*/}
+                        <div styleName='insightTooltipDiv' id='overdueInvoices'>
 
-                        <div styleName='insightTooltipInnerDiv' id='overdueInvoicesInner'></div>
+                          <div styleName='insightTooltipInnerDiv' id='overdueInvoicesInner'></div>
 
-                        {/*</OverlayTrigger>*/}
-
-
-                      </div>
+                        </div>
+                      </a>
 
                       <div styleName='moneySection floatLeft'>
                         {privateMode ? <div styleName='fancyMoney'>{overdueCount}</div> : <div styleName='fancyMoney'>{intl.formatNumber(overdueAmount, {format: 'MAD'})}</div>}
@@ -121,20 +165,16 @@ export default class Income extends Component {
 
                   </div>
 
-                  <div styleName='paid invoiceBar'>
+                  <div styleName='paid invoiceBar' onClick={e => { stopEvent(e); this.go('closed') }}>
 
-                    <div styleName='insightTooltipDiv' id='paidInvoices'>
+                    <a data-for='paid' data-tip={`<p style="text-align:left;margin: 20px auto;"><div class="${styles['fancyMoney']}" style="color:#fff;">${closedCount}</div><div class="${styles['fancyText']}">${intl.formatMessage(messages['paid_last_x_days'], {invoices: closedCount, days: 30, })}</div></p>`}>
 
-                    {/*<OverlayTrigger overlay={<Tooltip positionLeft={0} positionTop={0} placement={'top'}><span><div className={styles['moneySection']}>
-                      <div styleName='fancyMoney'>{closedCount}</div>
-                      <div styleName='fancyText upperCase'>{intl.formatMessage(messages['paid_last_x_days'], {invoices: closedCount, days: 30})}</div>
-                    </div></span></Tooltip>}>*/}
+                      <div styleName='insightTooltipDiv' id='paidInvoices'>
 
-                      <div styleName='insightTooltipInnerDiv' id='paidInvoicesInner'></div>
+                        <div styleName='insightTooltipInnerDiv' id='paidInvoicesInner'></div>
+                      </div>
 
-                      {/*</OverlayTrigger>*/}
-
-                    </div>
+                    </a>
 
                     <div styleName='moneySection floatLeft'>
                       {privateMode ? <div styleName='fancyMoney'>{closedCount}</div> : <div styleName='fancyMoney'>{intl.formatNumber(closedAmount, {format: 'MAD'})}</div>}

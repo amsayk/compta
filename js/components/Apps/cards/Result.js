@@ -22,7 +22,7 @@ import styles from './Result.scss';
 import RelayRoute from '../../../routes/AppResultRoute'
 
 @CSSModules(styles, { allowMultiple: true, })
-class Result extends Component{
+class Result extends React.Component{
   static displayName = 'AppsList.Result';
   static contextTypes = {
     intl: intlShape.isRequired
@@ -51,7 +51,7 @@ class Result extends Component{
           <div styleName={'label word'} style={{ textTransform: 'uppercase', }}>DÉPENSES</div>
         </div>
 
-        <span styleName='edit'>Derniers 30 jours</span>
+        <span styleName='badge edit'>Derniers 30 jours</span>
 
       </div>
     );
@@ -149,6 +149,16 @@ function wrapWithC(Component, props) {
 
           id,
 
+          VATSettings{
+            enabled,
+            agency,
+            startDate,
+            IF,
+            frequency,
+            regime,
+            percentages{ value, },
+          },
+
           dashboard__Result: operationsByCategories(first: 100000, categories: $resultCategories, from: $from, to: $to, _rev: 0){
             edges{
               node{
@@ -171,7 +181,7 @@ function createContainer({ ...props, }){
   const Route = new RelayRoute({ companyId: props.company.id, });
   const MyComponent = wrapWithC(Result, { companyId: props.company.id, });
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -199,7 +209,7 @@ function createContainer({ ...props, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {

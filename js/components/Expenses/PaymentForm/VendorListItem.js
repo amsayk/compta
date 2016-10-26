@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 
 import NewItemListItem from './NewItemListItem';
 
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'VendorListItem';
   static propTypes = {
     item: PropTypes.object.isRequired,

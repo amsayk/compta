@@ -4,7 +4,7 @@ import { useRouterHistory, } from 'react-router';
 
 import { getBeforeUnloadMessage, } from './utils/unbeforeunload';
 
-const history = useBeforeUnload(useRouterHistory(createHistory))();
+const history = useBeforeUnload(useRouterHistory(createHistory))({ basename: '/', });
 
 history.listenBeforeUnload(function () {
   return process.env.NODE_ENV !== 'production' ? null : getBeforeUnloadMessage();

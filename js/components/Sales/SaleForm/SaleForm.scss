@@ -1,3 +1,8 @@
+.VAT--row:hover{
+  background-color: #f3f8fe;
+  color: #000;
+}
+
 .modal{
   z-index: 2222;
 }
@@ -20,16 +25,16 @@
   }
 }
 
-.submitting{
-  vertical-align: middle;
-  display: inline-block;
-  -webkit-animation: spin 2s infinite linear;
-          animation: spin 2s infinite linear;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(359deg); }
-}
+// .submitting{
+//   vertical-align: middle;
+//   display: inline-block;
+//   -webkit-animation: spin 2s infinite linear;
+//           animation: spin 2s infinite linear;
+// }
+// @keyframes spin {
+//   0% { transform: rotate(0deg); }
+//   100% { transform: rotate(359deg); }
+// }
 
 .modal{
   font-family: HelveticaNeueRoman, Helvetica, Arial, sans-serif;

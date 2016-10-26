@@ -8,7 +8,7 @@ import {intlShape,} from 'react-intl';
 
 import {Table, Column, Cell,} from '../../../fixed-data-table';
 
-export default class TransactionLineEditor extends Component{
+export default class TransactionLineEditor extends React.Component{
 
   static propTypes = {
     onClickOutside: PropTypes.func.isRequired,
@@ -146,7 +146,7 @@ export default class TransactionLineEditor extends Component{
   }
 }
 
-class AccountCellEditor extends Component {
+class AccountCellEditor extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -270,7 +270,7 @@ class AccountCellEditor extends Component {
   }
 }
 
-class DebitCellEditor extends Component {
+class DebitCellEditor extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -334,7 +334,7 @@ class DebitCellEditor extends Component {
   }
 }
 
-class CreditCellEditor extends Component {
+class CreditCellEditor extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -398,7 +398,7 @@ class CreditCellEditor extends Component {
   }
 }
 
-class TextValueCellEditor extends Component {
+class TextValueCellEditor extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -439,7 +439,7 @@ class TextValueCellEditor extends Component {
             className={'form-control'}
             style={{}}
             type='text'
-            value={this.state.value}
+            value={this.state.value || ''}
             onBlur={(e) => {
               switch (type){
                 case 'name':
@@ -488,7 +488,7 @@ class TextValueCellEditor extends Component {
   }
 }
 
-class AddIcon extends Component {
+class AddIcon extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,

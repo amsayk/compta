@@ -1,6 +1,10 @@
 import React, {Component, PropTypes} from 'react';
 import Relay from 'react-relay';
 
+import LoadingActions from '../../Loading/actions';
+
+import shallowCompare from 'react-addons-shallow-compare';
+
 import {bindActionCreators} from 'redux';
 import {reduxForm} from 'redux-form';
 
@@ -27,7 +31,7 @@ import DropdownButton from 'react-bootstrap/lib/DropdownButton';
 import MenuItem from 'react-bootstrap/lib/MenuItem';
 
 import paymentValidation, {} from './paymentValidation';
-import * as paymentActions from '../../../redux/modules/paymentsOfBills';
+import * as paymentActions from '../../../redux/modules/v2/paymentsOfBills';
 
 import JournalEntries from '../../JournalEntries/JournalEntries';
 
@@ -140,17 +144,17 @@ function getMailingAddress({
   } : function(){
     const payee = ownProps.bill ? {
       type: 'Vendor',
-      className: `Vendor_${ownProps.company.objectId}`,
+      className: `People_${ownProps.company.objectId}`,
       id: ownProps.bill.payee.objectId,
       objectId: ownProps.bill.payee.objectId,
     } : (ownProps.selectedBills && ownProps.selectedBills.length > 0 ? {
       type: 'Vendor',
-      className: `Vendor_${ownProps.company.objectId}`,
+      className: `People_${ownProps.company.objectId}`,
       objectId: ownProps.selectedBills[0].payee.objectId,
       id: ownProps.selectedBills[0].payee.objectId,
     } : (ownProps.payee ? {
       type: 'Vendor',
-      className: `Vendor_${ownProps.company.objectId}`,
+      className: `People_${ownProps.company.objectId}`,
       id: ownProps.payee.objectId,
       objectId: ownProps.payee.objectId,
     } : undefined));
@@ -169,7 +173,7 @@ function getMailingAddress({
   }(),
 }), dispatch => bindActionCreators(paymentActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'PaymentForm';
 
@@ -331,13 +335,18 @@ export default class extends Component {
     const {
       selectedBills = [],
       formKey,
+      payment,
       editing: {
         [formKey]: store,
       },
       vendorOpenBills,
+      fields: { id, },
     } = nextProps;
 
-    switch (formKey) {
+    const idValue = getFieldValue(id);
+    const isSaved = payment || typeof idValue !== 'undefined';
+
+    switch (isSaved ? null : formKey) {
       case 'NEW':
 
           const {
@@ -381,7 +390,7 @@ export default class extends Component {
                 vendorOpenBills.edges.map(
                   ({node}) => decorateBillItem(store, node, bill)),
 
-                payment.itemsConnection.edges.map(
+                (payment || this._payment).itemsConnection.edges.map(
                   ({node}) => decoratePaymentItem(store, node))
               ),
 
@@ -392,7 +401,7 @@ export default class extends Component {
 
             [ 'asc', 'desc' ],
           ),
-          {id: formKey, company: nextProps.company}
+          {id: idValue, company: nextProps.company}
         );
     }
 
@@ -412,8 +421,8 @@ export default class extends Component {
       fields: { amountReceived, },
     } = this.props;
 
-    bills.forEach(({ id, itemsConnection, paymentsConnection, }) => {
-      const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountPaid;
+    bills.forEach(({ id, billItemsConnection, itemsConnection, billPaymentsConnection, paymentsConnection, }) => {
+      const balanceDue = (itemsConnection || billItemsConnection).totalAmount - (paymentsConnection || billPaymentsConnection).totalAmountPaid;
       store.setAmountById(id, balanceDue);
     });
 
@@ -465,6 +474,8 @@ export default class extends Component {
     // this._showHelp();
 
     this.refs.client && this.refs.client.focus();
+
+    ga('send', 'pageview', '/modal/app/makepayment');
   }
 
   _showHelp(){
@@ -545,12 +556,13 @@ export default class extends Component {
   }, 150);
 
   _handleClose = () => {
+    const self = this;
       setImmediate(() => {
-        this.props.onPaymentVendorSelected(
+        self.props.onPaymentVendorSelected(
           {id: undefined},
           ({ done, }) => {
             if(done){
-              this.props.onCancel();
+              self.props.onCancel();
             }
           }
         );
@@ -579,6 +591,9 @@ export default class extends Component {
       if(dirty || store.isDirty){
         Actions.show(intl.formatMessage(messages['Confirm']))
           .then(this._handleClose)
+          // .then(() => {
+          //   this._handleClose();
+          // })
           .catch(() => {});
       }else{
         this._handleClose();
@@ -586,7 +601,7 @@ export default class extends Component {
     };
 
     _onSave(){
-      return this.__onSubmit || (this.__onSubmit = this.props.handleSubmit((data) => {
+      return this.props.handleSubmit((data) => {
 
         const {
           styles,
@@ -630,8 +645,11 @@ export default class extends Component {
         // }
 
         return new Promise((resolve, reject) => {
-          this.props.save({ ...decorateData(data), id: this.props.payment && this.props.payment.objectId, payment: this.props.payment, _vendor: this.props.payee, items, company: this.props.company, viewer: this.props.viewer, })
+          LoadingActions.show();
+          this.props.save({ ...decorateData(data), id: this.props.payment ? this.props.payment.objectId : getFieldValue(this.props.fields.id), payment: this.props.payment, _vendor: this.props.payee, items, company: this.props.company, viewer: this.props.viewer, })
                 .then(result => {
+                  LoadingActions.hide();
+
                   if (result && typeof result.error === 'object') {
                     return reject(); // messages['error']
                   }
@@ -642,15 +660,12 @@ export default class extends Component {
                   //   this._handleSaveAndNew();
                   // }
                  resolve();
-               })/*.catch((error) => {
-                  if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                  reject(messages['error']);
-                })*/;
+               });
         });
-      }));
+      });
     }
     _onSaveClose(close = true){
-      return this.__onSubmitClose || (this.__onSubmitClose = this.props.handleSubmit((data) => {
+      return this.props.handleSubmit((data) => {
 
         const {
           styles,
@@ -694,8 +709,11 @@ export default class extends Component {
         // }
 
         return new Promise((resolve, reject) => {
-          this.props.save({ ...decorateData(data), id: this.props.payment && this.props.payment.objectId, payment: this.props.payment, _vendor: this.props.payee, items, company: this.props.company, viewer: this.props.viewer, })
+          LoadingActions.show();
+          this.props.save({ ...decorateData(data), id: this.props.payment ? this.props.payment.objectId : getFieldValue(this.props.fields.id), payment: this.props.payment, _vendor: this.props.payee, items, company: this.props.company, viewer: this.props.viewer, })
                 .then(result => {
+                  LoadingActions.hide();
+
                   if (result && typeof result.error === 'object') {
                     return reject(); // messages['error']
                   }
@@ -706,12 +724,152 @@ export default class extends Component {
                     this._handleSaveAndNew();
                   }
                  resolve();
-               })/*.catch((error) => {
-                  if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                  reject(messages['error']);
-                })*/;
+               });
         });
-      }));
+      });
+    }
+  _onSaveOnly(){
+      return this.props.handleSubmit((data) => {
+
+        const {
+          styles,
+          formKey,
+          editing: {
+            [formKey]: store,
+          },
+        } = this.props;
+
+        const items = [];
+
+        for(let i = 0, _len = store.getSize(); i < _len; i++){
+          const line = store.getObjectAt(i);
+
+          if(typeof line.amount !== 'undefined'){
+            const {valid} = store.isValid(line);
+
+            if(valid){
+              items.push(decoratePaymentItemForServer(i, line));
+            }else{
+              store.setShowErrors(true);
+              store.setActiveRow(i);
+              return Promise.reject();
+            }
+          }
+        }
+
+        // if(items.length === 0){
+        //   const {intl,} = this.context;
+        //   NotifyActions.add({
+        //     type: 'danger',
+        //     slug: styles['payment-form--error-message'],
+        //     data: () => (
+        //           <span>
+        //             {intl.formatMessage(messages['at_least_one_entry_required'])}
+        //           </span>
+        //     ),
+        //   });
+        //
+        //   return Promise.reject();
+        // }
+
+        return new Promise((resolve, reject) => {
+          LoadingActions.show();
+          this.props.save({ ...decorateData(data), id: this.props.payment ? this.props.payment.objectId : getFieldValue(this.props.fields.id), payment: this.props.payment, _vendor: this.props.payee, items, company: this.props.company, viewer: this.props.viewer, })
+                .then(result => {
+                  LoadingActions.hide();
+
+                  if (result && typeof result.error === 'object') {
+                    return reject(); // messages['error']
+                  }
+
+                  const {
+                    company,
+                    initializeForm,
+                    fields: {
+                      id,
+                    }
+                  } = this.props;
+
+                  function decoratePayment({ objectId, __dataID__, id, mailingAddress, payee, paymentRef, amountReceived, creditToAccountCode, paymentMethod, date, paymentItemsConnection : itemsConnection, memo, files, }) {
+                    const balanceDue = amountReceived - itemsConnection.totalAmountPaid;
+                    return {
+                      __dataID__,
+                      id,
+                      payee: payee ? {
+                        ...payee,
+                        className: `People_${company.objectId}`,
+                      } : undefined,
+                      date,
+                      paymentMethod,
+                      paymentRef,
+                      creditToAccountCode,
+                      type: 'Payment',
+                      refNo: paymentRef,
+                      mailingAddress,
+                      amountReceived,
+                      balanceDue,
+                      total: amountReceived,
+                      totalAmountPaid: itemsConnection.totalAmountPaid,
+                      status: balanceDue === 0.0
+                        ? 'Closed'
+                        : (balanceDue > 0.0 ? 'Partial' : 'Open'),
+                      memo, files,
+                      itemsConnection,
+                      objectId,
+                      dueDate: date,
+                    };
+                  }
+
+                  const payment = decoratePayment(result.result);
+
+                  this._payment = payment;
+
+                  function decoratePaymentItem({ id, amount, bill: { id: billId, objectId, date, dueDate, memo, paymentRef, billItemsConnection : itemsConnection, billPaymentsConnection : paymentsConnection, }, }){
+                    const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountPaid;
+                    const obj = {
+                      __selected: true,
+                      __existed: true,
+                      __originalAmount: amount,
+                      id,
+                      amount: amount,
+                      bill: {
+                        id,
+                        objectId,
+                        paymentRef,
+                        refNo: paymentRef,
+                        total: itemsConnection.totalAmount,
+                        balanceDue,
+                        amountPaid: paymentsConnection.totalAmountPaid,
+                        date,
+                        dueDate,
+                        memo,
+                      },
+                    };
+
+                    return obj;
+                  }
+
+                  store.reInit(
+                    payment.itemsConnection.edges.map(({node}) => decoratePaymentItem(node)), { id: payment.objectId, company, });
+
+                  const payee = payment.payee ? {
+                    type: 'Vendor',
+                    className: `People_${this.props.company.objectId}`,
+                    id: payment.payee.objectId,
+                    objectId: payment.payee.objectId,
+                  } : undefined;
+
+                  initializeForm({
+                    ...payment,
+                    id: payment.objectId,
+                    date: normalizeMoment(moment(payment.date)).format(),
+                    payee,
+                  });
+
+                  resolve();
+               });
+        });
+      });
     }
 
     _onPaymentVendorSelected = (...args) => {
@@ -790,6 +948,10 @@ export default class extends Component {
     //
     // console.log('=====================================');
 
+    const isSaved = payment || typeof getFieldValue(id) !== 'undefined';
+
+    const _dirty = dirty || store.isDirty;
+
     return (
       <Modal dialogClassName={classnames(`${styles['modal']} payment-form`, { drawerOpen: openBills && _openBills !== DrawerState.Closed, })}
              dialogComponentClass={Dialog}
@@ -805,7 +967,7 @@ export default class extends Component {
             </div>
 
             <div styleName='icon'>
-              <i style={{verticalAlign: 'middle'}} className='material-icons md-light' style={{}}>settings</i>
+              <i style={{verticalAlign: 'middle'}} className='material-icons md-light'>settings</i>
             </div>
 
           </div>
@@ -814,7 +976,7 @@ export default class extends Component {
 
         <Body>
 
-        <div styleName='table stretch'>
+        <div styleName='table stretch' style={{ overflow: 'hidden', }}>
 
           <div styleName='tableCell'>
 
@@ -1050,7 +1212,10 @@ export default class extends Component {
               styleName='btn  dark'
               onClick={() => this._handleCancel()}
               disabled={submitting}
-              className='unselectable'>{intl.formatMessage(messages['cancel'])}
+              className='unselectable'>{function () {
+              // const _dirty = dirty || store.isDirty;
+              return intl.formatMessage(messages[isSaved && !_dirty ? 'close' : 'cancel']);
+            }()}
             </button>
 
           </div>
@@ -1058,7 +1223,7 @@ export default class extends Component {
           <div styleName='tableCell' style={{textAlign: 'center'}}>
 
             <div>
-              {payment && <PaymentActions onDelete={this._del()} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
+              {isSaved && <PaymentActions onDelete={this._del()} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
             </div>
 
           </div>
@@ -1101,7 +1266,7 @@ export default class extends Component {
             </button>*/}
 
             {function(){
-              const _dirty = dirty || store.isDirty;
+              // const _dirty = dirty || store.isDirty;
               return (
                 <MySplitButton
                   className={'unselectable' + (valid && _dirty ? ' green valid' : (invalid || submitting || !_dirty ? ' disabled' : ''))}
@@ -1110,6 +1275,7 @@ export default class extends Component {
                   valid={valid}
                   onSave={self._onSave.bind(self)}
                   onSaveClose={self._onSaveClose.bind(self)}
+                  onSaveOnly={self._onSaveOnly.bind(self)}
                   disabled={invalid || submitting || !_dirty}
                   submitting={submitting}
                 />
@@ -1154,7 +1320,7 @@ export default class extends Component {
         openBills: false,
       })
     }
-  }
+  };
 
   _del = () => {
     const {intl,} = this.context;
@@ -1162,7 +1328,15 @@ export default class extends Component {
       return Actions.show(intl.formatMessage(messages['ConfirmDelete']))
         .then(() => {
           return new Promise((resolve, reject) => {
-            this.props.del({ payment: this.props.payment, company: this.props.company, viewer: this.props.viewer, })
+            const getObj = () => {
+              const id = getFieldValue(this.props.fields.id);
+              return {
+                __dataID__: id,
+                id,
+                objectId: id,
+              };
+            };
+            this.props.del({ payment: this.props.payment || getObj(), company: this.props.company, viewer: this.props.viewer, })
                   .then(result => {
                     if (result && typeof result.error === 'object') {
                       return reject(); // messages['error']
@@ -1170,10 +1344,7 @@ export default class extends Component {
 
                     this._handleClose();
                    resolve();
-                 })/*.catch((error) => {
-                    if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                    reject(messages['error']);
-                  })*/;
+                 });
           });
         })
         .catch(() => {});
@@ -1196,13 +1367,24 @@ export default class extends Component {
 
   journalEntriesModal = () => {
     if(this.state.modalOpen){
+      const self = this;
+      const obj = this.props.payment || function () {
+          const id = getFieldValue(self.props.fields.id);
+          const payee = getFieldValue(self.props.fields.payee);
+          return {
+            __dataID__: id,
+            id,
+            objectId: id,
+            payee,
+          };
+        }();
       return (
         <JournalEntries
           type={'PaymentOfBills'}
           company={this.props.company}
           viewer={this.props.viewer}
-          person={this.props.payment.payee}
-          id={this.props.payment.objectId}
+          person={obj.payee}
+          id={obj.objectId}
           onCancel={this._close}
         />
       );
@@ -1211,10 +1393,13 @@ export default class extends Component {
 
 }
 
-class MySplitButton extends Component{
+class MySplitButton extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
+  shouldComponentUpdate(nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
+  }
   _onClick = (close, e) => {
     stopEvent(e);
     const {onSaveClose, } = this.props;
@@ -1223,13 +1408,23 @@ class MySplitButton extends Component{
   };
   render(){
     const {intl} = this.context;
-    const {onSave, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
-    const title = (
-      <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
-    );
+    const {onSave, onSaveOnly, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
+    // const title = (
+    //   <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
+    // );
+    const title = intl.formatMessage(messages['saveAndClose']);
     return (
       <div className={styles['dropdown']}>
         <ButtonToolbar>
+
+          <button
+            // styleName='btn primary'
+            onClick={onSaveOnly()}
+            style={{marginLeft: 12,}}
+            disabled={disabled}
+            className={`${disabled ? 'disabled' : ''} ${className} btn btn-default ${styles['btn']} ${styles['dark']}`}>
+            {' '}{intl.formatMessage(messages['save'])}
+          </button>
 
           <SplitButton className={className} disabled={disabled} onClick={this._onClick.bind(this, true)} title={title} dropup pullRight id={'payment-form'}>
 
@@ -1239,22 +1434,13 @@ class MySplitButton extends Component{
 
           </SplitButton>
 
-          <button
-            // styleName='btn primary'
-            onClick={onSave()}
-            style={{marginLeft: 12,}}
-            disabled={disabled}
-            className={`hidden ${disabled ? 'disabled' : ''} ${styles['btn']} ${styles['dark']}`}>
-            {' '}{intl.formatMessage(messages['save'])}
-          </button>
-
         </ButtonToolbar>
       </div>
     );
   }
 }
 
-class PaymentActions extends Component{
+class PaymentActions extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -1325,8 +1511,8 @@ function decorateData({
 }
 
 function decorateBillItem(store, __original, { objectId : selectedBillId, balanceDue: selectedBillIdBalanceDue, } = {}){
- const { id, objectId, date, dueDate, memo, paymentRef, itemsConnection, paymentsConnection, } = __original;
-  const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountPaid;
+ const { id, objectId, date, dueDate, memo, paymentRef, billItemsConnection, itemsConnection, billPaymentsConnection, paymentsConnection, } = __original;
+  const balanceDue = (itemsConnection || billItemsConnection).totalAmount - (paymentsConnection || billPaymentsConnection).totalAmountPaid;
   const obj = {
     __existed: false,
     __originalAmount: undefined,
@@ -1336,9 +1522,9 @@ function decorateBillItem(store, __original, { objectId : selectedBillId, balanc
       objectId,
       paymentRef,
       refNo: paymentRef,
-      total: itemsConnection.totalAmount,
+      total: (itemsConnection || billItemsConnection).totalAmount,
       balanceDue,
-      amountReceived: paymentsConnection.totalAmountPaid,
+      amountReceived: (paymentsConnection || billPaymentsConnection).totalAmountPaid,
       date,
       dueDate,
       memo,
@@ -1362,8 +1548,8 @@ function decorateBillItem(store, __original, { objectId : selectedBillId, balanc
 }
 
 function decoratePaymentItem(store, { id, amount, bill : __original, }){
-  const { id: billId, objectId, date, dueDate, memo, paymentRef, itemsConnection, paymentsConnection, } = __original;
-  const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountPaid;
+  const { id: billId, objectId, date, dueDate, memo, paymentRef, billItemsConnection, itemsConnection, billPaymentsConnection, paymentsConnection, } = __original;
+  const balanceDue = (itemsConnection || billItemsConnection).totalAmount - (paymentsConnection || billPaymentsConnection).totalAmountPaid;
   const hasKey = store.hasKey(id);
   const obj = {
     __existed: true,
@@ -1375,9 +1561,9 @@ function decoratePaymentItem(store, { id, amount, bill : __original, }){
       objectId,
       paymentRef,
       refNo: paymentRef,
-      total: itemsConnection.totalAmount,
+      total: (itemsConnection || billItemsConnection).totalAmount,
       balanceDue,
-      amountReceived: paymentsConnection.totalAmountPaid,
+      amountReceived: (paymentsConnection || billPaymentsConnection).totalAmountPaid,
       date,
       dueDate,
       memo,

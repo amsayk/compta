@@ -1,16 +1,33 @@
 .page {
-  padding: 120px 0 80px;
+  padding: 0;
+}
+
+.page :global(.loading-spinner) {
+  padding: 10% 45%;
 }
 
 .toolbar {
-  position: fixed;
+  position: relative;
   top: 0;
   right: 0;
-  left: 225px;
-  background: #353446;
+  left: 0;
   height: 96px;
-  color: #fff;
   transition: left .5s ease-in;
+}
+
+.top{
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 165px; // --sidebar-width
+
+  padding: 0;
+
+  background-image: -webkit-linear-gradient(bottom, #f6f8fb 0%, #f9fafb 100%);
+  background-image: linear-gradient(to top, #f6f8fb 0%, #f9fafb 100%);
+  background-color: #f3f5f8;
+
+  border-bottom: 1px solid #e3eaf3;
 }
 
 .title {
@@ -44,11 +61,87 @@ body.fonts_loaded .section {
   font-size: 12px;
 }
 
-.actions {
+.index {
+  padding: 25px 30px;
+}
+
+body.fonts_loaded .create {
+  font-family: DIN17SBOP, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+
+.fancyMoney {
+  font-size: 3.6rem;
+}
+.fancyMoney {
+  font-family: "DinNext", Arial, sans-serif;
+  letter-spacing: -0.05em;
+  font-size: 2.0rem;
+  font-weight: 100;
+  color: #404040;
+}
+
+.actions{
+  margin-right: 16px;
   position: absolute;
   right: 14px;
   bottom: 20px;
 }
 
+.s-btn{
+  height: 34px;
+}
 
-// End page
+.stage-content {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.stage-content {
+  transition: opacity .10s linear .20s, max-height .05s linear .20s;
+  max-height: 500px;
+}
+.stage-content {
+  margin-top: 10px;
+}
+
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+
+
+body .tableRow {
+  display: table-row;
+  vertical-align: top;
+}
+
+body .tableCell {
+  display: table-cell;
+  vertical-align: top;
+}
+
+
+body .table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+
+.loading{
+
+}
+
+.table {
+  display: table;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+.stretch {
+  width: 100%;
+  height: 100%;
+}
+

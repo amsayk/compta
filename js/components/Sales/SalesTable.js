@@ -7,6 +7,10 @@ import classnames from 'classnames';
 
 import stopEvent from '../../utils/stopEvent';
 
+import GenPdfMutation from '../../mutations/GenPdfMutation';
+
+import PrintDialog from '../PrintDialog/PrintDialog';
+
 import {
   intlShape,
 } from 'react-intl';
@@ -21,18 +25,90 @@ import DropdownButton from 'react-bootstrap/lib/DropdownButton';
 
 import OverlayMenu from '../utils/OverlayMenu';
 
+class PrintDialogWrapper extends React.Component{
+  state = {
+    loading: true,
+    url: undefined,
+    error: undefined,
+  };
+
+  constructor(props, context) {
+    super(props, context);
+
+    const self = this;
+
+    Relay.Store.commitUpdate(new GenPdfMutation({
+      type: this.props.type,
+      objectId: this.props.obj.objectId,
+      company: this.props.company,
+      viewer: this.props.viewer,
+
+    }), {
+      onSuccess: function ({genPdf: {pdf}}) {
+        self.setState({ loading: false, url: pdf, error: undefined, });
+      },
+      onFailure: function (transaction) {
+        const error = transaction.getError();
+        self.setState({ loading: false, error, url: undefined, });
+      },
+    });
+  }
+
+  _print = () => {
+    const self = this;
+
+    self.setState({
+      loading: true,
+      url: undefined,
+      error: undefined,
+    }, function(){
+
+      Relay.Store.commitUpdate(new GenPdfMutation({
+        type: self.props.type,
+        objectId: self.props.obj.objectId,
+        company: self.props.company,
+        viewer: self.props.viewer,
+
+      }), {
+        onSuccess: function ({genPdf: {pdf}}) {
+          self.setState({ loading: false, url: pdf, error: undefined, });
+        },
+        onFailure: function (transaction) {
+          const error = transaction.getError();
+          self.setState({ loading: false, error, url: undefined, });
+        },
+      });
+    });
+
+  };
+
+  render(){
+    const { url, error, loading, } = this.state;
+    return (
+      <PrintDialog
+        url={url}
+        error={error}
+        onRefresh={this._print}
+        loading={loading}
+        onCancel={this.props.onCancel}
+      />
+    );
+  }
+
+}
+
 const ACTIONS = {
   Invoice: {
     main: 'receivepayment',
     actions: [
-      'print',
-      'send',
+      // 'send',
+      'print'
     ],
   },
   Sale: {
     main: 'print',
     actions: [
-      'send',
+      // 'send',
     ],
   },
   Payment: {
@@ -52,7 +128,7 @@ function getActionsStyle(rowIndex){
   };
 }
 
-class DropdownActions extends Component{
+class DropdownActions extends React.Component{
   state = { open: false, };
   render(){
     const { open, } = this.state;
@@ -68,10 +144,15 @@ function renderActions(self, { intl, store, rowIndex, }){
   const obj = store.getObjectAt(rowIndex);
   // const { main, actions, } = ACTIONS[obj.type];
   const { main, actions, } = obj.status === 'Closed' && obj.type === 'Invoice'
-    ? { main: 'print', actions: [ 'send' ], }
+    ? {
+        main: 'print',
+        actions: [
+          // 'send'
+        ],
+      }
     : ACTIONS[obj.type];
   return (
-    typeof main === 'undefined' ? null : <OverlayMenu title={main ? intl.formatMessage(messages[`Action_${main}`]) : undefined} container={self} onMainAction={self._onMainAction.bind(self, obj)}>
+    typeof main === 'undefined' ? null : <OverlayMenu title={main ? intl.formatMessage(messages[`Action_${main}`]) : undefined} container={self} onMainAction={self._onMainAction.bind(self, obj, main)}>
       {actions.length > 0 && <DropdownActions>
         <ul className={'dropdown-menu'} style={getActionsStyle(rowIndex)}>
           {actions.map(action => {
@@ -98,7 +179,7 @@ function reverseSortDirection(sortDir) {
   return sortDir === SortTypes.DESC ? SortTypes.ASC : SortTypes.DESC;
 }
 
-class SortHeaderCell extends Component {
+class SortHeaderCell extends React.Component {
   // constructor(props, context){
   //   super(props, context);
   //   this.state = {
@@ -154,7 +235,7 @@ class SortHeaderCell extends Component {
 function getSortKey(columnKey){
   switch (columnKey) {
     case 'age':           return 'dueDate';
-    case 'latestPayment': return 'latestPaymentDate';
+    case 'latestPayment': return 'dueDate'; // 'latestPaymentDate';
     default:              return columnKey;
   }
 }
@@ -177,19 +258,61 @@ import moment from 'moment';
 
 import {Table, Column, Cell,} from '../../../fixed-data-table';
 
-import {editStart as editStartInvoice} from '../../redux/modules/invoices';
-import {editStart as editStartPayment} from '../../redux/modules/paymentsOfInvoices';
-import {editStart as editStartSale} from '../../redux/modules/sales';
+import {editStart as editStartInvoice} from '../../redux/modules/v2/invoices';
+import {editStart as editStartPayment} from '../../redux/modules/v2/paymentsOfInvoices';
+import {editStart as editStartSale} from '../../redux/modules/v2/sales';
 
-import InvoiceForm  from './InvoiceForm/InvoiceForm';
-import SaleForm  from './SaleForm/SaleForm';
-import PaymentForm  from './PaymentForm/PaymentForm';
+// import InvoiceForm  from './InvoiceForm/InvoiceForm';
+// import SaleForm  from './SaleForm/SaleForm';
+// import PaymentForm  from './PaymentForm/PaymentForm';
+
+import LoadingActions from '../Loading/actions';
+
+let InvoiceForm = null;
+let SaleForm = null;
+let PaymentForm = null;
+
+function loadComponent(type, cb) {
+  LoadingActions.show();
+
+  switch (type){
+    case 'Invoice':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        InvoiceForm = require('./InvoiceForm/InvoiceForm').default;
+        cb();
+      }, 'InvoiceForm');
+
+      break;
+
+    case 'Payment':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        PaymentForm = require('./PaymentForm/PaymentForm').default;
+        cb();
+      }, 'PaymentOfInvoicesForm');
+
+      break;
+
+    case 'Sale':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        SaleForm = require('./SaleForm/SaleForm').default;
+        cb();
+      }, 'SaleForm');
+
+      break;
+  }
+}
 
 import requiredPropType from 'react-prop-types/lib/all';
 
 import { Modes as SelectionModes, } from '../../redux/modules/selection';
 
-export default class SalesTable extends Component{
+export default class SalesTable extends React.Component{
 
   static displayName = 'SalesTable';
 
@@ -224,9 +347,24 @@ export default class SalesTable extends Component{
     store: PropTypes.object.isRequired,
   };
 
-  _onMainAction = (obj, e) => {
-    stopEvent(e);
-    this._onReceivePayment(obj);
+  _onMainAction = (obj, btn) => {
+    switch (btn) {
+      case 'receivepayment':
+        this._onReceivePayment(obj);
+        break;
+
+      // case 'send':
+
+      case 'print':
+
+        this.setState({
+          modalOpen: true,
+          modalType: 'preview',
+          obj,
+        });
+
+        break;
+    }
   };
 
   _onAction = (btn, obj) => {
@@ -235,9 +373,39 @@ export default class SalesTable extends Component{
         this._onReceivePayment(obj);
         break;
 
-      case 'send':
+      // case 'send':
+
       case 'print':
+
+        this.setState({
+          modalOpen: true,
+          modalType: 'preview',
+          obj,
+        });
+
+        break;
     }
+  };
+
+  previewModal = () => {
+
+    if(this.state.modalOpen && this.state.modalType === 'preview'){
+      const self = this;
+
+      const obj = this.state.obj;
+
+      return (
+        <PrintDialogWrapper
+          type={obj.type}
+          obj={obj}
+          company={this.props.company}
+          viewer={this.props.viewer}
+          onCancel={this._close}
+        />
+      );
+    }
+
+    return null;
   };
 
   constructor(props, context){
@@ -272,6 +440,7 @@ export default class SalesTable extends Component{
 
     this.setState({
       modalOpen: false,
+      modalType: undefined,
       obj: undefined,
       invoice: undefined,
     })
@@ -284,12 +453,35 @@ export default class SalesTable extends Component{
 
     const obj = store.getObjectAt(rowIndex);
 
+    const VATInputType_ID_BY_NAME = {
+      HT: 1,
+      TTC: 2,
+      NO_VAT: 3,
+    };
+
+    const self = this;
+
+    function p__decorateItem(index, { ...props, item, VATPart,}){
+      return {
+        index,
+        ...props,
+        item: item ? {
+          ...item,
+          className: `Product_${self.props.company.objectId}`,
+        } : undefined,
+        VATPart: VATPart ? {
+          inputType: VATInputType_ID_BY_NAME[VATPart.inputType],
+          ...(VATPart.value !== undefined && VATPart.value !== null ? {value: VATPart.value,} : {}),
+        } : undefined,
+      };
+    }
+
     switch (obj.type) {
       case 'Invoice':
         this.context.store.dispatch(
           editStartInvoice(
             obj.id,
-            obj.itemsConnection.edges.map(({node}) => node),
+            obj.itemsConnection.edges.map(({node}) => p__decorateItem(node.index, node)),
             {id: obj.id, company: this.props.company,})
         );
         break;
@@ -298,7 +490,7 @@ export default class SalesTable extends Component{
         this.context.store.dispatch(
           editStartSale(
             obj.id,
-            obj.itemsConnection.edges.map(({node}) => node),
+            obj.itemsConnection.edges.map(({node}) => p__decorateItem(node.index, node)),
             {id: obj.id, company: this.props.company,})
         );
         break;
@@ -320,10 +512,16 @@ export default class SalesTable extends Component{
         throw 'Invalid Operation';
     }
 
-    this.setState({
-      modalOpen: true,
-      obj,
+    loadComponent(obj.type, () => {
+
+      this.setState({
+        modalOpen: true,
+        modalType: undefined,
+        obj,
+      });
+
     });
+
   };
 
   _onToggleAll = (e) => {
@@ -353,10 +551,15 @@ export default class SalesTable extends Component{
       this.props.onReceivePayment(invoice.customer);
     });
 
-    this.setState({
-      modalOpen: true,
-      obj: undefined,
-      invoice,
+    loadComponent('Payment', () => {
+
+      this.setState({
+        modalOpen: true,
+        modalType: undefined,
+        obj: undefined,
+        invoice,
+      });
+
     });
   };
 
@@ -368,25 +571,54 @@ export default class SalesTable extends Component{
     }, () => {
       obj = decorateInvoice(obj);
 
+      const VATInputType_ID_BY_NAME = {
+        HT: 1,
+        TTC: 2,
+        NO_VAT: 3,
+      };
+
+      const self = this;
+
+      function p__decorateItem(index, { ...props, item, VATPart,}){
+        return {
+          index,
+          ...props,
+          item: item ? {
+            ...item,
+            className: `Product_${self.props.company.objectId}`,
+          } : undefined,
+          VATPart: VATPart ? {
+            inputType: VATInputType_ID_BY_NAME[VATPart.inputType],
+            ...(VATPart.value !== undefined && VATPart.value !== null ? {value: VATPart.value,} : {}),
+          } : undefined,
+        };
+      }
+
       this.context.store.dispatch(
         editStartInvoice(
           obj.id,
-          obj.itemsConnection.edges.map(({node}) => node),
+          obj.itemsConnection.edges.map(({node}) => p__decorateItem(node.index, node)),
           {id: obj.id, company: this.props.company,})
       );
 
       setTimeout(() => {
-        this.setState({
-          modalOpen: true,
-          obj,
-          invoice: undefined,
+
+        loadComponent('Invoice', () => {
+
+          this.setState({
+            modalOpen: true,
+            modalType: undefined,
+            obj,
+            invoice: undefined,
+          });
         });
+
       }, 150);
     });
   };
 
   _renderModal = () => {
-    if(!this.state.modalOpen){
+    if(this.state.modalOpen === false || this.state.modalType === 'preview'){
       return (
         null
       );
@@ -400,6 +632,7 @@ export default class SalesTable extends Component{
             company={this.props.company}
             viewer={this.props.viewer}
             salesAccounts={this.props.salesAccounts}
+            expensesAccounts={this.props.expensesAccounts}
             formKey={this.state.obj.id}
             onCancel={this._close}
             onReceivePayment={this._onReceivePayment}
@@ -411,9 +644,9 @@ export default class SalesTable extends Component{
             sale={this.state.obj}
             company={this.props.company}
             viewer={this.props.viewer}
-            company={this.props.company}
             formKey={this.state.obj.id}
             salesAccounts={this.props.salesAccounts}
+            expensesAccounts={this.props.expensesAccounts}
             depositsAccounts={this.props.depositsAccounts}
             onCancel={this._close}
           />
@@ -431,6 +664,7 @@ export default class SalesTable extends Component{
               // customerOpenInvoices={formKey === 'NEW' ? self.props.customerOpenInvoices : {edges: []}}
               customerOpenInvoices={self.props.customerOpenInvoices}
               salesAccounts={self.props.salesAccounts}
+              expensesAccounts={self.props.expensesAccounts}
               depositsAccounts={self.props.depositsAccounts}
               onCancel={self._close}
               onPaymentCustomerSelected={self.props.onPaymentCustomerSelected}
@@ -443,9 +677,9 @@ export default class SalesTable extends Component{
 
   _onSortChange = (columnKey, dir) => {
     this.props.onSortChange(columnKey, dir);
-  }
+  };
 
-  _renderMoneyOnly(){
+  _renderMoneyOnly = (VATEnabled) => {
     const self = this;
 
     const { styles, page, selection, toggle, toggleAll, toggleNone, } = this.props;
@@ -456,10 +690,10 @@ export default class SalesTable extends Component{
     const rowsCount = loading ? 0 : store.getSize();
     const tableHeight = 36 + (rowsCount * 50) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -544,7 +778,7 @@ export default class SalesTable extends Component{
              <div>{loading || moment(store.getObjectAt(rowIndex).date).format('ll')}</div>
              </Cell>
            )}
-              width={100}
+              width={90}
             />
 
             {/* type */}
@@ -589,7 +823,7 @@ export default class SalesTable extends Component{
              }()}</div>
              </Cell>
            )}
-              width={40}
+              width={100}
               flexGrow={1}
             />
 
@@ -614,10 +848,10 @@ export default class SalesTable extends Component{
              <div>{loading || function(){
                const obj = store.getObjectAt(rowIndex);
                switch(obj.type){
-                 case 'Invoice': return intl.formatNumber(obj.balanceDue, {format: 'MAD'});
-                 case 'Sale':    return intl.formatNumber(0.0, {format: 'MAD'});
-                 case 'Payment': return intl.formatNumber(-1 * obj.balanceDue, {format: 'MAD'});
-                //  case 'Payment': return obj.balanceDue > 0 ? '(' + intl.formatNumber(obj.balanceDue, {format: 'MAD'}) + ')' : intl.formatNumber(obj.balanceDue, {format: 'MAD'});
+                 case 'Invoice': return intl.formatNumber(obj.balanceDue, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(0.0, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.balanceDue, {format: 'MONEY'});
+                //  case 'Payment': return obj.balanceDue > 0 ? '(' + intl.formatNumber(obj.balanceDue, {format: 'MONEY'}) + ')' : intl.formatNumber(obj.balanceDue, {format: 'MONEY'});
                }
              }()}</div>
              </Cell>
@@ -625,6 +859,68 @@ export default class SalesTable extends Component{
               width={50}
               flexGrow={1}
             />
+
+            {/* totalHT */}
+            {VATEnabled && <Column
+              columnKey={'totalHT'}
+              align={'right'}
+              header={(
+                <SortHeaderCell
+                  key={'totalHT'}
+                  styles={styles}
+                  className={sortKey === 'totalHT' || sortKey === getSortKey('totalHT') ? `${styles['sort-key']} ${styles[sortDir === -1 ? 'sort-dir-desc' : 'sort-dir-asc']}` : styles['sort-key']}
+                  columnKey={'totalHT'}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSortChange={this._onSortChange}>{intl.formatMessage(messages['Table_Title_Total_HT'])}
+                </SortHeaderCell>
+              )}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(){
+               const obj = store.getObjectAt(rowIndex);
+               switch(obj.type){
+                 case 'Invoice': return intl.formatNumber(obj.totalHT, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.totalHT, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MONEY'});
+               }
+             }()}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
+            {/* VAT */}
+            {VATEnabled && <Column
+              columnKey={'VAT'}
+              align={'right'}
+              header={(
+                <SortHeaderCell
+                  key={'VAT'}
+                  styles={styles}
+                  className={sortKey === 'VAT' || sortKey === getSortKey('VAT') ? `${styles['sort-key']} ${styles[sortDir === -1 ? 'sort-dir-desc' : 'sort-dir-asc']}` : styles['sort-key']}
+                  columnKey={'VAT'}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSortChange={this._onSortChange}>{intl.formatMessage(messages['Table_Title_VAT'])}
+                </SortHeaderCell>
+              )}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(){
+               const obj = store.getObjectAt(rowIndex);
+               switch(obj.type){
+                 case 'Invoice': return intl.formatNumber(obj.VAT, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.VAT, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(0.0, {format: 'MONEY'});
+               }
+             }()}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
 
             {/* Total */}
             <Column
@@ -647,10 +943,10 @@ export default class SalesTable extends Component{
              <div>{loading || function(){
                const obj = store.getObjectAt(rowIndex);
                switch(obj.type){
-                 case 'Invoice': return intl.formatNumber(obj.totalAmount, {format: 'MAD'});
-                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MAD'});
-                //  case 'Payment': return obj.total > 0 ? '(' + intl.formatNumber(obj.total, {format: 'MAD'}) + ')' : intl.formatNumber(obj.total, {format: 'MAD'});
-                 case 'Sale':    return intl.formatNumber(obj.totalAmountReceived, {format: 'MAD'});
+                 case 'Invoice': return intl.formatNumber(obj.totalAmount, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MONEY'});
+                //  case 'Payment': return obj.total > 0 ? '(' + intl.formatNumber(obj.total, {format: 'MONEY'}) + ')' : intl.formatNumber(obj.total, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.totalAmountReceived, {format: 'MONEY'});
                }
              }()}</div>
              </Cell>
@@ -687,8 +983,8 @@ export default class SalesTable extends Component{
              }()}</div>
              </Cell>
            )}
-              width={80}
-              flexGrow={1}
+              width={90}
+              // flexGrow={1}
             />
 
             {/* Status */}
@@ -714,7 +1010,7 @@ export default class SalesTable extends Component{
                  </Cell>
                )
               }}
-              width={100}
+              width={85}
             />
 
             {/* Actions */}
@@ -747,12 +1043,13 @@ export default class SalesTable extends Component{
         </div>}
 
         {this._renderModal()}
+        {this.previewModal()}
 
       </div>
     );
   }
 
-  _renderInvoicesOnly(){
+  _renderInvoicesOnly = (VATEnabled) => {
     const self = this;
     const { styles, page, selection, toggle, toggleAll, toggleNone, } = this.props;
     const sel = selection[page] || { mode: SelectionModes.None, keys: {}, };
@@ -762,10 +1059,10 @@ export default class SalesTable extends Component{
     const rowsCount = loading ? 0 : store.getSize();
     const tableHeight = 36 + (rowsCount * 50) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -850,7 +1147,7 @@ export default class SalesTable extends Component{
              <div>{loading || moment(store.getObjectAt(rowIndex).date).format('ll')}</div>
              </Cell>
            )}
-              width={100}
+              width={90}
             />
 
             {/* No */}
@@ -879,7 +1176,7 @@ export default class SalesTable extends Component{
              }()}</div>
              </Cell>
            )}
-              width={40}
+              width={100}
               flexGrow={1}
             />
 
@@ -961,10 +1258,10 @@ export default class SalesTable extends Component{
              <div>{loading || function(){
                const obj = store.getObjectAt(rowIndex);
                switch(obj.type){
-                 case 'Invoice': return intl.formatNumber(obj.balanceDue, {format: 'MAD'});
-                 case 'Sale':    return intl.formatNumber(0.0, {format: 'MAD'});
-                 case 'Payment': return intl.formatNumber(-1 * obj.balanceDue, {format: 'MAD'});
-                //  case 'Payment': return obj.balanceDue > 0 ? '(' + intl.formatNumber(obj.balanceDue, {format: 'MAD'}) + ')' : intl.formatNumber(obj.balanceDue, {format: 'MAD'});
+                 case 'Invoice': return intl.formatNumber(obj.balanceDue, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(0.0, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.balanceDue, {format: 'MONEY'});
+                //  case 'Payment': return obj.balanceDue > 0 ? '(' + intl.formatNumber(obj.balanceDue, {format: 'MONEY'}) + ')' : intl.formatNumber(obj.balanceDue, {format: 'MONEY'});
                }
              }()}</div>
              </Cell>
@@ -972,6 +1269,68 @@ export default class SalesTable extends Component{
               width={50}
               flexGrow={1}
             />
+
+            {/* totalHT */}
+            {VATEnabled && <Column
+              columnKey={'totalHT'}
+              align={'right'}
+              header={(
+                <SortHeaderCell
+                  key={'totalHT'}
+                  styles={styles}
+                  className={sortKey === 'totalHT' || sortKey === getSortKey('totalHT') ? `${styles['sort-key']} ${styles[sortDir === -1 ? 'sort-dir-desc' : 'sort-dir-asc']}` : styles['sort-key']}
+                  columnKey={'totalHT'}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSortChange={this._onSortChange}>{intl.formatMessage(messages['Table_Title_Total_HT'])}
+                </SortHeaderCell>
+              )}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(){
+               const obj = store.getObjectAt(rowIndex);
+               switch(obj.type){
+                 case 'Invoice': return intl.formatNumber(obj.totalHT, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.totalHT, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MONEY'});
+               }
+             }()}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
+            {/* VAT */}
+            {VATEnabled && <Column
+              columnKey={'VAT'}
+              align={'right'}
+              header={(
+                <SortHeaderCell
+                  key={'VAT'}
+                  styles={styles}
+                  className={sortKey === 'VAT' || sortKey === getSortKey('VAT') ? `${styles['sort-key']} ${styles[sortDir === -1 ? 'sort-dir-desc' : 'sort-dir-asc']}` : styles['sort-key']}
+                  columnKey={'VAT'}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSortChange={this._onSortChange}>{intl.formatMessage(messages['Table_Title_VAT'])}
+                </SortHeaderCell>
+              )}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(){
+               const obj = store.getObjectAt(rowIndex);
+               switch(obj.type){
+                 case 'Invoice': return intl.formatNumber(obj.VAT, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.VAT, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(0.0, {format: 'MONEY'});
+               }
+             }()}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
 
             {/* Total */}
             <Column
@@ -994,10 +1353,10 @@ export default class SalesTable extends Component{
              <div>{loading || function(){
                const obj = store.getObjectAt(rowIndex);
                switch(obj.type){
-                 case 'Invoice': return intl.formatNumber(obj.totalAmount, {format: 'MAD'});
-                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MAD'});
-                //  case 'Payment': return obj.total > 0 ? '(' + intl.formatNumber(obj.total, {format: 'MAD'}) + ')' : intl.formatNumber(obj.total, {format: 'MAD'});
-                 case 'Sale':    return intl.formatNumber(obj.totalAmountReceived, {format: 'MAD'});
+                 case 'Invoice': return intl.formatNumber(obj.totalAmount, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MONEY'});
+                //  case 'Payment': return obj.total > 0 ? '(' + intl.formatNumber(obj.total, {format: 'MONEY'}) + ')' : intl.formatNumber(obj.total, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.totalAmountReceived, {format: 'MONEY'});
                }
              }()}</div>
              </Cell>
@@ -1029,7 +1388,7 @@ export default class SalesTable extends Component{
                  </Cell>
                )
               }}
-              width={100}
+              width={85}
             />
 
             {/* Actions */}
@@ -1062,6 +1421,7 @@ export default class SalesTable extends Component{
         </div>}
 
         {this._renderModal()}
+        {this.previewModal()}
 
       </div>
     );
@@ -1075,20 +1435,22 @@ export default class SalesTable extends Component{
       sortKey, sortDir,
     } = this.props.filterArgs;
 
+    const VATEnabled = this.props.topLoading ? false : this.props.company.VATSettings.enabled;
+
     const isOnlyPayments =  type === 'recent' || type === 'money' || type === 'payments' || type === 'sales';
     if(isOnlyPayments){
-      return this._renderMoneyOnly();
+      return this._renderMoneyOnly(VATEnabled);
     }
 
     const isOnlyInvoices = type === 'invoices';
     if(isOnlyInvoices){
-      return this._renderInvoicesOnly();
+      return this._renderInvoicesOnly(VATEnabled);
     }
 
-    return this._renderNormal();
+    return this._renderNormal(VATEnabled);
   }
 
-  _renderNormal(){
+  _renderNormal = (VATEnabled) => {
     const self = this;
     const { styles, page, selection, toggle, toggleAll, toggleNone, } = this.props;
     const sel = selection[page] || { mode: SelectionModes.None, keys: {}, };
@@ -1098,10 +1460,10 @@ export default class SalesTable extends Component{
     const rowsCount = loading ? 0 : store.getSize();
     const tableHeight = 36 + (rowsCount * 50) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -1189,7 +1551,7 @@ export default class SalesTable extends Component{
              <div>{loading || moment(store.getObjectAt(rowIndex).date).format('ll')}</div>
              </Cell>
            )}
-              width={100}
+              width={90}
             />
 
             {/* type */}
@@ -1234,7 +1596,7 @@ export default class SalesTable extends Component{
              }()}</div>
              </Cell>
            )}
-              width={40}
+              width={100}
               flexGrow={1}
             />
 
@@ -1280,10 +1642,10 @@ export default class SalesTable extends Component{
              <div>{loading || function(){
                const obj = store.getObjectAt(rowIndex);
                switch(obj.type){
-                 case 'Invoice': return intl.formatNumber(obj.balanceDue, {format: 'MAD'});
-                 case 'Sale':    return intl.formatNumber(0.0, {format: 'MAD'});
-                 case 'Payment': return intl.formatNumber(-1 * obj.balanceDue, {format: 'MAD'});
-                //  case 'Payment': return obj.balanceDue > 0 ? '(' + intl.formatNumber(obj.balanceDue, {format: 'MAD'}) + ')' : intl.formatNumber(obj.balanceDue, {format: 'MAD'});
+                 case 'Invoice': return intl.formatNumber(obj.balanceDue, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(0.0, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.balanceDue, {format: 'MONEY'});
+                //  case 'Payment': return obj.balanceDue > 0 ? '(' + intl.formatNumber(obj.balanceDue, {format: 'MONEY'}) + ')' : intl.formatNumber(obj.balanceDue, {format: 'MONEY'});
                }
              }()}</div>
              </Cell>
@@ -1291,6 +1653,68 @@ export default class SalesTable extends Component{
               width={50}
               flexGrow={1}
             />
+
+            {/* totalHT */}
+            {VATEnabled && <Column
+              columnKey={'totalHT'}
+              align={'right'}
+              header={(
+                <SortHeaderCell
+                  key={'totalHT'}
+                  styles={styles}
+                  className={sortKey === 'totalHT' || sortKey === getSortKey('totalHT') ? `${styles['sort-key']} ${styles[sortDir === -1 ? 'sort-dir-desc' : 'sort-dir-asc']}` : styles['sort-key']}
+                  columnKey={'totalHT'}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSortChange={this._onSortChange}>{intl.formatMessage(messages['Table_Title_Total_HT'])}
+                </SortHeaderCell>
+              )}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(){
+               const obj = store.getObjectAt(rowIndex);
+               switch(obj.type){
+                 case 'Invoice': return intl.formatNumber(obj.totalHT, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.totalHT, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MONEY'});
+               }
+             }()}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
+            {/* VAT */}
+            {VATEnabled && <Column
+              columnKey={'VAT'}
+              align={'right'}
+              header={(
+                <SortHeaderCell
+                  key={'VAT'}
+                  styles={styles}
+                  className={sortKey === 'VAT' || sortKey === getSortKey('VAT') ? `${styles['sort-key']} ${styles[sortDir === -1 ? 'sort-dir-desc' : 'sort-dir-asc']}` : styles['sort-key']}
+                  columnKey={'VAT'}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSortChange={this._onSortChange}>{intl.formatMessage(messages['Table_Title_VAT'])}
+                </SortHeaderCell>
+              )}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div>{loading || function(){
+               const obj = store.getObjectAt(rowIndex);
+               switch(obj.type){
+                 case 'Invoice': return intl.formatNumber(obj.VAT, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.VAT, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(0, {format: 'MONEY'});
+               }
+             }()}</div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
 
             {/* Total */}
             <Column
@@ -1313,10 +1737,10 @@ export default class SalesTable extends Component{
              <div>{loading || function(){
                const obj = store.getObjectAt(rowIndex);
                switch(obj.type){
-                 case 'Invoice': return intl.formatNumber(obj.totalAmount, {format: 'MAD'});
-                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MAD'});
-                //  case 'Payment': return obj.total > 0 ? '(' + intl.formatNumber(obj.total, {format: 'MAD'}) + ')' : intl.formatNumber(obj.total, {format: 'MAD'});
-                 case 'Sale':    return intl.formatNumber(obj.totalAmountReceived, {format: 'MAD'});
+                 case 'Invoice': return intl.formatNumber(obj.totalAmount, {format: 'MONEY'});
+                 case 'Payment': return intl.formatNumber(-1 * obj.total, {format: 'MONEY'});
+                //  case 'Payment': return obj.total > 0 ? '(' + intl.formatNumber(obj.total, {format: 'MONEY'}) + ')' : intl.formatNumber(obj.total, {format: 'MONEY'});
+                 case 'Sale':    return intl.formatNumber(obj.totalAmountReceived, {format: 'MONEY'});
                }
              }()}</div>
              </Cell>
@@ -1348,7 +1772,7 @@ export default class SalesTable extends Component{
                  </Cell>
                )
               }}
-              width={100}
+              width={85}
             />
 
             {/* Actions */}
@@ -1381,6 +1805,7 @@ export default class SalesTable extends Component{
         </div>}
 
         {this._renderModal()}
+        {this.previewModal()}
 
       </div>
     );
@@ -1411,7 +1836,7 @@ function decoratePaymentItem({ id, amount, invoice: { id: invoiceId, objectId, d
   return obj;
 }
 
-function decorateInvoice({ objectId, __dataID__, id, refNo, customer, billingAddress, terms, date, dueDate, discountType, discountValue, itemsConnection, paymentsConnection, memo, files, }) {
+function decorateInvoice({ objectId, __dataID__, totalHT, VAT, id, refNo, customer, inputType, billingAddress, terms, date, dueDate, discountType, discountValue, itemsConnection, paymentsConnection, memo, files, }) {
   const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountReceived;
 
   function calcInvoiceStatus() {
@@ -1455,6 +1880,8 @@ function decorateInvoice({ objectId, __dataID__, id, refNo, customer, billingAdd
     totalAmountReceived: paymentsConnection.totalAmountReceived,
     status: calcInvoiceStatus(),
     memo, files,
+    totalHT, VAT,
+    inputType,
     itemsConnection,
     paymentsConnection,
     objectId,

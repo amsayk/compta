@@ -36,7 +36,7 @@ import events from 'dom-helpers/events';
 import enhanceWithClickOutside from '../../utils/react-click-outside';
 
 @enhanceWithClickOutside
-class ClickOutsideWrapper extends Component {
+class ClickOutsideWrapper extends React.Component {
   handleClickOutside = (e) => {
     // e.preventDefault();
     // e.stopImmediatePropagation();
@@ -115,7 +115,7 @@ const operationTarget = {
   connectDragSource: connect.dragSource(),
   isDragging: monitor.isDragging()
 }))
-class DragHandle extends Component {
+class DragHandle extends React.Component {
 
   static propTypes = {
     connectDragSource: PropTypes.func.isRequired,
@@ -165,7 +165,7 @@ class DragHandle extends Component {
   connectDropTarget: connect.dropTarget()
 }))
 @CSSModules(styles, {allowMultiple: true})
-class TransactionForm extends Component {
+class TransactionForm extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired
   };
@@ -669,7 +669,7 @@ class TransactionForm extends Component {
   };
 }
 
-class AccountCell extends Component {
+class AccountCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -738,7 +738,7 @@ class AccountCell extends Component {
   }
 }
 
-class DebitCell extends Component {
+class DebitCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -781,7 +781,7 @@ class DebitCell extends Component {
   }
 }
 
-class CreditCell extends Component {
+class CreditCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,
@@ -824,7 +824,7 @@ class CreditCell extends Component {
   }
 }
 
-class TextValueCell extends Component {
+class TextValueCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,

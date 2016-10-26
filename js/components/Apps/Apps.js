@@ -21,7 +21,7 @@ import stopEvent from '../../utils/stopEvent';
 
 import AppsHomeRoute from '../../routes/AppsHomeRoute';
 
-import CompanyForm from '../CompanyForm/CompanyForm';
+import CompanyForm from '../CompanyForm/v2/CompanyForm';
 
 import {editStart,} from '../../redux/modules/companies';
 
@@ -68,7 +68,7 @@ const Empty = ({styles, message,}) => (
   </div>
 );
 
-class Header extends Component {
+class Header extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired
   };
@@ -93,7 +93,7 @@ class Header extends Component {
 }
 
 @CSSModules(styles, {})
-class Apps extends Component {
+class Apps extends React.Component {
 
   static contextTypes = {
     store: PropTypes.object.isRequired,
@@ -117,12 +117,22 @@ class Apps extends Component {
     this.setState({modalOpen: false});
   };
 
+  _onDoneCreateCompany = (id, isSuccess) => {
+    isSuccess && this.context.router.push({
+      pathname: `/apps/${id}/`,
+      state: {},
+    });
+
+    this._close();
+  };
+
   _renderForm = () => {
     const form = this.state.modalOpen ? (
       <CompanyForm
-        onCancel={this._close}
+        canCancel={this.props.companies ? this.props.companies.length === 0 : false}
+        onRequestHide={this._close}
+        onDoneCreateCompany={this._onDoneCreateCompany}
         formKey={'NEW'}
-        viewer={this.props.viewer}
         viewer={this.props.viewer}
       />
     ) : null;
@@ -399,7 +409,7 @@ function createContainer({ ...props, }){
   const Route = new AppsHomeRoute();
   const MyComponent = wrapWithC(Apps, props);
 
-  class Container extends Component{
+  class Container extends React.Component{
     shouldComponentUpdate(){
       return false;
     }
@@ -447,7 +457,7 @@ function createContainer({ ...props, }){
   return () => Container;
 }
 
-class S extends Component{
+class S extends React.Component{
   constructor(props) {
     super(props);
     this.cache = new LazyCache(this, {
@@ -474,7 +484,7 @@ class S extends Component{
 module.exports = S;
 
 @CSSModules(styles, {})
-class Loading extends Component{
+class Loading extends React.Component{
   render(){
     // const appsCount = localStorage.getItem('apps.lastCount') === null
     //   ? 0

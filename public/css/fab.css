@@ -11,8 +11,9 @@
   -webkit-animation: fromBottom 1.6s 1;
 }
 .mfb-component--bl{
-  animation: fromBottom 1.9s 1;
-  -webkit-animation: fromBottom 1.9s 1;
+  /*animation: fromBottom 1.9s 1;*/
+  animation: fromBottom 0.5s 1;
+  /*-webkit-animation: fromBottom 1.9s 1;*/
 }
 @keyframes fromBottom {
   0% {
@@ -45,4 +46,8 @@
   100% {
     transform: translateY(0);
   }
+}
+
+.mfb-component--br {
+  margin-top: 0;
 }

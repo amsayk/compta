@@ -1,5 +1,46 @@
+.modal-wrapper{
+  z-index: 2223;
+  top: 15%;
+}
+
+.left{
+  float: left;
+}
+.right{
+  float: right;
+}
+
+
 .loading-spinner {
   padding: 25% 45%;
 }
 
+.loading-spinner--global{
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
 
+  z-index: 22299;
+  opacity: 0.3;
+
+  background-color: #000;
+}
+
+.loading-spinner--global.onPage{
+  left: 165px;
+}
+
+.loading-spinner--global :global .mdl-spinner{
+  height: 400px;
+  width: 400px;
+}
+
+.loading-spinner--global.loading-spinner :global .mdl-spinner__circle {
+  border-width: 10px;
+}
+
+.loading-spinner--global.loading-spinner {
+  padding: 15% 35%;
+}

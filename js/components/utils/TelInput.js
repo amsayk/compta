@@ -26,7 +26,7 @@ const changeHandler = (onChange) => (status, value, countryData, number, id) => 
   onChange(value);
 };
 
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'TelInput';
   static propTypes = {
     value: PropTypes.string.isRequired,
@@ -60,7 +60,7 @@ export default class extends Component {
 //   onChange(telNumber);
 // };
 
-// export default class extends Component {
+// export default class extends React.Component {
 //   static displayName = 'TelInput';
 //   static propTypes = {
 //     value: PropTypes.string.isRequired,

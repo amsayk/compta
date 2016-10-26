@@ -20,7 +20,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'VendorsExpensesToolbar';
   static propTypes = {
 
@@ -44,7 +44,7 @@ export default class extends Component{
 
           <div styleName='actions-bar'>
 
-            <span styleName='actions-batch'>
+            {/*<span styleName='actions-batch' style={{marginRight: 12}}>
 
               <i styleName='tertiary-sprite icon-arrow-left-down'></i>
 
@@ -56,7 +56,7 @@ export default class extends Component{
                 </Dropdown.Menu>
               </Dropdown>
 
-            </span>
+            </span>*/}
 
             <SearchBox
               topLoading={this.props.topLoading}

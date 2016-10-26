@@ -54,7 +54,7 @@ function getBodyHeight() {
   return height;
 }
 
-class Header extends Component {
+class Header extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired
   };
@@ -68,7 +68,7 @@ class Header extends Component {
          onChange={this.props.onFilterChange}
          className='search'
          placeholder={formatMessage(messages['filter'])}
-         value={this.props.filterQuery}
+         value={this.props.filterQuery || ''}
          />*/}
 
       </div>
@@ -77,7 +77,7 @@ class Header extends Component {
 }
 
 @CSSModules(styles, {allowMultiple: true})
-class Banking extends Component {
+class Banking extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
     store: PropTypes.object.isRequired,
@@ -332,6 +332,16 @@ function wrapWithC(Component, props) {
           sessionToken,
 
           company(id: $companyId){
+
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
 
             objectId,
 

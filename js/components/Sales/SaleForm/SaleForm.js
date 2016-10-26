@@ -1,17 +1,27 @@
 import React, {Component, PropTypes} from 'react';
 import Relay from 'react-relay';
 
+import LoadingActions from '../../Loading/actions';
+
+import shallowCompare from 'react-addons-shallow-compare';
+
 import {bindActionCreators} from 'redux';
 import {reduxForm} from 'redux-form';
 
 import Title from '../../Title/Title';
 
+import PrintDialog from '../../PrintDialog/PrintDialog';
+
+import getFieldValue from '../../utils/getFieldValue';
+
 import stopEvent from '../../../utils/stopEvent';
 
 import saleValidation, {} from './saleValidation';
-import * as saleActions from '../../../redux/modules/sales';
+import * as saleActions from '../../../redux/modules/v2/sales';
 
 import JournalEntries from '../../JournalEntries/JournalEntries';
+
+import GenPdfMutation from '../../../mutations/GenPdfMutation';
 
 import { setBeforeUnloadMessage, unsetBeforeUnloadMessage, } from '../../../utils/unbeforeunload';
 
@@ -63,6 +73,21 @@ import Files from './Files';
 
 import { getBodyWidth, getBodyHeight, } from '../../../utils/dimensions';
 
+import VATInputType from './VATInputType';
+
+import NoVATWarning from '../../TVA/utils/NoVATWarning';
+import VATPeriodWarning from '../../TVA/utils/VATPeriodWarning';
+
+function dateIsCurrentDeclaration(company, date) {
+  if(company.VATSettings.enabled){
+    const { periodStart, periodEnd, } = company.VATDeclaration;
+    return unNormalizeMoment(date).isBetween(
+      periodStart, periodEnd, null, '[]');
+  }
+
+  return true;
+}
+
 function getMinHeight() {
   return getBodyHeight() - 45 /* HEADER */ - 50 /* FOOTER */;
 }
@@ -96,6 +121,14 @@ function getBillingAddress({
   return addr.length === 0 ? undefined : [displayName, ...addr].join('\n');
 }
 
+const VAT_NAME_TO_ID = {
+  Value_20: 1,
+  Value_14: 2,
+  Value_10: 3,
+  Value_Exempt: 4,
+  Value_7: 5,
+};
+
 @reduxForm({
   form: 'sale',
   fields: [
@@ -105,6 +138,9 @@ function getBillingAddress({
     'date',
     'paymentMethod',
     'paymentRef',
+
+    'inputType',
+
     'memo',
     'discountType',
     'discountValue',
@@ -120,9 +156,12 @@ function getBillingAddress({
     ...ownProps.sale,
     date: normalizeMoment(moment(ownProps.sale.date)).format(),
     discountType: discountTypesById[ownProps.sale.discountType],
+    inputType: function () {
+      return VATInputType_ID_BY_NAME[ownProps.sale.inputType];
+    }(),
   } : function(){
     const customer = ownProps.customer ? {
-      className: `Customer_${ownProps.company.objectId}`,
+      className: `People_${ownProps.company.objectId}`,
       id: ownProps.customer.objectId,
       objectId: ownProps.customer.objectId,
     } : undefined;
@@ -131,13 +170,14 @@ function getBillingAddress({
       date: normalizeMoment(moment()).format(),
       discountType: 2,
       depositToAccountCode: ownProps.company.salesSettings.defaultDepositToAccountCode,
+      inputType: ownProps.company.VATSettings.enabled ? 1 /* HT */ : 3 /* NO_VAT */,
       customer,
       billingAddress: (customer ? getBillingAddress(customer) : undefined),
     };
   }(),
 }), dispatch => bindActionCreators(saleActions, dispatch))
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'SaleForm';
 
@@ -190,6 +230,8 @@ export default class extends Component {
     // this._showHelp();
 
     this.refs.client && this.refs.client.focus();
+
+    ga('send', 'pageview', '/modal/app/sale');
   }
 
   _showHelp(){
@@ -350,8 +392,11 @@ export default class extends Component {
       }
 
       return new Promise((resolve, reject) => {
-        this.props.save({ ...decorateData(data), id: this.props.sale && this.props.sale.objectId, sale: this.props.sale, items, _customer: this.props.customer, company: this.props.company, viewer: this.props.viewer, })
+        LoadingActions.show();
+        this.props.save({ ...decorateData(data), id: this.props.sale ? this.props.sale.objectId : getFieldValue(this.props.fields.id), sale: this.props.sale, items, _customer: this.props.customer, company: this.props.company, viewer: this.props.viewer, })
               .then(result => {
+                LoadingActions.hide();
+
                 if (result && typeof result.error === 'object') {
                   return reject(); // messages['error']
                 }
@@ -362,10 +407,7 @@ export default class extends Component {
                 //   this._handleSaveAndNew();
                 // }
                resolve();
-             })/*.catch((error) => {
-                if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                reject(messages['error']);
-              })*/;
+             });
       });
     });
   }
@@ -419,8 +461,11 @@ export default class extends Component {
       }
 
       return new Promise((resolve, reject) => {
-        this.props.save({ ...decorateData(data), id: this.props.sale && this.props.sale.objectId, sale: this.props.sale, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
+        LoadingActions.show();
+        this.props.save({ ...decorateData(data), id: this.props.sale ? this.props.sale.objectId : getFieldValue(this.props.fields.id), sale: this.props.sale, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
               .then(result => {
+                LoadingActions.hide();
+
                 if (result && typeof result.error === 'object') {
                   return reject(); // messages['error']
                 }
@@ -431,10 +476,116 @@ export default class extends Component {
                   this._handleSaveAndNew();
                 }
                resolve();
-             })/*.catch((error) => {
-                if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                reject(messages['error']);
-              })*/;
+             });
+      });
+    });
+  }
+
+  _onSaveOnly(){
+    return this.props.handleSubmit((data) => {
+
+      const {
+        styles,
+        formKey,
+        editing: {
+          [formKey]: store,
+        },
+      } = this.props;
+
+      const items = [];
+
+      for(let i = 0, _len = store.getSize(); i < _len; i++){
+        const line = store.getObjectAt(i);
+
+        if(line.dirty){
+          const {field, valid} = store.isValid(line);
+
+          if(valid){
+            items.push(decorateItem(i, { ...line, }));
+            continue;
+          }else{
+            store.setShowErrors(true);
+            store.setActiveRow({rowIndex: i, cell: field});
+            return Promise.reject();
+          }
+        }
+
+        if(line.objectId || line.id || line.__dataID__){
+          items.push(decorateItem(i, line));
+        }
+      }
+
+      if(items.length === 0){
+        const {intl,} = this.context;
+        NotifyActions.add({
+          type: 'danger',
+          slug: styles['sale-form--error-message'],
+          data: () => (
+                <span>
+                  {intl.formatMessage(messages['at_least_one_entry_required'])}
+                </span>
+          ),
+        });
+
+        return Promise.reject();
+      }
+
+      return new Promise((resolve, reject) => {
+        LoadingActions.show();
+        this.props.save({ ...decorateData({...data, }), id: this.props.sale ? this.props.sale.objectId : getFieldValue(this.props.fields.id), sale: this.props.sale, _customer: this.props.customer, items, company: this.props.company, viewer: this.props.viewer, })
+              .then(result => {
+                LoadingActions.hide();
+
+                if (result && typeof result.error === 'object') {
+                  return reject(); // messages['error']
+                }
+
+                const {
+                  company,
+                  initializeForm,
+                  fields: {
+                    id,
+                  }
+                } = this.props;
+
+                const sale = result.result;
+
+                function p__decorateItem(index, { ...props, item, VATPart,}){
+                  return {
+                    index,
+                    ...props,
+                    item: item ? {
+                      ...item,
+                      className: `Product_${company.objectId}`,
+                    } : undefined,
+                    VATPart: VATPart ? {
+                      inputType: VATInputType_ID_BY_NAME[VATPart.inputType],
+                      ...(VATPart.value !== undefined && VATPart.value !== null ? {value: VATPart.value,} : {}),
+                    } : undefined,
+                  };
+                }
+
+                store.reInit(
+                  sale.itemsConnection.edges.map(({node}) => p__decorateItem(node.index, {...node,})), { id: sale.objectId, company, });
+
+                const customer = sale.customer ? {
+                  type: 'Customer',
+                  className: `People_${this.props.company.objectId}`,
+                  id: sale.customer.objectId,
+                  objectId: sale.customer.objectId,
+                } : undefined;
+
+                initializeForm({
+                  ...sale,
+                  id: sale.objectId,
+                  date: normalizeMoment(moment(sale.date)).format(),
+                  discountType: discountTypesById[sale.discountType],
+                  inputType: VATInputType_ID_BY_NAME[sale.inputType],
+                  customer,
+                });
+
+               resolve();
+             });
       });
     });
   }
@@ -456,6 +607,9 @@ export default class extends Component {
         depositToAccountCode,
         discountType,
         discountValue,
+
+        inputType,
+
         memo,
         files,
       },
@@ -488,6 +642,8 @@ export default class extends Component {
 
       sale,
 
+      company,
+
     } = this.props;
 
     const {intl,} = this.context;
@@ -507,6 +663,12 @@ export default class extends Component {
 
     const minHeight = getMinHeight();
 
+    const isSaved = sale || typeof getFieldValue(id) !== 'undefined';
+
+    const VATEnabled = this.props.company.VATSettings.enabled;
+
+    const _dirty = dirty || store.isDirty;
+
     return (
       <Modal dialogClassName={`${this.props.styles['modal']} sale-form`}
              dialogComponentClass={Dialog}
@@ -522,7 +684,7 @@ export default class extends Component {
             </div>
 
             <div styleName='icon'>
-              <i style={{verticalAlign: 'middle'}} className='material-icons md-light' style={{}}>settings</i>
+              <i style={{verticalAlign: 'middle'}} className='material-icons md-light'>settings</i>
             </div>
 
           </div>
@@ -566,11 +728,11 @@ export default class extends Component {
                           sale={this.props.sale}
                           formKey={formKey}
                           fields={{
+                            id,
                             dirty,
                             date,
                             discountType,
                             discountValue,
-                            dirty,
                             valid,
                             invalid,
                             pristine,
@@ -586,6 +748,18 @@ export default class extends Component {
                   </div>
 
                   {saveError && <Alert title={intl.formatMessage(messages['ErrorTitle'])} type={'error'}>{intl.formatMessage({ ...saveError, id: saveError._id, })}</Alert>}
+
+                  {function () {
+                    return VATEnabled ? null : <div style={{ padding: '15px 25px 30px 30px', }}>
+                      <NoVATWarning company={company}/>
+                    </div>;
+                  }()}
+
+                  {isSaved ? null : function () {
+                    return dateIsCurrentDeclaration(company, getFieldValue(date)) ? null : <div style={{ padding: '15px 25px 30px 30px', }}>
+                      <VATPeriodWarning/>
+                    </div>;
+                  }()}
 
                   <div styleName='billingDetailsRow'>
 
@@ -618,6 +792,15 @@ export default class extends Component {
 
                   </div>
 
+                  {function () {
+                    return VATEnabled && <div style={{ padding: '15px 30px 0 30px', }}>
+                        <VATInputType
+                          fields={{ id, dirty, valid, invalid, inputType, pristine, submitting, values,}}
+                          formKey={formKey}
+                          store={store}/>
+                      </div>;
+                  }()}
+
                   <div styleName='itemsContainerRow'>
 
                     <div styleName='innerRow'>
@@ -627,13 +810,14 @@ export default class extends Component {
 
                         <ProductItems
                           salesAccounts={this.props.salesAccounts}
+                          expensesAccounts={this.props.expensesAccounts}
                           refresh={refresh}
                           company={this.props.company}
                           sale={sale}
                           viewer={this.props.viewer}
                           formKey={formKey}
                           store={store}
-                          fields={{dirty, valid, invalid, setActiveRow, resetLines, addMoreRows, clearAllRows, clearRow, moveOp, pristine, submitting, values,}}
+                          fields={{ inputType, dirty, valid, invalid, setActiveRow, resetLines, addMoreRows, clearAllRows, clearRow, moveOp, pristine, submitting, values,}}
                           height={minHeight}
                           bodyWidth={bodyWidth}
                         />
@@ -705,13 +889,14 @@ export default class extends Component {
                             <div styleName='innerRow'>
 
                               <TotalLine
+                                company={company}
                                 formKey={formKey}
                                 store={store}
                                 sale={sale}
                                 fields={{
+                                  id,
                                   discountType,
                                   discountValue,
-                                  // taxPercent,
                                   dirty,
                                   valid,
                                   invalid,
@@ -787,7 +972,10 @@ export default class extends Component {
               styleName='btn dark'
               onClick={() => this._handleCancel()}
               disabled={submitting}
-              className='unselectable'>{intl.formatMessage(messages['cancel'])}
+              className='unselectable'>{function () {
+              // const _dirty = dirty || store.isDirty;
+              return intl.formatMessage(messages[isSaved && !_dirty ? 'close' : 'cancel']);
+            }()}
             </button>
 
           </div>
@@ -795,7 +983,7 @@ export default class extends Component {
           <div styleName='tableCell' style={{textAlign: 'center'}}>
 
             <div>
-              {sale && <SaleActions onDelete={this._del()} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
+              {isSaved && <SaleActions onDelete={this._del()} onPreview={this._preview} onShowJournalEntries={this._showJournal} className={'unselectable'} styles={styles}/>}
             </div>
 
           </div>
@@ -847,6 +1035,7 @@ export default class extends Component {
                   valid={valid}
                   onSave={self._onSave.bind(self)}
                   onSaveClose={self._onSaveClose.bind(self)}
+                  onSaveOnly={self._onSaveOnly.bind(self)}
                   disabled={invalid || submitting || !_dirty}
                   submitting={submitting}
                 />
@@ -858,6 +1047,7 @@ export default class extends Component {
         </Footer>
 
         {this.journalEntriesModal()}
+        {this.previewModal()}
 
         <Title title={intl.formatMessage(messages['Title'])}/>
 
@@ -872,7 +1062,15 @@ export default class extends Component {
       return Actions.show(intl.formatMessage(messages['ConfirmDelete']))
         .then(() => {
           return new Promise((resolve, reject) => {
-            this.props.del({ sale: this.props.sale, company: this.props.company, viewer: this.props.viewer, })
+            const getObj = () => {
+              const id = getFieldValue(this.props.fields.id);
+              return {
+                __dataID__: id,
+                id,
+                objectId: id,
+              };
+            };
+            this.props.del({ sale: this.props.sale || getObj(), company: this.props.company, viewer: this.props.viewer, })
                   .then(result => {
                     if (result && typeof result.error === 'object') {
                       return reject(); // messages['error']
@@ -880,10 +1078,7 @@ export default class extends Component {
 
                     this._handleClose();
                    resolve();
-                 })/*.catch((error) => {
-                    if(process.env.NODE_ENV !== 'production') { console.error(error); }
-                    reject(messages['error']);
-                  })*/;
+                 });
           });
         })
         .catch(() => {});
@@ -894,6 +1089,7 @@ export default class extends Component {
     stopEvent(e);
     this.setState({
       modalOpen: true,
+      modalType: 'journal',
     })
   };
 
@@ -905,18 +1101,136 @@ export default class extends Component {
   };
 
   journalEntriesModal = () => {
-    if(this.state.modalOpen){
+    if(this.state.modalOpen && this.state.modalType === 'journal'){
+      const self = this;
+      const obj = this.props.sale || function () {
+          const id = getFieldValue(self.props.fields.id);
+          const customer = getFieldValue(self.props.fields.customer);
+          return {
+            __dataID__: id,
+            id,
+            objectId: id,
+            customer,
+          };
+        }();
       return (
         <JournalEntries
           type={'Sale'}
           company={this.props.company}
           viewer={this.props.viewer}
-          person={this.props.sale.customer}
-          id={this.props.sale.objectId}
+          person={obj.customer}
+          id={obj.objectId}
           onCancel={this._close}
         />
       );
     }
+
+    return null;
+  };
+
+  _preview = (e) => {
+    stopEvent(e);
+    this.setState({
+      modalOpen: true,
+      modalType: 'preview',
+    })
+  };
+
+  previewModal = () => {
+
+    if(this.state.modalOpen && this.state.modalType === 'preview'){
+      const self = this;
+
+      const obj = this.props.sale || function () {
+          const id = getFieldValue(self.props.fields.id);
+          return {
+            objectId: id,
+          };
+        }();
+
+      return (
+        <PrintDialogWrapper
+          obj={obj}
+          company={this.props.company}
+          viewer={this.props.viewer}
+          onCancel={this._close}
+        />
+      );
+    }
+
+    return null;
+  };
+
+}
+
+class PrintDialogWrapper extends React.Component{
+  state = {
+    loading: true,
+    url: undefined,
+    error: undefined,
+  };
+
+  constructor(props, context) {
+    super(props, context);
+
+    const self = this;
+
+    Relay.Store.commitUpdate(new GenPdfMutation({
+      type: 'Sale',
+      objectId: this.props.obj.objectId,
+      company: this.props.company,
+      viewer: this.props.viewer,
+
+    }), {
+      onSuccess: function ({genPdf: {pdf}}) {
+        self.setState({ loading: false, url: pdf, error: undefined, });
+      },
+      onFailure: function (transaction) {
+        const error = transaction.getError();
+        self.setState({ loading: false, error, url: undefined, });
+      },
+    });
+  }
+
+  _print = () => {
+    const self = this;
+
+    self.setState({
+      loading: true,
+      url: undefined,
+      error: undefined,
+    }, function(){
+
+      Relay.Store.commitUpdate(new GenPdfMutation({
+        type: 'Sale',
+        objectId: self.props.obj.objectId,
+        company: self.props.company,
+        viewer: self.props.viewer,
+
+      }), {
+        onSuccess: function ({genPdf: {pdf}}) {
+          self.setState({ loading: false, url: pdf, error: undefined, });
+        },
+        onFailure: function (transaction) {
+          const error = transaction.getError();
+          self.setState({ loading: false, error, url: undefined, });
+        },
+      });
+    });
+
+  };
+
+  render(){
+    const { url, error, loading, } = this.state;
+    return (
+      <PrintDialog
+        url={url}
+        onRefresh={this._print}
+        error={error}
+        loading={loading}
+        onCancel={this.props.onCancel}
+      />
+    );
   }
 
 }
@@ -934,8 +1248,20 @@ const discountTypeValueByIndex = {
   1: 'Value',
 };
 
+const VATInputType_NAME_BY_ID = {
+  1: 'HT',
+  2: 'TTC',
+  3: 'NO_VAT',
+};
+
+const VATInputType_ID_BY_NAME = {
+  HT: 1,
+  TTC: 2,
+  NO_VAT: 3,
+};
+
 function decorateData({
-  billingAddress, customer, depositToAccountCode, paymentRef, discountType, discountValue, date, memo, files, paymentMethod}){
+  billingAddress, customer, depositToAccountCode, paymentRef, inputType, discountType, discountValue, date, memo, files, paymentMethod}){
   return {
     billingAddress,
     customer: {
@@ -950,6 +1276,7 @@ function decorateData({
     files,
     paymentMethod,
     paymentRef,
+    inputType: VATInputType_NAME_BY_ID[inputType],
   };
 }
 
@@ -961,7 +1288,7 @@ function getDiscountType(type){
   // }
 }
 
-function decorateItem(index, { date, description, item, qty, rate, discountPart, }){
+function decorateItem(index, { date, description, item, qty, rate, discountPart, VATPart, }){
   return {
     index,
     date: date ? unNormalizeMoment(moment(date)).format() : undefined,
@@ -976,6 +1303,10 @@ function decorateItem(index, { date, description, item, qty, rate, discountPart,
       type: getDiscountType(discountPart.type),
       value: discountPart.value,
     },
+    VATPart: VATPart ? {
+      inputType: VATInputType_NAME_BY_ID[VATPart.inputType],
+      ...(VATPart.value !== undefined && VATPart.value !== null ? {value: VATPart.value,} : {}),
+    } : undefined,
   };
 }
 
@@ -986,19 +1317,32 @@ function getTopStyle(sale){
   };
 }
 
-class MySplitButton extends Component{
+class MySplitButton extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
+  shouldComponentUpdate(nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
+  }
   render(){
     const {intl} = this.context;
-    const {onSave, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
-    const title = (
-      <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
-    );
+    const {onSave, onSaveOnly, onSaveClose, className, disabled, submitting, valid, styles, } = this.props;
+    // const title = (
+    //   <span>{submitting ? <i className={`${styles['submitting']} material-icons`}>loop</i> : null}{' '}{intl.formatMessage(messages['saveAndClose'])}</span>
+    // );
+    const title = intl.formatMessage(messages['saveAndClose']);
     return (
       <div className={styles['dropdown']}>
         <ButtonToolbar>
+
+          <button
+            // styleName='btn primary'
+            onClick={onSaveOnly()}
+            style={{marginLeft: 12,}}
+            disabled={disabled}
+            className={`${disabled ? 'disabled' : ''} ${className} btn btn-default ${styles['btn']} ${styles['dark']}`}>
+            {' '}{intl.formatMessage(messages['save'])}
+          </button>
 
           <SplitButton className={className} disabled={disabled} onClick={onSaveClose()} title={title} dropup pullRight id={'sale-form'}>
 
@@ -1008,22 +1352,13 @@ class MySplitButton extends Component{
 
           </SplitButton>
 
-          <button
-            // styleName='btn primary'
-            onClick={onSave()}
-            style={{marginLeft: 12,}}
-            disabled={disabled}
-            className={`hidden ${disabled ? 'disabled' : ''} ${styles['btn']} ${styles['dark']}`}>
-            {' '}{intl.formatMessage(messages['save'])}
-          </button>
-
         </ButtonToolbar>
       </div>
     );
   }
 }
 
-class SaleActions extends Component{
+class SaleActions extends React.Component{
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -1034,6 +1369,10 @@ class SaleActions extends Component{
   _onShowJournalEntries = (e) =>{
     stopEvent(e);
     this.props.onShowJournalEntries();
+  };
+  _onPreview = (e) =>{
+    stopEvent(e);
+    this.props.onPreview();
   };
   render(){
     const {intl} = this.context;
@@ -1050,6 +1389,10 @@ class SaleActions extends Component{
 
             <MenuItem onClick={this._onShowJournalEntries} eventKey={'journalEntries'}>
               {intl.formatMessage(messages['JournalEntries'])}
+            </MenuItem>
+
+            <MenuItem onClick={this._onPreview} eventKey={'print'}>
+              {intl.formatMessage(messages['Preview'])}
             </MenuItem>
 
           </DropdownButton>

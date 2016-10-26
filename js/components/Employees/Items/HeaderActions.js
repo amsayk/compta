@@ -33,7 +33,7 @@ import styles from './Items.scss';
 import requiredPropType from 'react-prop-types/lib/all';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'EmployeesHeaderActions';
 

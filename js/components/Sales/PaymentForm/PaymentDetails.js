@@ -52,7 +52,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'PaymentDetails';
 
   static contextTypes = {
@@ -129,7 +129,7 @@ export default class extends Component {
 
         <div styleName='payment-details'>
 
-          <form>
+          <div>
 
             <div className='row'>
 
@@ -266,7 +266,7 @@ export default class extends Component {
                       this.setState({
                         value: typeof value !== 'number' || !isFinite(value) || value === 0.0 ? undefined : intl.formatNumber(value, {format: 'MONEY', }),
                       }, () => {
-                        const res = typeof value !== 'number' || !isFinite(value) || value === 0.0 ? undefined : value;
+                        const res = typeof value !== 'number' || !isFinite(value) || value === 0.0 ? undefined : validateAmountReceived(store, value);
                         store.onAmountReceivedChanged(res ? res : 0.0);
                         amountReceived.onChange(res);
                       });
@@ -287,11 +287,19 @@ export default class extends Component {
 
             </div>
 
-          </form>
+          </div>
 
         </div>
 
       </div>
     );
   }
+}
+
+function validateAmountReceived(store, amountReceived){
+  if(amountReceived > store.max){
+    return undefined;
+  }
+
+  return amountReceived;
 }

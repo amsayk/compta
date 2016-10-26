@@ -5,19 +5,75 @@ import messages from './messages';
 
 import stopEvent from '../../../utils/stopEvent';
 
-import {editStart as editStartBill} from '../../../redux/modules/bills';
-// import {editStart as editStartPayment} from '../../../redux/modules/paymentsOfBills';
-import {editStart as editStartExpense} from '../../../redux/modules/expenses';
+import {editStart as editStartBill} from '../../../redux/modules/v2/bills';
+// import {editStart as editStartPayment} from '../../../redux/modules/v2/paymentsOfBills';
+import {editStart as editStartExpense} from '../../../redux/modules/v2/expenses';
 
 import ButtonToolbar from 'react-bootstrap/lib/ButtonToolbar';
 import MenuItem from 'react-bootstrap/lib/MenuItem';
 import DropdownButton from 'react-bootstrap/lib/DropdownButton';
 
-import BillForm  from '../../Expenses//BillForm/BillForm';
-import ExpenseForm  from '../../Expenses//ExpenseForm/ExpenseForm';
-// import PaymentForm  from '../../Expenses//PaymentForm/PaymentForm';
+// import BillForm  from '../../Expenses/BillForm/BillForm';
+// import ExpenseForm  from '../../Expenses/ExpenseForm/ExpenseForm';
+// // import PaymentForm  from '../../Expenses//PaymentForm/PaymentForm';
 
-import VendorForm  from '../VendorForm/VendorForm';
+import LoadingActions from '../../Loading/actions';
+
+let ExpenseForm = null;
+let BillForm = null;
+// let PaymentForm = null;
+
+function loadComponent(type, cb) {
+  LoadingActions.show();
+
+  switch (type){
+
+    case 'Expense':
+    case 'expense':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        ExpenseForm = require('../../Expenses/ExpenseForm/ExpenseForm').default;
+        cb();
+      }, 'ExpenseForm');
+
+      break;
+
+    // case 'payment':
+    //
+    //   require.ensure([], function (require) {
+    //     LoadingActions.hide();
+    //     PaymentForm = require('../../Expenses/PaymentForm/PaymentForm').default;
+    //     cb();
+    //   }, 'PaymentOfBillsForm');
+    //
+    //   break;
+
+    case 'Bill':
+    case 'bill':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        BillForm = require('../../Expenses/BillForm/BillForm').default;
+        cb();
+      }, 'BillForm');
+
+      break;
+
+    case 'edit':
+
+      require.ensure([], function (require) {
+        LoadingActions.hide();
+        VendorForm = require('../VendorForm/VendorForm');
+        cb();
+      }, 'VendorForm');
+
+      break;
+  }
+}
+
+let VendorForm = null;
+// import VendorForm  from '../VendorForm/VendorForm';
 
 const BUTTONS = [
   'bill',
@@ -42,7 +98,7 @@ import styles from './Item.scss';
 import requiredPropType from 'react-prop-types/lib/all';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'VendorExpensesHeaderActions';
 
@@ -121,10 +177,112 @@ export default class extends Component{
 
     }
 
+    loadComponent(btn, () => {
+      this.setState({
+        modalOpen: true,
+        modalType: btn,
+      });
+    });
+  };
+
+  _renderPaymentModal = () => {
+    if(this.state.modalOpen && this.state.modalType === 'Payment'){
+      switch (this.state.obj ? this.state.obj.type : 'Payment'){
+        case 'Bill':
+          return (
+            <BillForm
+              bill={this.state.obj}
+              company={this.props.company}
+              viewer={this.props.viewer}
+              expensesAccounts={this.props.expensesAccounts}
+              formKey={this.state.obj.id}
+              onCancel={this._close}
+              onReceivePayment={this._onReceivePayment}
+            />
+          );
+        case 'Payment':
+          return function(self){
+            const formKey = self.state.obj ? self.state.obj.id : 'NEW';
+            return (
+              <PaymentForm
+                bill={self.state.bill}
+                payment={self.state.obj}
+                company={self.props.company}
+                viewer={self.props.viewer}
+                formKey={formKey}
+                vendorOpenBills={self.props.vendorOpenBills}
+                expensesAccounts={self.props.expensesAccounts}
+                depositsAccounts={self.props.depositsAccounts}
+                onCancel={self._close}
+                onPaymentVendorSelected={self.props.onPaymentVendorSelected}
+                onBill={self._onBill}
+              />
+            );
+          }(this);
+      }
+    }
+
+    return (
+      null
+    );
+
+
+  };
+
+  _onBill = (obj) => {
     this.setState({
-      modalOpen: true,
-      modalType: btn,
-    })
+      modalOpen: false,
+      obj: undefined,
+      modalType: 'Payment',
+      bill: undefined,
+    }, () => {
+      obj = decorateBill(obj);
+
+      this.context.store.dispatch(
+        editStartBill(
+          obj.id,
+          obj.itemsConnection.edges.map(({node}) => node),
+          {id: obj.id, company: this.props.company,})
+      );
+
+      setTimeout(() => {
+
+        loadComponent('bill', () => {
+
+          this.setState({
+            modalOpen: true,
+            modalType: 'Payment',
+            obj,
+            bill: undefined,
+          });
+        });
+
+      }, 150);
+    });
+  };
+
+  _onReceivePayment = (bill) => {
+    this.context.store.dispatch(
+      editStartPayment(
+        'NEW',
+        [],
+        {id: 'NEW', company: this.props.company,})
+    );
+
+    setImmediate(() => {
+      this.props.onReceivePayment(bill.payee);
+    });
+
+    loadComponent('payment', () => {
+
+      this.setState({
+        modalOpen: true,
+        modalType: 'Payment',
+        obj: undefined,
+        bill,
+      });
+
+    });
   };
 
   _close = (btn, e) => {
@@ -137,7 +295,7 @@ export default class extends Component{
   };
 
   _renderModal = () => {
-    if(!this.state.modalOpen){
+    if(this.state.modalOpen === false || this.state.modalType === 'Payment'){
       return (
         null
       );
@@ -154,6 +312,7 @@ export default class extends Component{
             company={this.props.company}
             viewer={this.props.viewer}
             formKey={'NEW'} onCancel={this._close}
+            onReceivePayment={this._onReceivePayment}
           />
         );
       case 'expense':
@@ -168,23 +327,29 @@ export default class extends Component{
             viewer={this.props.viewer}
             formKey={'NEW'}
             onCancel={this._close}
+            onPaymentVendorSelected={this.props.onPaymentVendorSelected}
+            onBill={this._onBill}
+            onReceivePayments={this._onReceivePayments}
           />
         );
-      // case 'payment':
-      //   return (
-      //     <PaymentForm
-      //       payee={this.props.payee}
-      //       filterArgs={this.props.filterArgs}
-      //       onNew={this._onSelect.bind(this, 'payment')}
-      //       company={this.props.company}
-      //       viewer={this.props.viewer}
-      //       vendorOpenBills={this.props.vendorOpenBills}
-      //       depositsAccounts={this.props.depositsAccounts}
-      //       formKey={'NEW'}
-      //       onPaymentVendorSelected={this.props.onPaymentVendorSelected}
-      //       onCancel={this._close}
-      //     />
-      //   );
+      case 'payment':
+
+        return (
+          <PaymentForm
+            company={this.props.company}
+            viewer={this.props.viewer}
+            formKey={'NEW'}
+            onNew={this._onSelect.bind(this, 'payment')}
+            vendorOpenBills={this.props.vendorOpenBills}
+            expensesAccounts={this.props.expensesAccounts}
+            depositsAccounts={this.props.depositsAccounts}
+            onCancel={this._close}
+            onPaymentVendorSelected={this.props.onPaymentVendorSelected}
+            onBill={this._onBill}
+            amountReceived={this.state.amountReceived || 0.0}
+            selectedBills={this.state.selectedBills || []}
+          />
+        );
       case 'edit':
         return (
           <VendorForm
@@ -195,6 +360,52 @@ export default class extends Component{
           />
         );
     }
+  };
+
+  _onReceivePayments = (bills) => {
+    let amountReceived = 0.0;
+
+    function decorateBillItem({ id, objectId, date, dueDate, memo, paymentRef, itemsConnection, paymentsConnection, }){
+      const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountPaid;
+      amountReceived += balanceDue;
+      const obj = {
+        __selected: true,
+        __existed: true,
+        __originalAmount: balanceDue,
+        id,
+        amount: balanceDue,
+        bill: {
+          id,
+          objectId,
+          paymentRef,
+          refNo: paymentRef,
+          total: itemsConnection.totalAmount,
+          balanceDue,
+          amountPaid: paymentsConnection.totalAmountPaid,
+          date,
+          dueDate,
+          memo,
+        },
+      }
+
+      return obj;
+    }
+
+    const items = bills.map(decorateBillItem);
+
+    this.context.store.dispatch(
+      editStartPayment(
+        'NEW', items, {id: 'NEW', company: this.props.company, }));
+
+    loadComponent('payment', () => {
+
+      this.setState({
+        modalOpen: true,
+        modalType: 'payment',
+        amountReceived,
+        selectedBills: bills,
+      });
+    });
   };
 
   render() {
@@ -219,7 +430,59 @@ export default class extends Component{
 
         </ButtonToolbar>
         {this._renderModal()}
+        {this._renderPaymentModal()}
       </div>
     );
   }
+}
+
+function decorateBill({ objectId, __dataID__, totalHT, VAT, inputType, id, payee, paymentRef, mailingAddress, terms, date, dueDate, itemsConnection, paymentsConnection, memo, files, }) {
+  const balanceDue = itemsConnection.totalAmount - paymentsConnection.totalAmountPaid;
+
+  function calcBillStatus() {
+    // const _date = moment(date);
+    const _dueDate = moment(dueDate);
+    const now = moment();
+
+    const isPaidInFull = balanceDue === 0.0;
+
+    if(isPaidInFull){
+      return 'Closed';
+    }
+
+    if(_dueDate.isBefore(now)){
+      return 'Overdue';
+    }
+
+    const hasPayment = paymentsConnection.totalAmountPaid !== 0;
+
+    if(hasPayment){
+      return 'Partial';
+    }
+
+    return 'Open';
+  }
+
+  return {
+    __dataID__,
+    id,
+    terms,
+    date,
+    mailingAddress,
+    type: 'Bill',
+    paymentRef,
+    refNo: paymentRef,
+    payee,
+    dueDate,
+    totalAmount: itemsConnection.totalAmount,
+    balanceDue,
+    total: itemsConnection.totalAmount,
+    totalAmountPaid: paymentsConnection.totalAmountPaid,
+    status: calcBillStatus(),
+    memo, files,
+    totalHT, VAT, inputType,
+    itemsConnection,
+    paymentsConnection,
+    objectId,
+  };
 }

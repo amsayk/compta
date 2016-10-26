@@ -21,7 +21,7 @@ import stopEvent from '../../../utils/stopEvent';
 
 import events from 'dom-helpers/events';
 
-import { Modes as SelectionModes, } from '../../../redux/modules/paymentsOfInvoices';
+import { Modes as SelectionModes, } from '../../../redux/modules/v2/paymentsOfInvoices';
 
 import {Company,} from '../../../utils/types';
 
@@ -34,7 +34,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true,})
-class SelectHandle extends Component {
+class SelectHandle extends React.Component {
 
   static propTypes = {
     store: PropTypes.object.isRequired,
@@ -69,7 +69,7 @@ class SelectHandle extends Component {
 }
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
 
   static displayName = 'PaymentInvoiceItems';
 
@@ -449,7 +449,7 @@ export default class extends Component {
 
 }
 
-class InvoiceInfoCell extends Component {
+class InvoiceInfoCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -479,7 +479,7 @@ class InvoiceInfoCell extends Component {
   }
 }
 
-class PaymentAmountCell extends Component {
+class PaymentAmountCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -596,7 +596,7 @@ class PaymentAmountCell extends Component {
     );
   }
 }
-class OpenBalanceCell extends Component {
+class OpenBalanceCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -624,7 +624,7 @@ class OpenBalanceCell extends Component {
     );
   }
 }
-class OriginalAmountCell extends Component {
+class OriginalAmountCell extends React.Component {
 
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -653,7 +653,7 @@ class OriginalAmountCell extends Component {
   }
 }
 
-class DueDateCell extends Component {
+class DueDateCell extends React.Component {
 
   static propTypes = {
     styles: PropTypes.object.isRequired,

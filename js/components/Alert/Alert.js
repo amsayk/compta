@@ -9,7 +9,7 @@ import classnames from 'classnames';
 import CSSModules from 'react-css-modules';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'Alert';
   static propTypes = {
     type: PropTypes.oneOf([ 'error', 'info', 'warning' ]).isRequired,
@@ -22,7 +22,7 @@ export default class extends Component{
   }
   _close = (e) => {
     stopEvent(e);
-    this.prosp.onClose();
+    this.props.onClose && this.props.onClose();
   };
   render(){
     const { type, onClose, title, children, } = this.props;

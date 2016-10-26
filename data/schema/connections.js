@@ -7,18 +7,18 @@
  * LICENSE-examples file in the root directory of this source tree.
  */
 
-import {
+const {
   connectionFromArray,
   connectionArgs,
   connectionDefinitions,
-} from 'graphql-relay';
+} = require('graphql-relay');
 
-import {
+const {
   GraphQLInt,
   GraphQLList,
   GraphQLString,
   GraphQLNonNull,
-} from 'graphql';
+} = require('graphql');
 
 import type {
   GraphQLOutputType,
@@ -32,7 +32,7 @@ type DataFetcherType = (obj: any) => Promise<any>;
  * that the object has a property named `prop`, and that property
  * contains a list of URLs.
  */
-export function connectionDefinition(
+module.exports.connectionDefinition = function connectionDefinition(
   name: string,
   type: GraphQLOutputType,
   dataFetcher?: ?DataFetcherType

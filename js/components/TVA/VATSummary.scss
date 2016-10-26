@@ -1,0 +1,152 @@
+.agencyWidgetClass {
+  padding-left: 16px;
+}
+
+.agencyWidgetContainer-wrapper {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.agencyWidgetContainer {
+  height: 165px;
+}
+
+.table{
+  display: table;
+}.tableRow{
+  display: table-row;
+}
+.tableCell{
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.agencyWidgetContainer {
+  border: 1px solid #CCCCCC;
+  border-radius: 10px;
+  width: 900px;
+  height: 153px;
+  display: table;
+}
+
+.agencyWidgetLeftPanel {
+  padding: 5px 15px;
+  max-width: 180px;
+  display: table-cell;
+  vertical-align: top;
+}
+
+.agencyWidgetRightPanel.dataSection {
+  padding-top: 15px;
+  padding-bottom: 5px;
+  padding-left: 15px;
+}
+
+.rightTopRoundedCorner {
+  border-top-right-radius: 10px;
+}
+
+.agencyWidgetRightPanel {
+  width: 625px;
+  padding: 5px 15px;
+  display: table-cell;
+  background-color: #F4F4F4;
+  vertical-align: top;
+  box-shadow: inset 10px 0px 15px -12px #ccc;
+}
+
+.taxNameClass {
+  font-family: Arial;
+  font-weight: bold;
+  color: #333333;
+  font-size: 16px;
+  height: 20px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.taxNameClass {
+  padding-top: 16px;
+}
+
+.balanceDueClass {
+  font-family: Arial;
+  font-weight: bold;
+  color: #333333;
+  font-size: 27px;
+  overflow: hidden;
+}
+
+.positiveBalance {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #333333;
+}
+
+.simpleTextClass {
+  font-family: Arial;
+  color: #666666;
+  font-size: 12px;
+  padding-top: 8px;
+  padding-bottom: 5px;
+}
+
+.rightHeader {
+  height: 20px;
+  margin-bottom: 10px;
+}
+
+.panelHeaderClass {
+  font-family: Arial;
+  font-weight: bold;
+  color: #333333;
+  font-size: 12px;
+}
+
+.rightPanelHeader {
+  float: left;
+}
+
+.chartClass {
+  width: 100%;
+  margin: 0 auto;
+  height: 70px;
+}
+
+.highcharts-container{
+  position: relative;
+  overflow: hidden;
+  width: 625px;
+  height: 70px;
+  text-align: left;
+  line-height: normal;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+}
+
+.linkSection {
+  padding: 2px 0;
+  border-top: 1px dotted gray;
+}
+
+.linkClass {
+  font-family: Arial;
+  color: #2b73dd;
+  font-size: 12px;
+  display: inline-block;
+}
+
+.rightBottomRoundedCorner {
+  border-bottom-right-radius: 10px;
+}
+
+.rightPanelLink {
+  padding-left: 0;
+}
+
+.linkClass:not(:first-child) {
+  margin-left: 15px;
+}
+

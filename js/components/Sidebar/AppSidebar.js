@@ -18,7 +18,7 @@ import Loading from '../Loading/Loading';
 
 // import {getBodyHeight,} from '../../utils/dimensions';
 
-import CompanyForm from '../CompanyForm/CompanyForm';
+// import CompanyForm from '../CompanyForm/CompanyForm';
 
 import {editStart as newAppEditStart,} from '../../redux/modules/companies';
 
@@ -30,14 +30,27 @@ import events from 'dom-helpers/events';
 
 // import {sortMostRecent,} from '../../utils/sort';
 
-import Fab from '../Fab/Fab';
+// import Fab from '../Fab/Fab';
+let Fab = null;
+
+function loadFab(done) {
+  if(Fab){
+    done();
+    return;
+  }
+
+  require.ensure([], function (require) {
+    Fab = require('../Fab/Fab');
+    done();
+  }, 'Fab');
+}
 
 import {
   FormattedMessage,
   intlShape,
 } from 'react-intl';
 
-class Group extends Component {
+class Group extends React.Component {
   static displayName = 'SidebarGroup';
 
   static contextTypes = {
@@ -93,7 +106,7 @@ class Group extends Component {
       };
 
       return (
-        <div className={styles['section_contents']}>
+        <div className={`${styles['section_contents']} sidebar-link-group-children`}>
 
           <div>
 
@@ -123,7 +136,7 @@ class Group extends Component {
 
               })}
 
-              {selectedIndex !== -1 && <div style={{top: 322 + (selectedIndex * 28)}} className={styles['overlay']}></div>}
+              {selectedIndex !== -1 && <div style={{top: /* 322 */ 291 + (selectedIndex * 28)}} className={styles['overlay']}></div>}
 
             </div>
 
@@ -154,15 +167,15 @@ class Group extends Component {
           cursor: 'pointer',
         }}>
 
-          <i className='material-icons md-36'>{icon}</i>
+          <i className={`sidebar-link-icon ${selectedIndex !== -1 ? 'active' : ''} material-icons md-36`}>{icon}</i>
 
-          <span>
+          <span className={`sidebar-link-text ${selectedIndex !== -1 ? 'active' : ''}`}>
             {title}
           </span>
 
           <span style={{ right: -10, verticalAlign:'middle', position: 'relative', }}
-                className={`material-icons ${styles['open']}`}>
-            <i>{open ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</i>
+                className={`material-icons sidebar-link-chevron ${styles['open']}`}>
+            <i className={`material-icons`}>{open ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</i>
           </span>
 
         </div>
@@ -177,7 +190,7 @@ class Group extends Component {
 @CSSModules(styles, {
   allowMultiple: true
 })
-class Link extends Component {
+class Link extends React.Component {
   static displayName = 'SidebarLink';
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -191,8 +204,8 @@ class Link extends Component {
         <div styleName='section active'>
           <Title title={intl.formatMessage(messages[`${page}-title`] || messages[page])}/>
           <div styleName='section_header'>
-            <i className='material-icons md-36'>{icon}</i>
-            <span>
+            <i className='sidebar-link-icon active material-icons md-36'>{icon}</i>
+            <span className='sidebar-link-text active'>
               <FormattedMessage {...messages[page]} />
             </span>
             {this.props.children}
@@ -204,8 +217,8 @@ class Link extends Component {
     return (
       <div styleName='section'>
         <a styleName='section_header' onClick={onClick.bind(null, page)}>
-          <i className='material-icons md-36'>{icon}</i>
-          <span>
+          <i className='sidebar-link-icon material-icons md-36'>{icon}</i>
+          <span className='sidebar-link-text'>
             <FormattedMessage {...messages[page]} />
           </span>
         </a>
@@ -220,19 +233,23 @@ const PATHS = {
   '/customers': (id) => `/apps/${id}/customers`,
   '/vendors':   (id) => `/apps/${id}/vendors`,
   '/employees': (id) => `/apps/${id}/employees`,
-  '/reports':   (id) => `/apps/${id}/reports`,
+  '/rapports':   (id) => `/apps/${id}/rapports`,
   '/settings':  (id) => `/apps/${id}/settings`,
 
-  '/tax':       (id) => `/apps/${id}/tax`,
+  '/vat':       (id) => `/apps/${id}/vat`,
 
   '/apps':      () => '/apps',
   '/account':   () => '/account',
+
+  '/sales' : (id) => `/apps/${id}/sales`,
+  '/expenses' : (id) => `/apps/${id}/expenses`,
+  '/accounts' : (id) => `/apps/${id}/accounts`,
 };
 
 @CSSModules(styles, {
   allowMultiple: true
 })
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'AppSidebar';
 
   static contextTypes = {
@@ -275,11 +292,13 @@ export default class extends Component {
   }
 
   componentDidMount() {
-    // setTimeout(() => {
-    //   this.setState({
-    //     show: true,
-    //   });
-    // }, 100);
+    setTimeout(() => {
+
+      loadFab(() => {
+        this.forceUpdate();
+      });
+
+    }, 1500);
 
     events.on(window, 'resize', this._handleWindowResize);
     events.on(document, 'click', this._hide, true);
@@ -306,19 +325,19 @@ export default class extends Component {
     this.setState({newAppModalOpen: false, newTransactionModalOpen: false});
   };
 
-  _renderNewAppForm = () => {
-    const form = this.state.newAppModalOpen ? (
-      <CompanyForm
-        initialValues={{ periodType: 'MONTHLY', }}
-        onCancel={this._close}
-        formKey={'NEW'}
-        root={this.props.root}
-        viewer={this.props.viewer}
-      />
-    ) : null;
-
-    return form;
-  };
+  // _renderNewAppForm = () => {
+  //   const form = this.state.newAppModalOpen ? (
+  //     <CompanyForm
+  //       initialValues={{ periodType: 'MONTHLY', }}
+  //       onCancel={this._close}
+  //       formKey={'NEW'}
+  //       root={this.props.root}
+  //       viewer={this.props.viewer}
+  //     />
+  //   ) : null;
+  //
+  //   return form;
+  // };
 
   _onToggle = (e) => {
     e.stopPropagation();
@@ -340,6 +359,7 @@ export default class extends Component {
     e.preventDefault();
 
     this.context.router.push(`/apps/${id}/`);
+    // this.context.router.push(PATHS[this.props.page](id));
   };
 
   _renderMenu = () => {
@@ -353,7 +373,7 @@ export default class extends Component {
     // apps.sort(sortMostRecent(obj => Date.parse(obj.createdAt)));
 
     return [
-      <div ref='menu' key={closed ? 'appsMenu' : 'apps'} className={'has-white-links'} styleName={closed ? 'appsMenu unselectable' : 'apps'}>
+      <div ref='menu' key={closed ? 'appsMenu' : 'apps'} className={'has-white-links hidden'} styleName={closed ? 'appsMenu unselectable' : 'apps'}>
 
         <div styleName='currentApp' onClick={this._onToggle}>{company ? company.displayName : (lastCompany && lastCompany.displayName ? lastCompany.displayName : '')}</div>
 
@@ -380,10 +400,6 @@ export default class extends Component {
 
   }
 
-  componentWillUnmount(){
-    // lastCompany = null;
-  }
-
   render() {
     const { show, } = this.state;
     const { page, company, companies, viewer, styles, route, } = this.props;
@@ -399,10 +415,10 @@ export default class extends Component {
     }, {
       page: '/expenses',
       title: formatMessage(messages['/expenses']),
-    }, {
+    }, /*{
       page: '/accounts',
       title: formatMessage(messages['/accounts']),
-    },];
+    },*/];
 
     if(company){
       lastCompany = company;
@@ -411,9 +427,9 @@ export default class extends Component {
     return (
       // <Fade in={show}>
 
-        <div className={''}>
+        <div className={'sidebar-wrapper'}>
 
-          <div styleName='sidebar' className={'height100Percent'} style={{ height: document.body.scrollHeight, }}>
+          <div styleName='sidebar' className={'height100Percent sidebar'} style={{ height: document.body.scrollHeight, }}>
 
             <Header
               viewer={viewer}
@@ -462,17 +478,17 @@ export default class extends Component {
                 selected={page}
                 title={formatMessage(messages['/transactions'])}/>
 
-              <Link
-                page={'/reports'}
-                icon={'group_work'}
-                selected={page === '/reports'}
-                onClick={this._onClick}
-              />
+              {/*<Link*/}
+                {/*page={'/rapports'}*/}
+                {/*icon={'group_work'}*/}
+                {/*selected={page === '/rapports'}*/}
+                {/*onClick={this._onClick}*/}
+              {/*/>*/}
 
               <Link
-                page={'/tax'}
+                page={'/vat'}
                 icon={'gavel'}
-                selected={page === '/tax'}
+                selected={page === '/vat'}
                 onClick={this._onClick}
               />
 
@@ -487,8 +503,8 @@ export default class extends Component {
 
           </div>
 
-          {this._renderNewAppForm()}
-          <Fab company={{ id: route.params.companyId, }}/>
+          {/*{this._renderNewAppForm()}*/}
+          {page === '/dashboard' && Fab && <Fab company={{ id: route.params.companyId, }}/>}
 
         </div>
 

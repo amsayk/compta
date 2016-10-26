@@ -7,6 +7,8 @@ import {changeWithKey as change,} from 'redux-form';
 
 import styles from './ExpenseForm.scss';
 
+import filter from 'lodash.filter';
+
 import CSSModules from 'react-css-modules';
 
 import VendorMiniForm from '../../Vendors/VendorForm/MiniForm';
@@ -29,7 +31,7 @@ import {
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'PayeeDetails';
 
   static contextTypes = {
@@ -172,21 +174,22 @@ export default class extends Component {
     this.context.store.dispatch(batchActions([
       change('expense', formKey, 'payee', {
         type,
-        className: function(){
-          // type === 'Vendor' || type === 2 ? `Vendor_${company.objectId}` : `Customer_${company.objectId}`
-          switch(type){
-            case 'Customer':
-            case 1: return `Customer_${company.objectId}`;
-
-            case 'Vendor':
-            case 2: return `Vendor_${company.objectId}`;
-
-            case 'Employee':
-            case 3: return `Employee_${company.objectId}`;
-
-            default: throw 'Invalid payee type';
-          }
-        }(),
+        // className: function(){
+        //   // type === 'Vendor' || type === 2 ? `People_${company.objectId}` : `People_${company.objectId}`
+        //   switch(type){
+        //     case 'Customer':
+        //     case 1: return `People_${company.objectId}`;
+        //
+        //     case 'Vendor':
+        //     case 2: return `People_${company.objectId}`;
+        //
+        //     case 'Employee':
+        //     case 3: return `People_${company.objectId}`;
+        //
+        //     default: throw 'Invalid payee type';
+        //   }
+        // }(),
+        className: `People_${company.objectId}`,
         objectId: vendor.id,
         id: vendor.id,
       }),
@@ -210,8 +213,14 @@ export default class extends Component {
     const self = this;
     const payeeValue = !this.state.showPayees ? null : getFieldValue(payee);
 
+    // const data = this.state.showPayees
+    //   ? [NEW_ITEM].concat(company.people.edges.map(({node}) => node))
+    //   : [];
+
     const data = this.state.showPayees
-      ? [NEW_ITEM].concat(company.people.edges.map(({node}) => node))
+      ? [NEW_ITEM].concat(
+      filter(
+        company.people.edges.map(({node}) => node), ({ type, objectId, active}) => type === 'Employee' || type === 3 ? true : (active || (payeeValue ? objectId === payeeValue.objectId : false)) ))
       : [];
 
     return (
@@ -258,7 +267,8 @@ export default class extends Component {
 
                     change('expense', formKey, 'payee', {
                       type: item['type'],
-                      className: `${TYPE_TO_STRING(item['type'])}_${company.objectId}`,
+                      className: `People_${company.objectId}`,
+                      // className: `${TYPE_TO_STRING(item['type'])}_${company.objectId}`,
                       objectId: item['objectId'],
                       id: item['objectId'],
                     }),
@@ -345,20 +355,20 @@ function getEmployeeAddress({
   return addr.length === 0 ? undefined : [displayName, ...addr].join('\n');
 }
 
-function TYPE_TO_STRING(type){
-  switch(type){
-    case 'Customer':
-    case 1: return `Customer`;
-
-    case 'Vendor':
-    case 2: return `Vendor`;
-
-    case 'Employee':
-    case 3: return `Employee`;
-
-    default: throw 'TYPE_TO_STRING: Invalid payee type';
-  }
-}
+// function TYPE_TO_STRING(type){
+//   switch(type){
+//     case 'Customer':
+//     case 1: return `People`;
+//
+//     case 'Vendor':
+//     case 2: return `People`;
+//
+//     case 'Employee':
+//     case 3: return `People`;
+//
+//     default: throw 'TYPE_TO_STRING: Invalid payee type';
+//   }
+// }
 
 const NEW_ITEM = {
   id: 'NEW',

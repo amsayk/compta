@@ -3,15 +3,15 @@
 require("babel-core/register");
 require("babel-polyfill");
 
-import fs from 'fs';
-import path from 'path';
-import { Schema } from '../data/schema/index';
-import { graphql }  from 'graphql';
-import { introspectionQuery, printSchema } from 'graphql/utilities';
+const fs = require('fs');
+const path = require('path');
+const { Schema } = require('../data/schema/v2');
+const { graphql }  = require('graphql');
+const { introspectionQuery, printSchema } = require('graphql/utilities');
 
 // Save JSON of full schema introspection for Babel Relay Plugin to use
-(async () => {
-  var result = await (graphql(Schema, introspectionQuery));
+graphql(Schema, introspectionQuery).then(result => {
+
   if (result.errors) {
     console.error(
       'ERROR introspecting schema: ',
@@ -23,7 +23,7 @@ import { introspectionQuery, printSchema } from 'graphql/utilities';
       JSON.stringify(result, null, 2)
     );
   }
-})();
+});
 
 // Save user readable type system shorthand of schema
 fs.writeFileSync(

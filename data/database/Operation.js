@@ -1,6 +1,6 @@
-import Parse from 'parse';
+const Parse = require('parse');
 
-export default company => {
+module.exports = company => {
 
   const name = `Operation_${company.id}`;
 

@@ -1,0 +1,45 @@
+-- Invoice form isDirty is broken
+-- Sale of kind=Sale paymentRef is broken
+-- paymentMethod is broken for paid invoices
+
+-- Delete payment and back to invoice doesn't change the invoice
+
+-- payment after delete payment broken
+
+-- TODO(factures):
+
+  1. description
+  2. Top coordonates
+
+
+https://github.com/bpampuch/pdfmake/pull/492/files/e7b7b3898e09f6da51ea0a296b3c19f1d5b1364b..59b5d82c4ec8c3e9c0aa4068af2343019f0a941b
+
+function renderWatermark(page, pdfKitDoc){
+	var watermark = page.watermark;
+
+	// pdfKitDoc.fill('black');
+	// pdfKitDoc.opacity(0.6);
+
+	pdfKitDoc.fill('darkgray'); // Change colour
+	pdfKitDoc.opacity(0.3); // Change opacity as watermark was too dark for my liking
+
+	pdfKitDoc.save();
+	pdfKitDoc.transform(1, 0, 0, -1, 0, pdfKitDoc.page.height);
+
+	var angle = Math.atan2(pdfKitDoc.page.height, pdfKitDoc.page.width/2) * 180/Math.PI;
+	pdfKitDoc.rotate(angle, {origin: [pdfKitDoc.page.width/2, pdfKitDoc.page.height/2]});
+
+  var encoded = watermark.font.encode(watermark.text);
+	pdfKitDoc.addContent('BT');
+	pdfKitDoc.addContent('' + (pdfKitDoc.page.width/2 - watermark.size.size.width/2) + ' ' + (pdfKitDoc.page.height/2 - watermark.size.size.height/4) + ' Td');
+	// pdfKitDoc.addContent('' + (pdfKitDoc.page.width/2 - watermark.size.size.width/4) + ' ' + (pdfKitDoc.page.height/2 - watermark.size.size.height/4) + ' Td');
+
+	// pdfKitDoc.addContent('/' + encoded.fontId + ' ' + watermark.size.fontSize + ' Tf');
+	pdfKitDoc.addContent('/ ' + watermark.size.fontSize + ' Tf');
+
+	// pdfKitDoc.addContent('<' + encoded.encodedText + '> Tj');
+	pdfKitDoc.addContent('(' + watermark.text + ') Tj');
+
+	pdfKitDoc.addContent('ET');
+	pdfKitDoc.restore();
+}

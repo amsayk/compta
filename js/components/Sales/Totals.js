@@ -17,7 +17,7 @@ import requiredPropType from 'react-prop-types/lib/all';
 
 import { Modes as SelectionModes, } from '../../redux/modules/selection';
 
-export default class SalesTotals extends Component{
+export default class SalesTotals extends React.Component{
 
   static displayName = 'SalesTotals';
 
@@ -52,7 +52,7 @@ export default class SalesTotals extends Component{
 
   }
 
-  _renderMoneyOnly(){
+  _renderMoneyOnly(VATEnabled){ // Sales + Payments
     const self = this;
 
     const { styles, company, page, selection, } = this.props;
@@ -62,10 +62,10 @@ export default class SalesTotals extends Component{
     const rowsCount = 1;
     const tableHeight = 0 + (rowsCount * 30) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -79,35 +79,151 @@ export default class SalesTotals extends Component{
 
     const isSelected = (key) => sel.mode === SelectionModes.All || sel.keys[key];
 
+    // let _totalTTC = undefined;
+    // const totalTTC = () => {
+    //
+    //   if(_totalTTC === undefined){
+    //     _totalTTC = calcSumOfTotals();
+    //   }
+    //
+    //   return _totalTTC;
+    // };
+    //
+    // let _totalHT = undefined;
+    // const totalHT = () => {
+    //   if(_totalHT === undefined){
+    //     _totalHT = calcSumOfTotals__HT();
+    //   }
+    //
+    //   return _totalHT;
+    // };
+    //
+    // let _totalVAT = undefined;
+    // const totalVAT = () => {
+    //   if(_totalTTC === undefined){
+    //     _totalTTC = calcSumOfTotals();
+    //   }
+    //
+    //   if(_totalHT === undefined){
+    //     _totalHT = calcSumOfTotals__HT();
+    //   }
+    //
+    //   return _totalTTC - _totalHT;
+    // };
+
     const calcSumOfBalances = () => {
       const resl = sel.mode === SelectionModes.None
-        ? company.payments.sumOfCredits
-        : company.payments.edges.reduce((result, {node : { id, amountReceived, itemsConnection, }}) => {
-          return result + (isSelected(id)
-            ? amountReceived - itemsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0)
-            : 0.0);
+        ? company.sales.paymentsSumOfCredits + company.sales.invoicesSumOfBalances
+        : company.sales.edges.reduce((result, {node : { id, __opType : type, invoiceItemsConnection, discountType, discountValue, invoicePaymentsConnection, amountReceived, paymentItemsConnection, }}) => {
+
+          switch(type){
+            case 'Invoice':
+
+              return result + (isSelected(id)
+                ? getTotal(invoiceItemsConnection, { discountType, discountValue, })  - invoicePaymentsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0)
+                : 0.0);
+
+            case 'PaymentOfInvoices':
+
+              return result + (isSelected(id)
+                ?  amountReceived - paymentItemsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0)
+                : 0.0);
+
+            default: return result;
+          }
+
+          // return result + ((type === 'PaymentOfInvoices' || type === 'Invoice') && isSelected(id)
+          //   ? amountReceived - itemsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0)
+          //   : 0.0);
         }, 0.0);
 
-      return intl.formatNumber(resl, { format: 'MAD', });
+      return intl.formatNumber(resl, { format: 'MONEY', });
     };
     const calcSumOfTotals = () => {
-      const paymentsResl = sel.mode === SelectionModes.None
-        ? company.payments.sumOfTotals
-        : company.payments.edges.reduce((result, {node : { id, amountReceived, }}) => {
-          return result + (isSelected(id)
-            ? amountReceived
-            : 0.0);
-        }, 0.0);
-      const salesResl = sel.mode === SelectionModes.None
-        ? company.sales.sumOfTotals
-        : company.sales.edges.reduce((result, {node : { id, itemsConnection, discountType, discountValue, }}) => {
-          return result + (isSelected(id)
-            ? getTotal(itemsConnection, { discountType, discountValue, })
-            : 0.0);
+      // const paymentsResl = sel.mode === SelectionModes.None
+      //   ? company.sales.paymentsSumOfTotals
+      //   : company.sales.edges.reduce((result, {node : { id, __opType : type, amountReceived, }}) => {
+      //     return result + (type === 'PaymentOfInvoices' && isSelected(id)
+      //       ? amountReceived
+      //       : 0.0);
+      //   }, 0.0);
+      // const salesResl = sel.mode === SelectionModes.None
+      //   ? company.sales.salesSumOfTotals
+      //   : company.sales.edges.reduce((result, {node : { id, __opType : type, itemsConnection, discountType, discountValue, }}) => {
+      //     return result + (type === 'Sale' && isSelected(id)
+      //       ? getTotal(itemsConnection, { discountType, discountValue, })
+      //       : 0.0);
+      //   }, 0.0);
+      //
+      // return intl.formatNumber(salesResl + paymentsResl, { format: 'MONEY', });
+
+      const res = sel.mode === SelectionModes.None
+        ? company.sales.invoicesSumOfTotals + company.sales.salesSumOfTotals + company.sales.paymentsSumOfTotals
+        : company.sales.edges.reduce((result, {node : { id, __opType : type, invoiceItemsConnection, saleItemsConnection, discountType, discountValue, amountReceived, }}) => {
+
+          switch(type){
+            case 'Sale':
+
+              return result + (isSelected(id)
+                ? getTotal(saleItemsConnection, { discountType, discountValue, })
+                : 0.0);
+
+            case 'Invoice':
+
+              return result + (isSelected(id)
+                ? getTotal(invoiceItemsConnection, { discountType, discountValue, })
+                : 0.0);
+
+            case 'PaymentOfInvoices':
+
+              return result + (isSelected(id)
+                ?  amountReceived
+                : 0.0);
+
+            default: return result;
+          }
+
+          // return result + (type === 'Sale' && isSelected(id)
+          //   ? getTotal(itemsConnection, { discountType, discountValue, })
+          //   : 0.0);
         }, 0.0);
 
-      return intl.formatNumber(salesResl + paymentsResl, { format: 'MAD', });
+        return intl.formatNumber(res, { format: 'MONEY', });
     };
+    // const calcSumOfTotals__HT = () => {
+    //   const res = sel.mode === SelectionModes.None
+    //     ? company.sales.invoicesSumOfTotals + company.sales.salesSumOfTotals + company.sales.paymentsSumOfTotals
+    //     : company.sales.edges.reduce((result, {node : { id, __opType : type, invoiceItemsConnection, saleItemsConnection, discountType, discountValue, amountReceived, }}) => {
+    //
+    //       switch(type){
+    //         case 'Sale':
+    //
+    //           return result + (isSelected(id)
+    //             ? getTotal(saleItemsConnection, { discountType, discountValue, })
+    //             : 0.0);
+    //
+    //         case 'Invoice':
+    //
+    //           return result + (isSelected(id)
+    //             ? getTotal(invoiceItemsConnection, { discountType, discountValue, })
+    //             : 0.0);
+    //
+    //         case 'PaymentOfInvoices':
+    //
+    //           return result + (isSelected(id)
+    //             ?  amountReceived
+    //             : 0.0);
+    //
+    //         default: return result;
+    //       }
+    //
+    //       // return result + (type === 'Sale' && isSelected(id)
+    //       //   ? getTotal(itemsConnection, { discountType, discountValue, })
+    //       //   : 0.0);
+    //     }, 0.0);
+    //
+    //     return intl.formatNumber(res, { format: 'MONEY', });
+    // };
 
     return (
       isEmpty ? null : <div className={classnames({[styles['sales-totals-table-wrapper'] || '']: true, [styles['table']]: true, })}>
@@ -159,7 +275,7 @@ export default class SalesTotals extends Component{
              <div></div>
              </Cell>
            )}
-              width={100}
+              width={90}
             />
 
             {/* type */}
@@ -200,7 +316,7 @@ export default class SalesTotals extends Component{
              <div>{intl.formatMessage(messages['Totals_Label'])}({sel.mode === SelectionModes.None ? intl.formatMessage(messages['Totals_All'])  : intl.formatMessage(messages['Totals_Selected'])})</div>
              </Cell>
            )}
-              width={40}
+              width={100}
               flexGrow={1}
             />
 
@@ -217,6 +333,34 @@ export default class SalesTotals extends Component{
               width={50}
               flexGrow={1}
             />
+
+            {/* totalHT */}
+            {VATEnabled && <Column
+              columnKey={'totalHT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
+            {/* VAT */}
+            {VATEnabled && <Column
+              columnKey={'VAT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
 
             {/* Total */}
             <Column
@@ -242,8 +386,8 @@ export default class SalesTotals extends Component{
              <div></div>
              </Cell>
            )}
-              width={80}
-              flexGrow={1}
+              width={90}
+              // flexGrow={1}
             />
 
             {/* Status */}
@@ -259,7 +403,7 @@ export default class SalesTotals extends Component{
                  </Cell>
                )
               }}
-              width={100}
+              width={85}
             />
 
             {/* Actions */}
@@ -285,7 +429,7 @@ export default class SalesTotals extends Component{
     );
   }
 
-  _renderInvoicesOnly(){
+  _renderInvoicesOnly(VATEnabled){
     const self = this;
     const { styles, company, page, selection, } = this.props;
     const sel = selection[page] || { mode: SelectionModes.None, keys: {}, };
@@ -294,10 +438,10 @@ export default class SalesTotals extends Component{
     const rowsCount = 1;
     const tableHeight = 0 + (rowsCount * 30) + 2;
     // const bodyWidth = Math.max(956,
-    //   this.props.bodyWidth - 225 - 60
+    //   this.props.bodyWidth - 165 - 60
     // )
     // ;
-    const bodyWidth = Math.max(this.props.bodyWidth - 225 - 60, 956);
+    const bodyWidth = Math.max(this.props.bodyWidth - 165 - 60, 956);
     const tableWidth = bodyWidth - 1;
 
     const isEmpty = rowsCount === 0;
@@ -313,25 +457,25 @@ export default class SalesTotals extends Component{
 
     const calcSumOfBalances = () => {
       const resl = sel.mode === SelectionModes.None
-        ? company.invoices.sumOfBalances
-        : company.invoices.edges.reduce((result, {node : { id, itemsConnection, paymentsConnection, discountType, discountValue, }}) => {
-          return result + (isSelected(id)
+        ? company.sales.invoicesSumOfBalances
+        : company.sales.edges.reduce((result, {node : { id, __opType : type, invoiceItemsConnection : itemsConnection, invoicePaymentsConnection : paymentsConnection, discountType, discountValue, }}) => {
+          return result + (type === 'Invoice' && isSelected(id)
             ? (getTotal(itemsConnection, { discountType, discountValue, }) - paymentsConnection.edges.reduce((sum, {node : { amount, }}) => sum + amount, 0.0))
             : 0.0)
         }, 0.0);
 
-      return intl.formatNumber(resl, { format: 'MAD', });
+      return intl.formatNumber(resl, { format: 'MONEY', });
     };
     const calcSumOfTotals = () => {
       const resl = sel.mode === SelectionModes.None
-        ? company.invoices.sumOfTotals
-        : company.invoices.edges.reduce((result, {node : { id, itemsConnection, discountType, discountValue, }}) => {
-          return result + (isSelected(id)
+        ? company.sales.invoicesSumOfTotals
+        : company.sales.edges.reduce((result, {node : { id, __opType : type, invoiceItemsConnection : itemsConnection, discountType, discountValue, }}) => {
+          return result + (type === 'Invoice' && isSelected(id)
             ? getTotal(itemsConnection, { discountType, discountValue, })
             : 0.0)
         }, 0.0);
 
-      return intl.formatNumber(resl, { format: 'MAD', });
+      return intl.formatNumber(resl, { format: 'MONEY', });
     };
 
     return (
@@ -383,7 +527,7 @@ export default class SalesTotals extends Component{
              <div></div>
              </Cell>
            )}
-              width={100}
+              width={90}
             />
 
             {/* No */}
@@ -409,7 +553,7 @@ export default class SalesTotals extends Component{
              <div>{intl.formatMessage(messages['Totals_Label'])}({sel.mode === SelectionModes.None ? intl.formatMessage(messages['Totals_All'])  : intl.formatMessage(messages['Totals_Selected'])})</div>
              </Cell>
            )}
-              width={40}
+              width={100}
               flexGrow={1}
             />
 
@@ -455,6 +599,34 @@ export default class SalesTotals extends Component{
               flexGrow={1}
             />
 
+            {/* totalHT */}
+            {VATEnabled && <Column
+              columnKey={'totalHT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
+            {/* VAT */}
+            {VATEnabled && <Column
+              columnKey={'VAT'}
+              align={'right'}
+              header={null}
+              cell={({rowIndex, ...props}) => (
+             <Cell {...props}>
+             <div></div>
+             </Cell>
+           )}
+              width={50}
+              flexGrow={1}
+            />}
+
             {/* Total */}
             <Column
               columnKey={'total'}
@@ -482,7 +654,7 @@ export default class SalesTotals extends Component{
                  </Cell>
                )
               }}
-              width={100}
+              width={85}
             />
 
             {/* Actions */}
@@ -516,14 +688,16 @@ export default class SalesTotals extends Component{
       sortKey, sortDir,
     } = this.props.filterArgs;
 
+    const VATEnabled = this.props.topLoading ? false : this.props.company.VATSettings.enabled;
+
     const isOnlyPayments =  type === 'recent' || type === 'money' || type === 'payments' || type === 'sales';
     if(isOnlyPayments){
-      return this._renderMoneyOnly();
+      return this._renderMoneyOnly(VATEnabled);
     }
 
     const isOnlyInvoices = type === 'invoices';
     if(isOnlyInvoices){
-      return this._renderInvoicesOnly();
+      return this._renderInvoicesOnly(VATEnabled);
     }
 
     return null;
@@ -531,40 +705,198 @@ export default class SalesTotals extends Component{
 
 }
 
+// function getTotal(itemsConnection, { discountType, discountValue, }){
+//   const completedLines = itemsConnection.edges;
+//
+//   const subtotal = completedLines
+//     .reduce((sum, { node: { qty, rate, }, }) => sum + (qty * rate), 0.0);
+//   const totalDiscount = getTotalDiscount(subtotal, { type: discountType, value: discountValue, });
+//   const taxableSubtotal = completedLines
+//     .reduce((sum, { node: { qty, rate, discountPart : itemDiscountPart, }, }) => {
+//       const amount = qty * rate;
+//       const itemDiscount = itemGetDiscount(amount, itemDiscountPart);
+//       const amountPercentage = (amount * 100 / subtotal);
+//       const discountPart = amountPercentage / 100 * totalDiscount;
+//       return sum + (amount - discountPart) - itemDiscount;
+//     }, 0.0);
+//
+//   const total = subtotal - totalDiscount;
+//
+//   const taxAmount = 0; // getTaxAmount(taxableSubtotal, {});
+//   return total + taxAmount;
+// }
+
 function getTotal(itemsConnection, { discountType, discountValue, }){
   const completedLines = itemsConnection.edges;
 
-  const subtotal = completedLines
-    .reduce((sum, { node: { qty, rate, }, }) => sum + (qty * rate), 0.0);
-  const totalDiscount = getTotalDiscount(subtotal, { type: discountType, value: discountValue, });
-  const taxableSubtotal = completedLines
-    .reduce((sum, { node: { qty, rate, discountPart : itemDiscountPart, }, }) => {
-      const amount = qty * rate;
-      const itemDiscount = itemGetDiscount(amount, itemDiscountPart);
-      const amountPercentage = (amount * 100 / subtotal);
-      const discountPart = amountPercentage / 100 * totalDiscount;
-      return sum + (amount - discountPart) - itemDiscount;
+  const subtotalHT = completedLines
+    .reduce((sum, { node: { qty, rate, VATPart : itemVATPart, }, }) => sum + itemGetAmount__HT(qty * rate, itemVATPart), 0.0);
+
+  const itemsTotalDiscount = completedLines
+    .reduce((sum, { node: { qty, rate, discountPart : itemDiscountPart, VATPart : itemVATPart, }, }) => {
+
+      const entryValue = qty * rate;
+
+      const amountHT__BeforeDiscount = itemGetAmount__HT(entryValue, itemVATPart);
+
+      const itemDiscount = itemGetDiscount(amountHT__BeforeDiscount, itemDiscountPart);
+
+      return sum + itemDiscount;
     }, 0.0);
 
-  const total = subtotal - totalDiscount;
+  const totalDiscount = getTotalDiscount(subtotalHT - itemsTotalDiscount, { type: discountType, value: discountValue, });
 
-  const taxAmount = 0; // getTaxAmount(taxableSubtotal, {});
-  return total + taxAmount;
+  const totalHT = subtotalHT - totalDiscount - itemsTotalDiscount;
+
+  const totalTaxAmount = completedLines
+    .reduce((sum, { node: { qty, rate, discountPart : itemDiscountPart, VATPart : itemVATPart, }, }) => {
+
+      const entryValue = qty * rate;
+
+      const amountHT__BeforeDiscount = itemGetAmount__HT(entryValue, itemVATPart);
+
+      const itemTotalDiscount = itemGetTotalDiscountPart(amountHT__BeforeDiscount, itemDiscountPart);
+
+      const amountHT = amountHT__BeforeDiscount - itemTotalDiscount;
+
+      function itemGetTotalDiscountPart(amountHT__BeforeDiscount, itemDiscountPart) {
+        const itemDiscount = itemGetDiscount(amountHT__BeforeDiscount, itemDiscountPart);
+
+        const amountPercentage = (amountHT__BeforeDiscount * 100 / subtotalHT);
+
+        const discountPart = amountPercentage / 100 * totalDiscount;
+
+        return itemDiscount + discountPart;
+      }
+
+      const taxableAmount = amountHT; // - itemTotalDiscount;
+
+      return sum + itemGeVATPart__Amount(taxableAmount, itemVATPart);
+    }, 0.0);
+
+  return totalHT + totalTaxAmount;
 }
 
 function itemGetDiscount(total, {type, value}){
   switch (type) {
     case 'Value':    return value || 0.0;
+    case 1:          return value || 0.0;
+
     case 'Percent':  return total * ((value||0.0)/100);
+    case 2:          return total * ((value||0.0)/100);
   }
 }
 function getTotalDiscount(subtotal, {type, value}){
   switch (type) {
     case 'Value':    return value || 0.0;
+    case 1:          return value || 0.0;
+
     case 'Percent':  return subtotal * ((value||0.0)/100);
+    case 2:          return subtotal * ((value||0.0)/100);
   }
 }
 
-// function getTaxAmount(taxableSubtotal, {taxPercent}){
-//   return taxableSubtotal * ((taxPercent || 0.0) / 100);
-// }
+const VAT_ID_TO_VALUE = {
+  Value_20: 0.20,
+  Value_14: 0.14,
+  Value_10: 0.1,
+  Value_Exempt: 0.0,
+  Value_7: 0.07,
+
+  1: 0.20,
+  2: 0.14,
+  3: 0.1,
+  4: 0.0,
+  5: 0.07,
+};
+
+const VAT_NAME_TO_ID = {
+  Value_20: 1,
+  Value_14: 2,
+  Value_10: 3,
+  Value_Exempt: 4,
+  Value_7: 5,
+};
+
+function itemGeVATPart__Amount(taxableAmount /* ALWAYS HT */, itemVATPart) {
+
+  if(itemVATPart){
+    const { inputType, value = 'Value_Exempt', } = itemVATPart;
+
+    // taxableAmount is HT: VAT = %VAT * taxableAmountHT
+    return function () {
+      const VAT_percentage = value ? VAT_ID_TO_VALUE[value] : 0.0;
+
+      const taxableAmountHT = taxableAmount;
+
+      const VAT_amount = VAT_percentage * taxableAmountHT;
+
+      return VAT_amount;
+    }();
+
+  }
+
+  return 0;
+}
+
+function itemGetAmount__TTC(entryValue, itemVATPart) {
+  if(itemVATPart){
+    const { inputType, value = 'Value_Exempt', } = itemVATPart;
+
+    switch (inputType){
+      case 1:
+      case 'HT':
+
+        // entryValue is HT: TTC = (1 + %VAT) * entryValueHT;
+        return (1 + VAT_ID_TO_VALUE[value]) * entryValue;
+
+      case 2:
+      case 'TTC':
+
+        // entryValue is TTC: TTC = entryValueTTC;
+        return entryValue;
+
+      case 3:
+      case 'NO_VAT':
+
+        return entryValue;
+
+      default:
+
+        throw new Error(`itemGetAmount__TTC: Invalid inputType`, inputType);
+    }
+  }
+
+  return entryValue;
+}
+
+function itemGetAmount__HT(entryValue, itemVATPart) {
+  if(itemVATPart){
+    const { inputType, value = 'Value_Exempt', } = itemVATPart;
+
+    switch (inputType){
+      case 1:
+      case 'HT':
+
+        // entryValue is HT: HT = entryValueHT;
+        return entryValue;
+
+      case 2:
+      case 'TTC':
+
+        // entryValue is TTC: HT =  entryValueTTC / (1 + %VAT);
+        return entryValue / (1 + VAT_ID_TO_VALUE[value]);
+
+      case 3:
+      case 'NO_VAT':
+
+        return entryValue;
+
+      default:
+
+        throw new Error(`itemGetAmount__HT: Invalid inputType`, inputType);
+    }
+  }
+
+  return entryValue;
+}

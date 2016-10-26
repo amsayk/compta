@@ -33,7 +33,7 @@ import styles from './Items.scss';
 import requiredPropType from 'react-prop-types/lib/all';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
 
   static displayName = 'VendorsExpensesHeaderActions';
 
@@ -122,10 +122,17 @@ export default class extends Component{
           <VendorForm
             company={this.props.company}
             viewer={this.props.viewer}
-            formKey={'NEW'} onCancel={this._close}
+            formKey={'NEW'} onCancel={this._close} onDone={this._onSaveVendor}
           />
         );
     }
+  };
+
+  _onSaveVendor = ({ vendor: { id, }, }) => {
+    this.context.router.push({
+      pathname: `/apps/${this.props.company.id}/vendor/${id}`,
+      state: {},
+    })
   };
 
   render() {

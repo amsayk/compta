@@ -27,7 +27,7 @@ import {
 const messages = defineMessages({
   '/apps': {
     id: 'apps-menu-item-title',
-    defaultMessage: 'Vos sociétés',
+    defaultMessage: 'Mes sociétés',
   },
 
   '/account': {
@@ -37,7 +37,7 @@ const messages = defineMessages({
 
   '/apps-title': {
     id: 'apps-menu-item-title.meta',
-    defaultMessage: 'Vos sociétés | Compta',
+    defaultMessage: 'Mes sociétés | Compta',
   },
 
   '/account-title': {
@@ -58,7 +58,7 @@ const PAGES = [{
 @CSSModules(styles, {
   allowMultiple: true
 })
-class Link extends Component {
+class Link extends React.Component {
   // static contextTypes = {
   //   intl: intlShape.isRequired,
   // };
@@ -71,8 +71,8 @@ class Link extends Component {
         <div styleName='section active'>
           {/*<Title title={intl.formatMessage(messages[`${page}-title`])}/>*/}
           <div styleName='section_header'>
-            <i className='material-icons md-36'>{icon}</i>
-            <span>
+            <i className='sidebar-link-icon active material-icons md-36'>{icon}</i>
+            <span className='sidebar-link-text active'>
               <FormattedMessage {...messages[page]} />
             </span>
           </div>
@@ -83,8 +83,8 @@ class Link extends Component {
     return (
       <div styleName='section'>
         <a styleName='section_header' onClick={onClick.bind(null, page)}>
-          <i className='material-icons md-36'>{icon}</i>
-          <span>
+          <i className='sidebar-link-icon material-icons md-36'>{icon}</i>
+          <span className='sidebar-link-text'>
             <FormattedMessage {...messages[page]} />
           </span>
         </a>
@@ -93,7 +93,7 @@ class Link extends Component {
   };
 }
 
-class HomeSidebar extends Component {
+class HomeSidebar extends React.Component {
 
   static contextTypes = {
     router: PropTypes.object,

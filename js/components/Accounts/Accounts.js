@@ -19,7 +19,7 @@ const Title = (company) => company.displayName;
 import messages from './messages';
 
 @CSSModules(styles, {allowMultiple: true})
-class Accounts extends Component {
+class Accounts extends React.Component {
   static contextTypes = {
     intl: intlShape.isRequired,
   };
@@ -134,6 +134,16 @@ function wrapWithC(Component, props) {
           sessionToken,
 
           company(id: $companyId){
+
+            VATSettings{
+              enabled,
+              agency,
+              startDate,
+              IF,
+              frequency,
+              regime,
+              percentages{ value, },
+            },
 
             objectId,
 

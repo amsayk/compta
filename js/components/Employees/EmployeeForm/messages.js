@@ -31,7 +31,7 @@ export default defineMessages({
 
   FormTitle: {
     id: 'employee-form.title',
-    defaultMessage: 'Ajouter un client',
+    defaultMessage: 'Ajouter un employé',
   },
 
   error: {

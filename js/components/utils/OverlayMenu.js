@@ -12,7 +12,7 @@ import stopEvent from '../../utils/stopEvent';
 import styles from './OverlayMenu.scss';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component{
+export default class extends React.Component{
   static displayName = 'OverlayMenu';
   static propTypes = {};
   state = { show: false, };
@@ -24,11 +24,11 @@ export default class extends Component{
     const { show, } = this.state;
     const { onMainAction, title, } = this.props;
     return (
-      <div styleName={classnames('action', { 'has-menu': this.props.children, })}>
+      <div className={classnames('overlay-menu', {'overlay-menu-has-menu': this.props.children, })} styleName={classnames('action', { 'has-menu': this.props.children, })}>
 
-        <div className={' universal-grid-next-action secondary'} styleName='link-combo-button'>
+        <div className={'overlay-menu-link universal-grid-next-action secondary'} styleName='link-combo-button'>
 
-          <button type='button' title={title || 'Créer une facture'} onClick={e => { stopEvent(e); onMainAction(); }} styleName='combo-button-main' tabIndex='0' style={{ WebkitUserSelect: 'none', outline: 0, }}>{title || 'Créer une facture'}</button>
+          <button type='button' title={title || 'Créer une facture'} onClick={e => { stopEvent(e); onMainAction(); }} className='overlay-menu-button-main' styleName='combo-button-main' tabIndex='0' style={{ WebkitUserSelect: 'none', outline: 0, }}>{title || 'Créer une facture'}</button>
 
           {this.props.children && <button
             ref={'target'}

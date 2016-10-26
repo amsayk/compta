@@ -26,7 +26,7 @@ import messages from './messages';
 import requiredPropType from 'react-prop-types/lib/all';
 
 @CSSModules(styles, {allowMultiple: true})
-export default class extends Component {
+export default class extends React.Component {
   static displayName = 'BillBalanceDue';
   static contextTypes = {
     intl: intlShape.isRequired,
@@ -102,8 +102,9 @@ export default class extends Component {
     const {
       formKey,
       bill,
+      _bill,
       store,
-      fields: {dirty, date, dueDate,},
+      fields: { id, dirty, date, dueDate,},
     } = this.props;
 
     const hasBill = formKey !== 'NEW';
@@ -111,7 +112,7 @@ export default class extends Component {
     const _dirty = dirty || store.isDirty;
 
     const totalAmount = hasBill && ! _dirty
-      ? bill.totalAmount : store.subtotal;
+      ? bill.totalAmount : store.getTotal();
 
     const amountPaid = hasBill
       ? bill.totalAmountPaid
@@ -127,6 +128,12 @@ export default class extends Component {
 
     const hasSomePayments = hasBill ? bill.paymentsConnection.totalCount > 0 : false;
 
+    const isSaved = hasBill || typeof getFieldValue(id) !== 'undefined';
+
+    const onReceivePayment = (e) => {
+      stopEvent(e);
+      this.props.onReceivePayment(bill || _bill);
+    };
 
     return (
       <div styleName='balance-due-wrapper'>
@@ -153,9 +160,9 @@ export default class extends Component {
 
                       </div>
 
-                      {hasBill && <div styleName='paddingTop10'>
+                      {isSaved && <div styleName='paddingTop10'>
                           <div styleName='stateActionButton inlineBlock'>
-                            <a onClick={e => { stopEvent(e); self.props.onReceivePayment(bill); }} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
+                            <a onClick={onReceivePayment} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
                           </div>
                       </div>}
 
@@ -206,9 +213,9 @@ export default class extends Component {
 
                       </div>
 
-                      {hasBill && <div styleName='paddingTop10'>
+                      {isSaved && <div styleName='paddingTop10'>
                           <div styleName='stateActionButton inlineBlock'>
-                            <a onClick={e => { stopEvent(e); self.props.onReceivePayment(bill); }} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
+                            <a onClick={onReceivePayment} styleName='bbutton secondary'>{intl.formatMessage(messages['receive_payment_label'])}</a>
                           </div>
                       </div>}
 
