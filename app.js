@@ -107,7 +107,7 @@ function setup(server = express()) {
     });
   });
 
-  server.use(
+  process.env.SERVE_ASSETS === 'true' && server.use(
     '/assets/', express.static(path.resolve(process.cwd(), 'public')));
 
   return server;
