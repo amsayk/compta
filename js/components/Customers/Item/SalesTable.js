@@ -470,7 +470,7 @@ export default class SalesTable extends React.Component{
 
         const self = this;
 
-        function p__decorateItem(index, { ...props, item, VATPart,}){
+        function p__decorateItem(index, { item, VATPart, ...props, }){
           return {
             index,
             ...props,
@@ -583,7 +583,7 @@ export default class SalesTable extends React.Component{
 
       const self = this;
 
-      function p__decorateItem(index, { ...props, item, VATPart,}){
+      function p__decorateItem(index, { item, VATPart, ...props, }){
         return {
           index,
           ...props,

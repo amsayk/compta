@@ -6,7 +6,7 @@ import findIndex from 'lodash.findindex';
 
 import messages from './messages';
 
-import shallowEqual from 'shallowEqual';
+import shallowEqual from 'fbjs/lib/shallowEqual';
 
 import styles from './Sidebar.scss';
 

@@ -8,7 +8,7 @@ import stopEvent from '../../../utils/stopEvent';
 
 import Paginate from 'react-paginate';
 
-import shallowEqual from 'shallowEqual';
+import shallowEqual from 'fbjs/lib/shallowEqual';
 
 @CSSModules(styles, {allowMultiple: true})
 export default class extends React.Component{

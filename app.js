@@ -18,6 +18,8 @@ const morgan = require('morgan');
 //   'fr'
 // ];
 
+const ParseDashboard = require('parse-dashboard');
+
 const __DEV__ = process.env.NODE_ENV !== 'production';
 
 const APP_PORT = process.env.PORT || 5000;
@@ -43,11 +45,36 @@ const api = new ParseServer({
   maxUploadSize: '25mb',
 });
 
+const dashboard = new ParseDashboard({
+  "apps": [
+    {
+      "appId": process.env.APPLICATION_ID,
+      "javascriptKey": process.env.JAVASCRIPT_KEY,
+      "masterKey": process.env.MASTER_KEY,
+      "serverURL": SERVER_URL,
+      "appName": "Compta Enterprise",
+      "production": ! __DEV__,
+      "iconName": "ic_account_balance_wallet_black_48dp.png",
+    }
+  ],
+  "trustProxy": 1,
+  "useEncryptedPasswords": true,
+  "users": __DEV__ ? [] : [
+    {
+      "user": 'amsayk',
+      "pass": '$2a$08$ayRVAV5Qj6tUuS0bMo5WOeer.YZciRFjtSQBQUgXcRh/Pe7od9sS2'
+    }
+  ]
+}, /* allowInsecureHTTP = */ false);
+
 function setup(server = express()) {
   server.use(cors());
 
   // Serve the Parse API on the /parse URL prefix
   server.use(mountPath, api);
+
+  // Serve dashboard
+  server.use("/dashboard", dashboard);
 
   // server.use(locale(SUPPORTED_LOCALES));
   server.use(useragent.express());
@@ -108,7 +135,7 @@ function setup(server = express()) {
   });
 
   process.env.SERVE_ASSETS === 'true' && server.use(
-    '/assets/', express.static(path.resolve(process.cwd(), 'public')));
+    '/assets/', express.static(path.resolve(process.cwd(), 'dist')));
 
   return server;
 }

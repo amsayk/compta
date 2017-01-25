@@ -1,0 +1,12 @@
+[Unit]
+Description=Compta Enterprise
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/docker/compta/
+ExecStart=/usr/bin/npm run start:dev
+
+[Install]
+WantedBy=multi-user.target
+
+

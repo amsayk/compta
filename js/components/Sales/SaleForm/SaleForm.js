@@ -550,7 +550,7 @@ export default class extends React.Component {
 
                 const sale = result.result;
 
-                function p__decorateItem(index, { ...props, item, VATPart,}){
+                function p__decorateItem(index, { item, VATPart, ...props, }){
                   return {
                     index,
                     ...props,

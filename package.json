@@ -12,20 +12,19 @@
     "npm": ">=3.x"
   },
   "scripts": {
+    "link": "pushd dist && for l in `ls ../public`; do ln -sf ../public/`basename $l` `basename $l`; done && popd",
     "lint": "node_modules/.bin/eslint .",
-    "clean": "npm run clean:app && rm -fr public/js/__build__",
+    "clean": "npm run clean:app && cd dist && rm -fr * && cd ..",
     "clean:app": "rm -fr out",
     "build:schema": "node out/scripts/updateSchema.js",
     "build:langs": "TRANSLATE=yes node out/scripts/translate.js && mkdir -p out/build/lang && cp -r build/lang out/build/",
     "build:app": "npm run clean:app && mkdir -p out/data/database && mkdir -p out/scripts && node_modules/.bin/babel --presets es2015,stage-0,react scripts/updateSchema.js --out-dir out/ && node_modules/.bin/babel --presets es2015,stage-0,react scripts/translate.js --out-dir out/ && cp data/database/*.json out/data/database/ && cp package.json out/ && node_modules/.bin/babel --presets es2015,stage-0,react data/ --out-dir out/data/ && node_modules/.bin/babel --presets es2015,stage-0,react app.js --out-dir out/ && node_modules/.bin/babel --presets es2015,stage-0,react webpack.config.js --out-dir out/ && mkdir -p out/build && cp build/babel-preset-fbjs.js out/build/ && cp build/babelRelayPlugin.js out/build/",
-    "build": "npm run build:app && npm run build:schema && npm run build:langs",
+    "build": "npm run build:app && npm run build:schema && npm run build:langs && npm run link",
     "start": "node out/app.js",
     "build:langs:dev": "node -r dotenv/config out/scripts/translate.js && mkdir -p out/build/lang && cp -r build/lang out/build/",
     "build:dev": "npm run build:app && npm run build:schema && npm run build:langs:dev",
     "start:dev": "node -r dotenv/config out/app.js",
-    "start:webStorm": "node $NODE_DEBUG_OPTION -r dotenv/config out/app.js",
-    "build:production": "NODE_ENV=production APPLICATION_ID=xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT JAVASCRIPT_KEY=UWvZmYpzg7J3jIOhI0Bg5H1ELKjYlfu9sYDzjDXW MASTER_KEY=bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb SEQ_ID=ywylI5nW8c CLIENT_CLASS_CREATION=true ANON_USERS=true webpack --progress",
-    "build:production:local": "NODE_ENV=production APPLICATION_ID=xLEz7YMFwX3EfcmV3xuH1gYMVZXT9ilFkx5K99bT JAVASCRIPT_KEY=UWvZmYpzg7J3jIOhI0Bg5H1ELKjYlfu9sYDzjDXW MASTER_KEY=bRpkBy7R6M6hM0GnB5aTcHDvyZk4S9cvmmSza5nb SEQ_ID=ywylI5nW8c CLIENT_CLASS_CREATION=true ANON_USERS=true webpack --progress"
+    "build:production": "webpack --progress"
   },
   "dependencies": {
     "alt": "^0.18.4",
@@ -86,7 +85,7 @@
     "react-addons-update": "^15.2.1",
     "react-avatar-cropper": "^0.1.2",
     "react-bootstrap": "^0.29.5",
-    "react-css-modules": "^3.7.0",
+    "react-css-modules": "3.7.0",
     "react-dnd": "^2.1.4",
     "react-dnd-html5-backend": "^2.1.2",
     "react-dom": "^15.2.1",

@@ -651,7 +651,7 @@ export default class extends React.Component {
 
                 this._invoice = invoice;
 
-                function p__decorateItem(index, { ...props, item, VATPart,}){
+                function p__decorateItem(index, { item, VATPart, ...props, }){
                   return {
                     index,
                     ...props,

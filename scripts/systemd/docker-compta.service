@@ -1,0 +1,30 @@
+[Unit]
+Description=Schola container
+Requires=docker.service
+After=docker.service
+BindsTo=docker.service
+Conflicts=shutdown.target reboot.target halt.target
+
+[Service]
+Restart=always
+; TimeoutStartSec=0
+; TimeoutStopSec=30
+; RestartSec=10
+
+WorkingDirectory=/opt/docker/compta/
+
+ExecStartPre=-/usr/local/bin/docker-compose kill
+ExecStartPre=-/usr/local/bin/docker-compose rm
+ExecStartPre=-/usr/local/bin/docker-compose rm --force -v
+
+ExecStart=/usr/local/bin/docker-compose up -d
+
+ExecStop=/usr/local/bin/docker-compose stop
+
+ExecStopPost=/usr/local/bin/docker-compose rm --force -v
+
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
+

@@ -497,7 +497,7 @@ export default class extends React.Component {
 
         <Modal.Footer styleName={'modal-footer'}>
 
-          <br/>
+          {/* <br/> */}
 
           <button
             styleName='save-btn floatLeft'

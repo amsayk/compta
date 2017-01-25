@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const webpack = require('webpack');
 const path = require('path');
 const AssetsPlugin = require('assets-webpack-plugin');
@@ -196,7 +198,7 @@ let entry = {
 
 let output = {
   filename: '[hash:8].[name].js',
-  path: path.resolve(process.cwd(), 'public'),
+  path: path.resolve(process.cwd(), 'dist'),
   publicPath: '/assets/',
   chunkFilename: '[id].[chunkhash:8].[name].js',
 };
